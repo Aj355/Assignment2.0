@@ -38,6 +38,7 @@ void pterm(void);
 int pgetid(void);
 int pnice (int);
 int pbind(int);
+int psend(int dst_id,char *msg, int sz);
 
 
 #endif /* PCOMMANDS_H_ */

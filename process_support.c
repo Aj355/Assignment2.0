@@ -182,6 +182,8 @@ int enqueue_pcb (struct pcb *in_pcb)
     if (current_priority < in_pcb->priority )
         current_priority = in_pcb->priority;
 
+    pcb_counter++;
+
     return SUCCESS;
 
 }

@@ -22,7 +22,7 @@ void init_display ()
 void main(void)
  {
     init_kernel();
-    init_display ();
+    //init_display ();
     /* reg_proc(process name, id, priority) */
     reg_proc(idle, 0, 0);
     reg_proc(proc1, 1, 3);

@@ -155,7 +155,7 @@ else /* Subsequent SVCs */
             kcaptr -> rtnvalue = kbind(*((int *)kcaptr -> pkmsg));
             break;
         case SEND:
-            //kcaptr -> rtnvalue = ksend(kcaptr -> pkmsg);
+            kcaptr -> rtnvalue = ksend(kcaptr -> pkmsg);
             break;
         case RECV:
             //kcaptr -> rtnvalue = krecv(kcaptr -> pkmsg);

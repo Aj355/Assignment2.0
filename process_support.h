@@ -24,16 +24,6 @@
 
 enum PR_TYPE {IDLE_, LOW_, MED_, HIGH_};
 
-void set_LR(volatile unsigned long);
-unsigned long get_PSP();
-void set_PSP(volatile unsigned long);
-unsigned long get_MSP(void);
-void set_MSP(volatile unsigned long);
-unsigned long get_SP();
-int reg_proc( void (*func)(void), unsigned id, unsigned short priority);
-void assignR7(volatile unsigned long data);
-
-
 void volatile save_registers();
 void volatile restore_registers();
 
@@ -77,6 +67,15 @@ struct pcb
     struct pcb *prev;
 };
 
+void set_LR(volatile unsigned long);
+unsigned long get_PSP();
+void set_PSP(volatile unsigned long);
+unsigned long get_MSP(void);
+void set_MSP(volatile unsigned long);
+unsigned long get_SP();
+int reg_proc( void (*func)(void), unsigned id, unsigned short priority);
+void assignR7(volatile unsigned long data);
+int enqueue_pcb(struct pcb*);
 
 /* externals */
 extern struct pcb  *running[];

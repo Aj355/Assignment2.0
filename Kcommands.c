@@ -12,6 +12,7 @@
 #include "Kcommands.h"
 #include "Pcommands.h"
 #include "process_support.h"
+#include "Queue.h"
 
 struct mailbox mailboxes[MAX_MSG_QUEUE]; /* List of message queues */
 
@@ -116,7 +117,7 @@ int ksend(struct msg_request *req)
         return FAIL;
 
     /*IF receiving process is blocked*/
-    if (mailboxes[req->dst_id].buffer_addr != NULL)
+    if (dst_mail->buffer_addr != NULL)
     {
         /* max_sz is either size of sender's msg or receiver's buffer
          * whichever is smaller */
@@ -127,12 +128,14 @@ int ksend(struct msg_request *req)
         for (i=0; i<max_sz; i++)
             dst_mail->buffer_addr[i] = req->msg[i];
         /*Unblock receiver by inserting its PCB into WTR queue*/
-
+        enqueue_pcb(dst_mail->process);
+        /*put a null in the buffer_addr in mailbox to signify that process is not blocked*/
+        dst_mail->buffer_addr = NULL;
     }
     else /* if process not blocked */
     {
         /*put message, its size, and source id into the receive mailbox*/
-        //enqueue_msg(req);
+        enqueue_msg(req);
     }
 
     /*EXIT with the number of copied bytes*/

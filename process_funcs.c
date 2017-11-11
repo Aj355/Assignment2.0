@@ -18,18 +18,14 @@ void process (void)
 
 void proc1 (void)
 {
-    //print_str("I ");
-    int x = pbind(1);
-    print_char(x+'0');
-    print_char(pbind(0)+'1');
-    pnice(1);
-    //print_str("am");
+    pbind(1);
+    psend(1, "hello", 6);
     while (1);
 }
 
 void proc2 (void)
 {
-    print_str("and");
+    pbind(2);
     while(1); //
 }
 
