@@ -14,6 +14,7 @@
 
 struct pcb  *running[PRIORITY_NUM];          /* Pointers to running process in WTR queues while accounting for priority */
 int current_priority;                        /* Current priority level */
+int pcb_counter;                             /* keeps track of the number of WTR processes */
 
 void assignR7(volatile unsigned long data)
 {
@@ -154,4 +155,33 @@ int reg_proc( void (*func)(void), unsigned id, unsigned short priority)
 *             SUCCESS   if successful enqueuing of the PCB occurs
 *             FAIL      if the WTR queue is full
 *******************************************************************************/
-int enqueue_pcb (struct pcb )
+int enqueue_pcb (struct pcb *in_pcb)
+{
+    /*if the number of processes exceeds the allowable amount*/
+    if (pcb_counter == MAX_PROCESS)
+        /*exit with error code*/
+        return FAIL;
+    /*else if the number of messages does not exceed the maximum*/
+    /*Connect PCB to the end of the priority queue*/
+    if (running[in_pcb->priority] == NULL)
+    {
+        /* if the queue is empty, let the priority queue pointer point at this pcb.
+         * Make the next and previous pointer point to the same pcb (for circular queue)
+         */
+        running[in_pcb->priority] = in_pcb;
+        in_pcb -> next            = in_pcb;
+        in_pcb -> prev            = in_pcb;
+    }else {
+        /* if the queue is not empty, add the current pcb to the end of the queue*/
+        in_pcb -> next                      = running[in_pcb->priority];
+        in_pcb -> prev                      = running[in_pcb->priority]->prev;
+        running[in_pcb->priority] -> prev   = in_pcb;
+        in_pcb -> prev-> next               = in_pcb;
+    }
+    /*if the inserted process has higher priority, then change the current priority*/
+    if (current_priority < in_pcb->priority )
+        current_priority = in_pcb->priority;
+
+    return SUCCESS;
+
+}

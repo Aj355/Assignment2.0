@@ -12,7 +12,7 @@
 #define FAIL           -1
 #define PRIORITY_NUM    4   /* idle, low, medium and high priorities. */
 #define STACKSIZE       1024
-#define MAX_PROCESS     128
+#define MAX_PROCESS     32
 #define PRIVATE static
 
 #define disable()   __asm(" cpsid i")
@@ -81,5 +81,6 @@ struct pcb
 /* externals */
 extern struct pcb  *running[];
 extern int current_priority;             /* Current priority level */
+extern int pcb_counter;                  /* keeps track of the number of WTR processes */
 
 #endif /* PROCESS_SUPPORT_H_ */
