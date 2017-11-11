@@ -160,15 +160,18 @@ EXIT with success code
 ---------------------------------------------------------------------------
 Structured English: precv
 ---------------------------------------------------------------------------
-Set
-
-EXIT
+create mcb with buffer and buffer size
+CALL pkcall routine with RECV code messsage and an mcb to store msg
+EXIT with number of bytes sent and sender id.
 ---------------------------------------------------------------------------
 Structured English: krecv
 ---------------------------------------------------------------------------
-Set
-
-EXIT
+IF the current process is not bound to a mailbox
+	EXIT with error code
+ELSE
+	CALL pkcall routine with RECV code messsage and an mcb to store msg
+	EXIT with success code
+ENDIF
 
 ---------------------------------------------------------------------------
 Structured English: p_uart
