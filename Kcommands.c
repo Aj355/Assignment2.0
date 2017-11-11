@@ -105,12 +105,14 @@ int kbind(int num)
 *******************************************************************************/
 int ksend(struct msg_request *req)
 {
-#ifdef  DONE_SEND
-    int i;
 
+    int i;
+    struct mailbox *dst_mail = &mailboxes[req->dst_id];
+    /*maximum size to be copied*/
+    int max_sz = (dst_mail->sz > req->sz) ? req->sz : dst_mail->sz;
     /*IF sender does not own a mailbox OR destination mailbox not found*/
     if (running[current_priority]->mailbox_num == UNBOUND_Q ||
-            mailboxes[req->dst_id].process == NULL)
+            dst_mail->process == NULL)
         /*THEN EXIT with error code*/
         return FAIL;
 
@@ -118,18 +120,27 @@ int ksend(struct msg_request *req)
     if (mailboxes[req->dst_id].buffer_addr != NULL)
     {
         /*THEN give source id to receiver*/
-        mailboxes[req->dst_id].src_id = running[current_priority]->mailbox_num;
+        dst_mail->src_id = running[current_priority]->mailbox_num;
         /*copy message into receiver buffer until it's full or message is complete*/
-        for (i=0; i<mailboxes[req->dst_id].sz; i++)
-            mailboxes[req->dst_id]-
-        Unblock receiver by inserting its PCB into WTR queue
+        for (i=0; i<max_sz; i++)
+            dst_mail->buffer_addr[i] = req->msg[i];
+        /*Unblock receiver by inserting its PCB into WTR queue*/
+
+
+
     }
-    ELSE
-        put message, its size, and source id into the receive mailbox
-    ENDIF
-    EXIT with success code
-#endif
-    return 0;
+    else /* if process not blocked */
+    {
+        /*put message, its size, and source id into the receive mailbox*/
+
+        /*
+         * enqueue the message
+         */
+
+    }
+
+    /*EXIT with the number of copied bytes*/
+    return max_sz;
 }
 
 /*******************************************************************************
