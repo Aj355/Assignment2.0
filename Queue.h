@@ -1,0 +1,58 @@
+/******************************************************************************/
+/* Filename: Queue.h
+ * Author: Abdullah Alhadlaq
+ * Date: 25 Sep 2017
+ * Purpose: This file contains the definitions, external global variables and
+ *          function prototypes for the Queue module.
+ */
+/******************************************************************************/
+
+#ifndef QUEUE_H_
+#define QUEUE_H_
+
+/* maximum number of queue entries for both input and output */
+#define MAX_ENTRIES 128
+/* number of queues: Input and output */
+#define QUEUE_NUM   2
+/* to signal successful or unsuccessful enqueuing and dequeuing */
+#define FALSE   0
+#define TRUE    1
+
+/* two types of entries in a queue: either a character for
+ * UART, or an entry signaling that one-tenth a second has
+ * elapsed.
+ */
+enum entry_type {UART, SYSTICK};
+
+/* an index for the type of queue (input or output) */
+enum Queue_Type {INPUT, OUTPUT};
+
+/* the structure of a queue entry. It is the same
+ * for both input and output queues.
+ */
+struct entry
+{
+    unsigned short type;        /* SYSTICK | UART */
+    unsigned char character;    /* if it is of type UART */
+};
+
+/* structure for a queue */
+struct queue
+{
+    unsigned short head;                // index to the top of the queue
+    unsigned short tail;                // index to the bottom of the queue
+    unsigned short counter;             // the current content of the queue
+    struct entry entries[MAX_ENTRIES];  // the nodes of the queue
+};
+
+/* external definition of the input and output queues
+ * (contained in the array called queues)
+ */
+extern struct queue queues[];   // contains input and output queues
+
+/* function prototypes */
+unsigned short enqueue (unsigned short queue_type, struct entry added_entry);
+unsigned short dequeue (unsigned short queue_type, struct entry *removed_entry);
+void init_queues(void);
+
+#endif /* QUEUE_H_ */
