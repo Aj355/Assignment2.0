@@ -25,7 +25,8 @@ struct mailbox
     int tail;                           /* */
     int cnt;                            /* */
     /* these elements are message info in event of process blocking */
-    int  src_id;
+    struct msg_request req;
+    int  *src_id;
     int  sz;
     char *buffer_addr;
 };

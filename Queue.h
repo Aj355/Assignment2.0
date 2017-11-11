@@ -60,6 +60,6 @@ extern struct queue queues[];   // contains input and output queues
 unsigned short enqueue (unsigned short queue_type, struct entry added_entry);
 unsigned short dequeue (unsigned short queue_type, struct entry *removed_entry);
 int enqueue_msg(struct msg_request *);
-int dequeue_msg(struct mcb *);
+int dequeue_msg(struct msg_request *);
 
 #endif /* QUEUE_H_ */

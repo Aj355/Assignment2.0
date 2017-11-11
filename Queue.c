@@ -148,7 +148,7 @@ int enqueue_msg(struct msg_request * msg)
  *                element = pointer desired entry to be removed from the queue
  * Returns: none
  * -------------------------------------------------------------------------- */
-int dequeue_msg(struct mcb *msg)
+int dequeue_msg(struct msg_request *msg)
 {
     int state;
     int i;
@@ -159,7 +159,7 @@ int dequeue_msg(struct mcb *msg)
     if (ptr->cnt > 0)                              // IF the queue is not empty
     {
         msg->sz = ptr->msg_queue[ptr->head].sz;
-        msg->src_id = ptr->msg_queue[ptr->head].src_id;
+        msg->id = ptr->msg_queue[ptr->head].src_id;
         for(i = 0; i<msg->sz ; i++)
             msg->msg[i] = ptr->msg_queue[ptr->head].msg[i];
         ptr->tail = (ptr->tail + 1) % MSG_PER_Q;
