@@ -8,6 +8,10 @@
 #include "Pcommands.h"
 #include "process_support.h"
 
+/* */
+#define SVC()   __asm(" SVC #0")
+
+
 /* pkcall */
 int pkcall(int code, void *pkmsg)
 {

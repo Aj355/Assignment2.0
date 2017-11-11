@@ -10,6 +10,8 @@
 #include "kernel_calls.h"
 #include "Pcommands.h"
 
+#define SVC()   __asm(" SVC #0")
+
 void init_display ()
 {
     print_str("\e[36m"); // Enable the Cyan font colour

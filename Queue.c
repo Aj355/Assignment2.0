@@ -15,6 +15,8 @@
 #include "Queue.h"
 #include "UART.h"
 #include "Kcommands.h"
+#include "process_support.h"
+
 /* an array of the queues: input and output */
 struct queue queues[QUEUE_NUM];
 
@@ -113,24 +115,27 @@ unsigned short dequeue (unsigned short queue_type, struct entry *removed_entry)
  *                data = Character to be stored in Queue (matters in UART)
  * Returns: none
  * -------------------------------------------------------------------------- */
-int enqueue_msg(struct mcb * msg, int dst_id)
+int enqueue_msg(struct msg_request * msg)
 {
-    InterruptMasterDisable();               // Disable all interrupt
-    int state = TRUE;
+    int state;
     int i;
-    if (mailboxes[dst_id].cnt == MSG_PER_Q) // IF queue is full
+    struct mailbox *ptr;
+    InterruptMasterDisable();               // Disable all interrupt
+    state = TRUE;
+    ptr = &mailboxes[msg->dst_id];
+    if (ptr->cnt == MSG_PER_Q) // IF queue is full
         state = FALSE;
     else
     {
-        mailboxes[dst_id].msg_queue[mailboxes[dst_id].head].sz = msg->sz;
-        mailboxes[dst_id].msg_queue[mailboxes[dst_id].head].src_id = msg->src_id;
+        ptr->msg_queue[ptr->head].sz = msg->sz;
+        ptr->msg_queue[ptr->head].src_id = running[current_priority]->mailbox_num;
         for(i = 0; i<msg->sz ; i++)
-            mailboxes[dst_id].msg_queue[mailboxes[dst_id].head].msg[i] = msg->msg[i];
+            ptr->msg_queue[ptr->head].msg[i] = msg->msg[i];
 
         // Increment head to next entry
-        mailboxes[dst_id].head = (mailboxes[dst_id].head + 1) % MSG_PER_Q;
+        ptr->head = (ptr->head + 1) % MSG_PER_Q;
         // Increment Queue entry counter
-        mailboxes[dst_id].cnt++;
+        ptr->cnt++;
     }
     InterruptMasterEnable();                // Enable all interrupts
     return state;
@@ -143,20 +148,23 @@ int enqueue_msg(struct mcb * msg, int dst_id)
  *                element = pointer desired entry to be removed from the queue
  * Returns: none
  * -------------------------------------------------------------------------- */
-int dequeue_msg(struct mcb *msg, int dst_id)
+int dequeue_msg(struct mcb *msg)
 {
-    InterruptMasterDisable();                    // Disable all interrupt
-    int state = TRUE;
+    int state;
     int i;
-    if (mailboxes[dst_id].cnt > 0)                              // IF the queue is not empty
+    struct mailbox *ptr;
+    InterruptMasterDisable();                    // Disable all interrupt
+    state = TRUE;
+    ptr = &mailboxes[running[current_priority]->mailbox_num];
+    if (ptr->cnt > 0)                              // IF the queue is not empty
     {
-        msg->sz = mailboxes[dst_id].msg_queue[mailboxes[dst_id].head].sz;
-        msg->src_id = mailboxes[dst_id].msg_queue[mailboxes[dst_id].head].src_id;
+        msg->sz = ptr->msg_queue[ptr->head].sz;
+        msg->src_id = ptr->msg_queue[ptr->head].src_id;
         for(i = 0; i<msg->sz ; i++)
-            msg->msg[i] = mailboxes[dst_id].msg_queue[mailboxes[dst_id].head].msg[i];
-        mailboxes[dst_id].tail = (mailboxes[dst_id].tail + 1) % MSG_PER_Q;
+            msg->msg[i] = ptr->msg_queue[ptr->head].msg[i];
+        ptr->tail = (ptr->tail + 1) % MSG_PER_Q;
                                                                 // Increment tail to entry
-        mailboxes[dst_id].cnt--;                                // Decrement queue counter
+        ptr->cnt--;                                // Decrement queue counter
     }
     else
         state = FALSE;

@@ -8,9 +8,12 @@
 #ifndef KCOMMANDS_H_
 #define KCOMMANDS_H_
 
+#include "Pcommands.h"
+
 #define MSG_PER_Q       8
 #define UNBOUND_Q       -1  /* signals that a process does not have a queue */
 #define MAX_MSG_SZ      64  /* done for memory constraints */
+
 
 /* Message control block */
 struct mcb
@@ -41,5 +44,5 @@ int kgetid(void);
 void kterm(void);
 void knice(int*);
 int kbind(int);
-int ksend(struct msg_request *);
+int ksend(struct msg_request *req);
 #endif /* KCOMMANDS_H_ */

@@ -11,7 +11,11 @@
  * -------------------------------------------------------------------------- */
 #ifndef QUEUE_H_
 #define QUEUE_H_
+
+#include "process_support.h"
+#include "Pcommands.h"
 #include "Kcommands.h"
+
 /* maximum number of queue entries for both input and output */
 #define MAX_ENTRIES 128
 /* number of queues: Input and output */
@@ -55,13 +59,7 @@ extern struct queue queues[];   // contains input and output queues
 /* function prototypes */
 unsigned short enqueue (unsigned short queue_type, struct entry added_entry);
 unsigned short dequeue (unsigned short queue_type, struct entry *removed_entry);
-
-
-/* External global variables */
-
-
-
-int dequeue_msg(struct mcb *msg, int dst_id);
-int enqueue_msg(struct mcb * msg, int dst_id);
+int enqueue_msg(struct msg_request *);
+int dequeue_msg(struct mcb *);
 
 #endif /* QUEUE_H_ */
