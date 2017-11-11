@@ -15,9 +15,9 @@ void init_display ()
     print_str("\e[36m"); // Enable the Cyan font colour
     print_str("\e[3J");  // Clear to top of terminal
     print_str("\e[;H");  // Cursor goes to top left
-    //print_str("> ");     // Screen indication
-    //
+
 }
+
 void main(void)
  {
     init_kernel();

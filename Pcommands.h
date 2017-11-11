@@ -8,8 +8,8 @@
 #ifndef PCOMMANDS_H_
 #define PCOMMANDS_H_
 
-#define MAX_MSG_QUEUE   128
-#define MAX_MSG_SZ      64  /* done for memory constraints */
+#define MAX_MSG_QUEUE   32  /* Maximum number of mailboxes */
+#define MAX_MSG_SZ      64  /* Done for memory constraints */
 
 /* */
 #define SVC()   __asm(" SVC #0")
