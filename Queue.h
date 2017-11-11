@@ -1,12 +1,14 @@
-/******************************************************************************/
-/* Filename: Queue.h
- * Author: Abdullah Alhadlaq
- * Date: 25 Sep 2017
- * Purpose: This file contains the definitions, external global variables and
- *          function prototypes for the Queue module.
- */
-/******************************************************************************/
-
+/* -------------------------------------------------------------------------- *
+ * Author: Abdulrahman Aljedaibi
+ * Course: Real time systems
+ * ECED 4402
+ * Date assigned :   07  Sept  2017
+ * Date created  :   20  Sept  2017
+ * Submission date : 02 Oct 2017
+ * File name : Queue.h
+ * Purpose: Implement a static circular queue in order to organize interrupts
+ *              According to their type (UART or SYSTICK)
+ * -------------------------------------------------------------------------- */
 #ifndef QUEUE_H_
 #define QUEUE_H_
 
@@ -53,6 +55,14 @@ extern struct queue queues[];   // contains input and output queues
 /* function prototypes */
 unsigned short enqueue (unsigned short queue_type, struct entry added_entry);
 unsigned short dequeue (unsigned short queue_type, struct entry *removed_entry);
-void init_queues(void);
+
+
+/* External global variables */
+
+extern volatile int cnt[QNUM];
+
+
+ void enqueue(enum type c, enum source s, char data);
+ void dequeue(enum type c, struct q_entry *element);
 
 #endif /* QUEUE_H_ */

@@ -1,52 +1,26 @@
-/******************************************************************************/
-/* Filename: Queue.c
- * Author: Abdullah Alhadlaq
- * Date: 25 Sep 2017
- * Purpose: This file contains the initialization routine as well as enqueuing
- *          and dequeuing routines for the Queue module.
- * Edits:
- * 30 sep 2017: -Added protection in critical sections
- */
-/******************************************************************************/
 
+/* -------------------------------------------------------------------------- *
+ * Author: Abdulrahman Aljedaibi and Abdullah alhadlaq
+ * Course: Real time systems
+ * ECED 4402
+ * Date assigned :   07  Sept  2017
+ * Date created  :   21  Sept  2017
+ * Editing       :   29  Sept - Disable interrupt upon entry and enable upon
+ *                                  leaving
+ * Submission date : 02 Oct 2017
+ * File name : Queue.c
+ * Purpose: Implement a static circular queue in order to organize interrupts
+ *              According to their type (UART or SYSTICK)
+ * -------------------------------------------------------------------------- */
 #include "Queue.h"
 #include "UART.h"
-
+#include "Kcommands.h"
 /* an array of the queues: input and output */
 struct queue queues[QUEUE_NUM];
 
-/* This function initializes the queues by assigning initial
- * values to the head, the tail, and the counter of each
- * queue.
- * Argument:
- *      NONE
- * Returns:
- *      NONE
- */
-void init_queues(void)
-{
-    int i;  // used in the for loop
+/* Globals */
+volatile int cnt = 0;     // Initialize both queue counters
 
-    /* initialize all queues: both input and output */
-    for (i=0; i<QUEUE_NUM; i++)
-    {
-        queues[i].head = 0;
-        queues[i].tail = 0;
-        queues[i].counter = 0;
-    }
-
-    return;
-}
-
-/* This function enqueues an entry to the head
- * of a queue.
- * Arguments:
- *      queue_type: input or output queue
- *      added_entry: entry to be added to queue
- * Return:
- *      TRUE: if enqueuing is successful
- *      FALSE: if enqueuing is unsuccessful
- */
 unsigned short enqueue (unsigned short queue_type, struct entry added_entry)
 {
     /* identify what queue to use (input or output) */
@@ -128,4 +102,60 @@ unsigned short dequeue (unsigned short queue_type, struct entry *removed_entry)
     InterruptMasterEnable();
 
     return state;   /* 1 successful | 0 unsuccessful */
+}
+
+
+/* -------------------------------------------------------------------------- *
+ * Purpose: Insert an entry into the input or output queue.
+ * Parameters:
+ *                c = Queue type (OUTPUT  or INPUT)
+ *                s = Entry type (SYSTICK or UART )
+ *                data = Character to be stored in Queue (matters in UART)
+ * Returns: none
+ * -------------------------------------------------------------------------- */
+int enqueue_msg(struct mcb * msg, int dst_id)
+{
+    InterruptMasterDisable();               // Disable all interrupt
+    int state = TRUE;
+    int i;
+    if (mailboxes[dst_id].cnt == MSG_PER_Q) // IF queue is full
+        state = FALSE;
+    else
+    {
+        mailboxes[dst_id].msg_queue.sz = msg->sz;
+        mailboxes[dst_id].msg_queue.src_id = msg->src_id;
+        for(i = 0; i<msg->sz ; i++)
+        mailboxes[dst_id].msg_queue.msg[i] = msg->msg[i];
+
+        // Increment head to next entry
+        mailboxes[dst_id].head = (mailboxes[dst_id].head + 1) % QSIZE;
+        // Increment Queue entry counter
+        mailboxes[dst_id].cnt++;
+    }
+    InterruptMasterEnable();                // Enable all interrupts
+    return state;
+}
+
+/* -------------------------------------------------------------------------- *
+ * Purpose: remove an element from an Input or Output queue
+ * Parameters:
+ *                c = Queue type (OUTPUT  or INPUT)
+ *                element = pointer desired entry to be removed from the queue
+ * Returns: none
+ * -------------------------------------------------------------------------- */
+int dequeue(struct mcb *msg, int dst_id)
+{
+    InterruptMasterDisable();                    // Disable all interrupt
+    int state = TRUE;
+    if (cnt[c] > 0)                              // IF the queue is not empty
+    {
+        (*msg).data = queue[c][tail[c]].data;    // Copy data to element
+        (*msg).sid = queue[c][tail[c]].sid;      // Copy type to element
+        tail[c] = (tail[c] + 1) % QSIZE;         // Increment tail to entry
+        cnt[c]--;                                // Decrement queue counter
+    }
+    else
+        state = FALSE;
+    InterruptMasterEnable();                     // Enable all interrupts
+    return state;
 }
