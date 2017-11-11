@@ -185,6 +185,32 @@ int enqueue_pcb (struct pcb *in_pcb)
     pcb_counter++;
 
     return SUCCESS;
-
 }
 
+/*******************************************************************************
+* Purpose:
+*             This process removes a PCB from its corresponding priority
+*             WTR queue and adjusts the current_priority global variable
+*             if needed. This function does not free the PCB.
+* Arguments:
+*             NONE (only dequeues the running processes pcb)
+* Return :
+*             NONE
+*******************************************************************************/
+void dequeue_pcb(void)
+{
+    /* if the running process is not the last one in the current priority WTR queue */
+    if (running[current_priority] != running[current_priority]->next)
+    {
+        /* remove the running process PCB from the WTR queue */
+        running[current_priority]->prev->next = running[current_priority]->next;
+        running[current_priority]->next->prev = running[current_priority]->prev;
+        /* make the next process the running process */
+        running[current_priority] = running[current_priority] -> next;
+    }
+    else /* if it is the last process */
+    {
+        /* decrease the priority until a process PCB is present */
+        while (!running[--current_priority]);
+    }
+}

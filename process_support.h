@@ -76,6 +76,7 @@ unsigned long get_SP();
 int reg_proc( void (*func)(void), unsigned id, unsigned short priority);
 void assignR7(volatile unsigned long data);
 int enqueue_pcb(struct pcb*);
+void dequeue_pcb(void);
 
 /* externals */
 extern struct pcb  *running[];
