@@ -1,0 +1,206 @@
+---------------------------------------------------------------------------
+Structured English: Process Registration
+---------------------------------------------------------------------------
+Allocate memory for process stack 
+Set Stacktop = stackpointer + stacksize - stack frame size
+Create Process control block (PCB)
+Set Initial values for registers r0 to r12 on the stack 
+Set Link register on the stack to entry point of pterm routine 
+Set PC on the stack to the Process's entry point
+Set xPSR on the stack to enable thumb mode
+Set ID element in PCB to supplied ID
+Set SP element in PCB to Stacktop
+Set mailbox ID element in PCB to -1
+Set stack address element in PCB to address of entire stack memory
+Set Priority element in PCB to supplied priority
+Insert PCB into Process Queue with appropriate priority 
+
+
+---------------------------------------------------------------------------
+Structured English: Run first process
+---------------------------------------------------------------------------
+
+Set PSP to highest priority process's stacktop
+Initialize SYSTICK module
+Set link register to 0xFFFFFFFD to signal thread mode and PSP stack pointer
+Force return to PSP by executing assembly code " Bx LR"
+
+
+---------------------------------------------------------------------------
+Structured English: Systick Module 
+---------------------------------------------------------------------------
+
+Increment Time of day counter
+Trigger PendSV handler
+
+---------------------------------------------------------------------------
+Structured English: PendSV handler
+---------------------------------------------------------------------------
+
+disable all interrupts
+Push registers R4 to R11 on the process stack
+Set Stack pointer element in Running PCB to current stack pointer
+Get next process to run
+Set stack pointer to next process's stack pointer
+Pull registers R4 to R11 from next process's stack 
+enable all interrupts
+
+---------------------------------------------------------------------------
+Structured English: pterm
+---------------------------------------------------------------------------
+
+CALL pkcall subroutine with TERMINATE code message 
+EXIT
+
+---------------------------------------------------------------------------
+Structured English: kterm
+---------------------------------------------------------------------------
+
+store the running process's PCB
+remove the running process from the WTR queue
+set the running process to the next one in the list
+free the stored process's stack
+free the stored process's PCB
+set the PSP to the current running process's SP
+restore the registers of the current running process
+
+---------------------------------------------------------------------------
+Structured English: pgetid
+---------------------------------------------------------------------------
+
+CALL pkcall subroutine with GETID code message
+provide the id number to the calling process 
+EXIT
+
+---------------------------------------------------------------------------
+Structured English: kgetid
+---------------------------------------------------------------------------
+
+provide the id number of the running process to the calling routine
+EXIT
+
+---------------------------------------------------------------------------
+Structured English: pnice
+---------------------------------------------------------------------------
+IF desired priority is higher than 1 OR lower than 3
+	THEN CALL pkcall routine with NICE code message and desired priority
+	EXIT
+ELSE
+	EXIT with ERROR code
+ENDIF
+
+
+
+---------------------------------------------------------------------------
+Structured English: knice
+---------------------------------------------------------------------------
+Set SP of the running process to the PSP
+change priority of running process to desired prioirty
+IF desired priority = current priority
+	THEN EXIT
+ELSE
+	remove running PCB from current WTR queue 
+	insert running PCB into new priority queue
+ENDIF
+IF desired priority > current priority
+	THEN set current priority = desired priority
+ENDIF
+Set the PSP to the SP of the  current running process	
+EXIT
+
+---------------------------------------------------------------------------
+Structured English: pbind
+---------------------------------------------------------------------------
+
+IF mailbox number is within boundary 
+	THEN CALL pkcall routine with BIND code message and mailbox number 
+	EXIT with mailbox number
+ELSE 
+	EXIT with error message
+ENDIF
+
+---------------------------------------------------------------------------
+Structured English: kbind
+---------------------------------------------------------------------------
+
+IF Process is already bound to mailbox OR mailbox is bound to another process
+	THEN EXIT with error code
+ELSE
+	store desired mailbox ID in PCB
+	connect PCB to desired mailbox
+	EXIT with mailbox number
+ENDIF
+
+---------------------------------------------------------------------------
+Structured English: psend
+---------------------------------------------------------------------------
+
+IF size of message to be sent > max message size
+	THEN EXIT with error code
+ENDIF
+create message request with destination mailbox id, message, and its size
+CALL pkcall routine with SEND code and message request 
+EXIT
+
+---------------------------------------------------------------------------
+Structured English: ksend
+---------------------------------------------------------------------------
+
+IF sender does not own a mailbox OR destination mailbox not found
+	THEN EXIT with error code
+ENDIF
+IF receiving process is blocked
+	THEN give message, its size, and source id directly to receiver
+	Unblock receiver by inserting its PCB into WTR queue
+ELSE
+	put message, its size, and source id into the receive mailbox
+ENDIF
+EXIT with success code
+
+---------------------------------------------------------------------------
+Structured English: precv
+---------------------------------------------------------------------------
+Set
+
+EXIT
+---------------------------------------------------------------------------
+Structured English: krecv
+---------------------------------------------------------------------------
+Set
+
+EXIT
+
+---------------------------------------------------------------------------
+Structured English: p_uart
+---------------------------------------------------------------------------
+Set
+
+EXIT
+
+---------------------------------------------------------------------------
+Structured English: k_uart
+---------------------------------------------------------------------------
+Set
+
+EXIT
+
+---------------------------------------------------------------------------
+Structured English: time server
+---------------------------------------------------------------------------
+Set
+
+EXIT
+
+---------------------------------------------------------------------------
+Structured English: window manager
+---------------------------------------------------------------------------
+Set
+
+EXIT
+
+---------------------------------------------------------------------------
+Structured English: idle process
+---------------------------------------------------------------------------
+Set
+
+EXIT
