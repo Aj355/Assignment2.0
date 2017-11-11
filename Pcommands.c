@@ -122,3 +122,34 @@ int psend(int dst_id,char *msg, int sz)
 
     return pkcall(SEND,&req);
 }
+
+
+
+/*******************************************************************************
+* Purpose:
+*             This function receives a message
+* Arguments:
+*             dst_id:   the mailbox number of the receiver
+*             msg:      the message to be sent
+*             sz:       the size of the message in bytes
+* Return :
+*             BYTE_NUM  the number of bytes copied to the receiver
+*             FAIL      if sending is unsuccessful
+*******************************************************************************/
+int precv(int dst_id, int *src_id,char *msg, int maxsz)
+{
+    struct mcb recv_msg;
+
+    msg = &recv_msg.msg;
+    recv_msg.sz;
+    pkcall(RECV,&recv_msg);
+
+    return recv_msg
+}
+
+
+
+    EXIT with error code
+ELSE
+    CALL pkcall routine with RECV code messsage and an mcb to store msg
+    EXIT with success code
