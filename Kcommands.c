@@ -123,6 +123,8 @@ int ksend(struct msg_request *req)
         /* max_sz is either size of sender's msg or receiver's buffer
          * whichever is smaller */
         max_sz = (dst_mail->sz > req->sz) ? req->sz : dst_mail->sz;
+        /*so that the receiver knows the number of bytes copied*/
+        dst_mail -> sz = max_sz;
         /*THEN give source id to receiver*/
         *(dst_mail->src_id) = running[current_priority]->mailbox_num;
         /*copy message into receiver buffer until it's full or message is complete*/
@@ -158,8 +160,25 @@ int ksend(struct msg_request *req)
 *******************************************************************************/
 int krecv(struct msg_request *req)
 {
-    if (running[current_priority])
+    if (running[current_priority]->mailbox_num == UNBOUND_Q)
+        return FALSE;
+    else
     {
+        if (mailboxes[running[current_priority]->mailbox_num].cnt == 0)
+        {
+            mailboxes[running[current_priority]->mailbox_num].src_id = &(req->id);
+            mailboxes[running[current_priority]->mailbox_num].sz = req->sz;
+            mailboxes[running[current_priority]->mailbox_num].buffer_addr = req->msg;
+            running[current_priority]->sp = get_PSP();
+            dequeue_pcb();
+            set_PSP(running[current_priority] -> sp);
+            return mailboxes[running[current_priority]->mailbox_num].sz;
+        }
+        else
+        {
+            dequeue_msg(req);
+            return req->sz;
+        }
 
     }
 }
@@ -174,7 +193,7 @@ int krecv(struct msg_request *req)
 *             process id
 *******************************************************************************/
 int kdisplay(void)
-{}
+{return 0;}
 /*******************************************************************************
 * Purpose:
 *             get the process's id from the running PCCB
