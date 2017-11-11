@@ -142,3 +142,16 @@ int reg_proc( void (*func)(void), unsigned id, unsigned short priority)
     return SUCCESS;
 
 }
+
+/*******************************************************************************
+* Purpose:
+*             This process inserts a PCB into its corresponding priority
+*             WTR queue and adjusts the current_priority global variable
+*             if needed.
+* Arguments:
+*             in_pcb:   process control block to be inserted
+* Return :
+*             SUCCESS   if successful enqueuing of the PCB occurs
+*             FAIL      if the WTR queue is full
+*******************************************************************************/
+int enqueue_pcb (struct pcb )

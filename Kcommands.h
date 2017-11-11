@@ -41,5 +41,5 @@ int kgetid(void);
 void kterm(void);
 void knice(int*);
 int kbind(int);
-int ksend();
+int ksend(struct msg_request *);
 #endif /* KCOMMANDS_H_ */

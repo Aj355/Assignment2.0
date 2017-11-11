@@ -108,8 +108,7 @@ int ksend(struct msg_request *req)
 
     int i;
     struct mailbox *dst_mail = &mailboxes[req->dst_id];
-    /*maximum size to be copied*/
-    int max_sz = (dst_mail->sz > req->sz) ? req->sz : dst_mail->sz;
+    int max_sz = req->sz;       /*maximum size to be copied*/
     /*IF sender does not own a mailbox OR destination mailbox not found*/
     if (running[current_priority]->mailbox_num == UNBOUND_Q ||
             dst_mail->process == NULL)
@@ -119,6 +118,9 @@ int ksend(struct msg_request *req)
     /*IF receiving process is blocked*/
     if (mailboxes[req->dst_id].buffer_addr != NULL)
     {
+        /* max_sz is either size of sender's msg or receiver's buffer
+         * whichever is smaller */
+        max_sz = (dst_mail->sz > req->sz) ? req->sz : dst_mail->sz;
         /*THEN give source id to receiver*/
         dst_mail->src_id = running[current_priority]->mailbox_num;
         /*copy message into receiver buffer until it's full or message is complete*/
@@ -126,17 +128,11 @@ int ksend(struct msg_request *req)
             dst_mail->buffer_addr[i] = req->msg[i];
         /*Unblock receiver by inserting its PCB into WTR queue*/
 
-
-
     }
     else /* if process not blocked */
     {
         /*put message, its size, and source id into the receive mailbox*/
-
-        /*
-         * enqueue the message
-         */
-
+        enqueue_msg(req);
     }
 
     /*EXIT with the number of copied bytes*/
