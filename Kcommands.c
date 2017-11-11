@@ -108,7 +108,7 @@ int ksend(struct msg_request *req)
 {
 
     int i;
-    struct mailbox *dst_mail = &mailboxes[req->dst_id];
+    struct mailbox *dst_mail = &mailboxes[req->id];
     int max_sz = req->sz;       /*maximum size to be copied*/
     /*IF sender does not own a mailbox OR destination mailbox not found*/
     if (running[current_priority]->mailbox_num == UNBOUND_Q ||
@@ -142,6 +142,26 @@ int ksend(struct msg_request *req)
     return max_sz;
 }
 
+
+
+/*******************************************************************************
+* Purpose:
+*             This function takes a message request and either gives it
+*             directly to the receiving process of stores it in the receiving
+*             process's mailbox.
+* Arguments:
+*             req:      message request containing (msg, sz, dst_id)
+* Return :
+*             QUEUE NUM if successful binding is done
+*             FAIL      if invalid number is given by process or binding failed
+*******************************************************************************/
+int krecv(struct msg_request *req)
+{
+    if (running[current_priority])
+    {
+
+    }
+}
 /*******************************************************************************
 * Purpose:
 *             get the process's id from the running PCCB

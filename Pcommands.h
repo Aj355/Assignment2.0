@@ -18,9 +18,19 @@
 enum CODE_TYPE {TERMINATE, GETID, NICE, BIND, SEND, RECV, DISPLAY};
 
 
+
+/* Message control block */
+struct mcb
+{
+    int  src_id;                 /* */
+    char msg[MAX_MSG_SZ];        /* */
+    int  sz;                     /* */
+};
+
+
 struct msg_request
 {
-    int  dst_id;                 /* */
+    int  id;                 /* dst or src */
     int  sz;
     char *msg;
 };

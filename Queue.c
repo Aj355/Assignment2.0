@@ -122,7 +122,7 @@ int enqueue_msg(struct msg_request * msg)
     struct mailbox *ptr;
     InterruptMasterDisable();               // Disable all interrupt
     state = TRUE;
-    ptr = &mailboxes[msg->dst_id];
+    ptr = &mailboxes[msg->id];
     if (ptr->cnt == MSG_PER_Q) // IF queue is full
         state = FALSE;
     else

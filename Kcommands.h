@@ -15,13 +15,6 @@
 #define MAX_MSG_SZ      64  /* done for memory constraints */
 
 
-/* Message control block */
-struct mcb
-{
-    int  src_id;                 /* */
-    char msg[MAX_MSG_SZ];        /* */
-    int  sz;                     /* */
-};
 
 /* Message queue */
 struct mailbox
@@ -45,4 +38,5 @@ void kterm(void);
 void knice(int*);
 int kbind(int);
 int ksend(struct msg_request *req);
+int krecv(struct msg_request *req);
 #endif /* KCOMMANDS_H_ */

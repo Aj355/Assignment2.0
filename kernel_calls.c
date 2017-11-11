@@ -158,7 +158,7 @@ else /* Subsequent SVCs */
             kcaptr -> rtnvalue = ksend(kcaptr -> pkmsg);
             break;
         case RECV:
-            //kcaptr -> rtnvalue = krecv(kcaptr -> pkmsg);
+            kcaptr -> rtnvalue = krecv(kcaptr -> pkmsg);
             break;
         default:
             kcaptr -> rtnvalue = -1;

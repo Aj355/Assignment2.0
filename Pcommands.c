@@ -116,7 +116,7 @@ int psend(int dst_id,char *msg, int sz)
     if (sz > MAX_MSG_SZ)
         return FAIL;
 
-    req.dst_id = dst_id;
+    req.id = dst_id;
     req.msg = msg;
     req.sz = sz;
 
@@ -136,20 +136,12 @@ int psend(int dst_id,char *msg, int sz)
 *             BYTE_NUM  the number of bytes copied to the receiver
 *             FAIL      if sending is unsuccessful
 *******************************************************************************/
-int precv(int dst_id, int *src_id,char *msg, int maxsz)
+int precv(int *src_id,char *msg, int maxsz)
 {
-    struct mcb recv_msg;
-
-    msg = &recv_msg.msg;
-    recv_msg.sz;
+    struct msg_request recv_msg;
+    recv_msg.msg = msg;
+    recv_msg.sz = maxsz;
     pkcall(RECV,&recv_msg);
-
-    return recv_msg
+    *src_id = recv_msg.id;          // sender ID stored in structure after pkcall
+    return recv_msg.sz;
 }
-
-
-
-    EXIT with error code
-ELSE
-    CALL pkcall routine with RECV code messsage and an mcb to store msg
-    EXIT with success code
