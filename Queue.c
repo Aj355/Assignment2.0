@@ -122,13 +122,13 @@ int enqueue_msg(struct mcb * msg, int dst_id)
         state = FALSE;
     else
     {
-        mailboxes[dst_id].msg_queue.sz = msg->sz;
-        mailboxes[dst_id].msg_queue.src_id = msg->src_id;
+        mailboxes[dst_id].msg_queue[mailboxes[dst_id].head].sz = msg->sz;
+        mailboxes[dst_id].msg_queue[mailboxes[dst_id].head].src_id = msg->src_id;
         for(i = 0; i<msg->sz ; i++)
-            mailboxes[dst_id].msg_queue.msg[i] = msg->msg[i];
+            mailboxes[dst_id].msg_queue[mailboxes[dst_id].head].msg[i] = msg->msg[i];
 
         // Increment head to next entry
-        mailboxes[dst_id].head = (mailboxes[dst_id].head + 1) % QSIZE;
+        mailboxes[dst_id].head = (mailboxes[dst_id].head + 1) % MSG_PER_Q;
         // Increment Queue entry counter
         mailboxes[dst_id].cnt++;
     }
@@ -143,17 +143,19 @@ int enqueue_msg(struct mcb * msg, int dst_id)
  *                element = pointer desired entry to be removed from the queue
  * Returns: none
  * -------------------------------------------------------------------------- */
-int dequeue(struct mcb *msg, int dst_id)
+int dequeue_msg(struct mcb *msg, int dst_id)
 {
     InterruptMasterDisable();                    // Disable all interrupt
     int state = TRUE;
+    int i;
     if (mailboxes[dst_id].cnt > 0)                              // IF the queue is not empty
     {
-        msg->sz = mailboxes[dst_id].msg_queue.sz;
-        msg->src_id = mailboxes[dst_id].msg_queue.src_id;
+        msg->sz = mailboxes[dst_id].msg_queue[mailboxes[dst_id].head].sz;
+        msg->src_id = mailboxes[dst_id].msg_queue[mailboxes[dst_id].head].src_id;
         for(i = 0; i<msg->sz ; i++)
-            msg->msg[i] = mailboxes[dst_id].msg_queue.msg[i] ;
-        mailboxes[dst_id].tail = (mailboxes[dst_id].tail + 1) % QSIZE;         // Increment tail to entry
+            msg->msg[i] = mailboxes[dst_id].msg_queue[mailboxes[dst_id].head].msg[i];
+        mailboxes[dst_id].tail = (mailboxes[dst_id].tail + 1) % MSG_PER_Q;
+                                                                // Increment tail to entry
         mailboxes[dst_id].cnt--;                                // Decrement queue counter
     }
     else

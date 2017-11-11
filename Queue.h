@@ -11,7 +11,7 @@
  * -------------------------------------------------------------------------- */
 #ifndef QUEUE_H_
 #define QUEUE_H_
-
+#include "Kcommands.h"
 /* maximum number of queue entries for both input and output */
 #define MAX_ENTRIES 128
 /* number of queues: Input and output */
@@ -59,10 +59,9 @@ unsigned short dequeue (unsigned short queue_type, struct entry *removed_entry);
 
 /* External global variables */
 
-extern volatile int cnt[QNUM];
 
 
- void enqueue(enum type c, enum source s, char data);
- void dequeue(enum type c, struct q_entry *element);
+int dequeue_msg(struct mcb *msg, int dst_id);
+int enqueue_msg(struct mcb * msg, int dst_id);
 
 #endif /* QUEUE_H_ */

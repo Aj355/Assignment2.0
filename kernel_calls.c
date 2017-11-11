@@ -61,8 +61,6 @@ __asm("     POP     {PC}");
 
 void init_kernel (void)
 {
-    /* initialize queues */
-    init_queues();
 
     /* Initialize UART */
     init_UART();
