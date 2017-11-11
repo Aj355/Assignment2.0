@@ -15,6 +15,7 @@
 #include "Queue.h"
 
 struct mailbox mailboxes[MAX_MSG_QUEUE]; /* List of message queues */
+struct UART_requests UART_list;
 
 /*******************************************************************************
 * Purpose:
@@ -55,7 +56,7 @@ void kterm(void)
 
 /*******************************************************************************
 * Purpose:
-*             get the process's id from the running PCCB
+*             get the process's id from the running PCB
 * Arguments:
 *             NONE
 * Return :
@@ -123,7 +124,7 @@ int ksend(struct msg_request *req)
          * whichever is smaller */
         max_sz = (dst_mail->sz > req->sz) ? req->sz : dst_mail->sz;
         /*THEN give source id to receiver*/
-        dst_mail->src_id = running[current_priority]->mailbox_num;
+        *(dst_mail->src_id) = running[current_priority]->mailbox_num;
         /*copy message into receiver buffer until it's full or message is complete*/
         for (i=0; i<max_sz; i++)
             dst_mail->buffer_addr[i] = req->msg[i];
@@ -162,6 +163,18 @@ int krecv(struct msg_request *req)
 
     }
 }
+
+/*******************************************************************************
+* Purpose:
+*             This function puts a UART request into the UART requests circular
+*             queue.
+* Arguments:
+*             NONE
+* Return :
+*             process id
+*******************************************************************************/
+int kdisplay(void)
+{}
 /*******************************************************************************
 * Purpose:
 *             get the process's id from the running PCCB

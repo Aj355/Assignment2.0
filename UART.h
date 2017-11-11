@@ -67,6 +67,7 @@
 #define EN_DIG_PA0              0x00000001  // Enable Digital I/O on PA0
 #define EN_DIG_PA1              0x00000002  // Enable Digital I/O on PA1
 
+
 // Clock Gating Registers
 #define SYSCTL_RCGCGPIO_R      (*((volatile unsigned long *)0x400FE608))
 #define SYSCTL_RCGCUART_R      (*((volatile unsigned long *)0x400FE618))

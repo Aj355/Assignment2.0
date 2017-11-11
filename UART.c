@@ -17,9 +17,11 @@
 
 #include "UART.h"
 #include "Queue.h"
+#include "process_support.h"
 
 /* Globals */
 volatile int UART_state;    /* BUSY|IDLE */
+
 
 void UART0_Init(void)
 {
@@ -167,3 +169,5 @@ void init_UART (void)
     InterruptEnable(INT_VEC_UART0);             // Enable UART0 interrupts
     UART0_IntEnable(UART_INT_RX | UART_INT_TX); // Enable RCV & Xmit interrupts
 }
+
+

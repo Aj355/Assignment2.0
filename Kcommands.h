@@ -9,10 +9,12 @@
 #define KCOMMANDS_H_
 
 #include "Pcommands.h"
+#include "process_support.h"
 
 #define MSG_PER_Q       8
 #define UNBOUND_Q       -1  /* signals that a process does not have a queue */
 #define MAX_MSG_SZ      64  /* done for memory constraints */
+
 
 
 
@@ -25,9 +27,21 @@ struct mailbox
     int tail;                           /* */
     int cnt;                            /* */
     /* these elements are message info in event of process blocking */
-    int  src_id;
+    int  *src_id;
     int  sz;
     char *buffer_addr;
+};
+
+struct UART_entry
+{
+    struct pcb  *proc;
+    char        *dsp_msg;
+};
+struct UART_requests
+{
+    int head;
+    int tail;
+    struct UART_entry UART_Q[MAX_UART_REQ];
 };
 
 extern struct mailbox mailboxes[];

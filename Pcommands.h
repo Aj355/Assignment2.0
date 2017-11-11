@@ -10,6 +10,7 @@
 
 #define MAX_MSG_QUEUE   32  /* Maximum number of mailboxes */
 #define MAX_MSG_SZ      64  /* Done for memory constraints */
+#define MAX_UART_REQ    32          // # UART requests in the queue
 
 
 
@@ -41,6 +42,12 @@ struct krequest
 int code;      /* Unique (and defined) kernel code */
 int rtnvalue;  /* Result of operation (specific to each code) */
 void *pkmsg;   /* Address (32-bit value) of process message */
+};
+
+struct UART_request
+{
+    int   proc_id;
+    char *dsp_msg;
 };
 
 /* Function entry points */
