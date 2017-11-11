@@ -9,6 +9,7 @@
 #define PCOMMANDS_H_
 
 #define MAX_MSG_QUEUE   128
+#define MAX_MSG_SZ      64  /* done for memory constraints */
 
 /* */
 #define SVC()   __asm(" SVC #0")

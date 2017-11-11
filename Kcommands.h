@@ -8,8 +8,9 @@
 #ifndef KCOMMANDS_H_
 #define KCOMMANDS_H_
 
-#define MAX_MSG_SZ      64  /* done for memory constraints */
 #define MSG_PER_Q       8
+#define UNBOUND_Q       -1  /* signals that a process does not have a queue */
+#define MAX_MSG_SZ      64  /* done for memory constraints */
 
 /* Message control block */
 struct mcb
@@ -25,7 +26,7 @@ struct mailbox
     struct pcb *process;                /* */
     struct mcb msg_queue[MSG_PER_Q];    /* */
     /* these elements are message info in event of process blocking */
-    int  dst_id;
+    int  src_id;
     int  sz;
     char *buffer_addr;
 };

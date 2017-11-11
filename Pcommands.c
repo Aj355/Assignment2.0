@@ -56,8 +56,6 @@ int pgetid(void)
     return pkcall(GETID, NULL);
 }
 
-
-
 /*******************************************************************************
 * Purpose:
 *             invoke the kernel to change the process priority to supplied
@@ -78,8 +76,6 @@ int pnice(int pr)
     return SUCCESS;
 }
 
-
-
 /*******************************************************************************
 * Purpose:
 *             bind a process to a queue
@@ -87,7 +83,7 @@ int pnice(int pr)
 *             num:      queue number for binding
 * Return :
 *             QUEUE NUM if successful binding is done
-*             FAIL     if invalid number is given by process or binding failed
+*             FAIL      if invalid number is given by process or binding failed
 *******************************************************************************/
 int pbind(int num)
 {
@@ -100,20 +96,25 @@ int pbind(int num)
 
 /*******************************************************************************
 * Purpose:
-*             This function creates a message reuest
+*             This function creates a message request
 * Arguments:
-*             dst_id:
-*             msg:
-*             sz:
+*             dst_id:   the mailbox number of the receiver
+*             msg:      the message to be sent
+*             sz:       the size of the message in bytes
 * Return :
-*             QUEUE NUM if successful binding is done
-*             FAIL     if invalid number is given by process or binding failed
+*             BYTE_NUM  the number of bytes copied to the receiver
+*             FAIL      if sending is unsuccessful
 *******************************************************************************/
 int psend(int dst_id,char *msg, int sz)
 {
     struct msg_request req;
+
+    if (sz > MAX_MSG_SZ)
+        return FAIL;
+
     req.dst_id = dst_id;
     req.msg = msg;
     req.sz = sz;
+
     return pkcall(SEND,&req);
 }

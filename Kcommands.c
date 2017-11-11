@@ -77,7 +77,7 @@ int kgetid(void)
 int kbind(int num)
 {
     /* IF Process is already bound to mailbox OR mailbox is already bound */
-    if (running[current_priority] -> mailbox_num != -1 ||
+    if (running[current_priority] -> mailbox_num != UNBOUND_Q ||
             mailboxes[num].process != NULL )
         /* THEN EXIT with error */
         return FAIL;
@@ -94,18 +94,42 @@ int kbind(int num)
 
 /*******************************************************************************
 * Purpose:
-*             This function creates a message reuest
+*             This function takes a message request and either gives it
+*             directly to the receiving process of stores it in the receiving
+*             process's mailbox.
 * Arguments:
-*             dst_id:
-*             msg:
-*             sz:
+*             req:      message request containing (msg, sz, dst_id)
 * Return :
 *             QUEUE NUM if successful binding is done
-*             FAIL     if invalid number is given by process or binding failed
+*             FAIL      if invalid number is given by process or binding failed
 *******************************************************************************/
-int ksend(void *mcb)
+int ksend(struct msg_request *req)
 {
-    return 1;
+#ifdef  DONE_SEND
+    int i;
+
+    /*IF sender does not own a mailbox OR destination mailbox not found*/
+    if (running[current_priority]->mailbox_num == UNBOUND_Q ||
+            mailboxes[req->dst_id].process == NULL)
+        /*THEN EXIT with error code*/
+        return FAIL;
+
+    /*IF receiving process is blocked*/
+    if (mailboxes[req->dst_id].buffer_addr != NULL)
+    {
+        /*THEN give source id to receiver*/
+        mailboxes[req->dst_id].src_id = running[current_priority]->mailbox_num;
+        /*copy message into receiver buffer until it's full or message is complete*/
+        for (i=0; i<mailboxes[req->dst_id].sz; i++)
+            mailboxes[req->dst_id]-
+        Unblock receiver by inserting its PCB into WTR queue
+    }
+    ELSE
+        put message, its size, and source id into the receive mailbox
+    ENDIF
+    EXIT with success code
+#endif
+    return 0;
 }
 
 /*******************************************************************************
