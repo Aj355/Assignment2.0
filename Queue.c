@@ -125,7 +125,7 @@ int enqueue_msg(struct mcb * msg, int dst_id)
         mailboxes[dst_id].msg_queue.sz = msg->sz;
         mailboxes[dst_id].msg_queue.src_id = msg->src_id;
         for(i = 0; i<msg->sz ; i++)
-        mailboxes[dst_id].msg_queue.msg[i] = msg->msg[i];
+            mailboxes[dst_id].msg_queue.msg[i] = msg->msg[i];
 
         // Increment head to next entry
         mailboxes[dst_id].head = (mailboxes[dst_id].head + 1) % QSIZE;
@@ -147,12 +147,14 @@ int dequeue(struct mcb *msg, int dst_id)
 {
     InterruptMasterDisable();                    // Disable all interrupt
     int state = TRUE;
-    if (cnt[c] > 0)                              // IF the queue is not empty
+    if (mailboxes[dst_id].cnt > 0)                              // IF the queue is not empty
     {
-        (*msg).data = queue[c][tail[c]].data;    // Copy data to element
-        (*msg).sid = queue[c][tail[c]].sid;      // Copy type to element
-        tail[c] = (tail[c] + 1) % QSIZE;         // Increment tail to entry
-        cnt[c]--;                                // Decrement queue counter
+        msg->sz = mailboxes[dst_id].msg_queue.sz;
+        msg->src_id = mailboxes[dst_id].msg_queue.src_id;
+        for(i = 0; i<msg->sz ; i++)
+            msg->msg[i] = mailboxes[dst_id].msg_queue.msg[i] ;
+        mailboxes[dst_id].tail = (mailboxes[dst_id].tail + 1) % QSIZE;         // Increment tail to entry
+        mailboxes[dst_id].cnt--;                                // Decrement queue counter
     }
     else
         state = FALSE;

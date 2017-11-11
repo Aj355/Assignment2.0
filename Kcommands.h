@@ -25,8 +25,8 @@ struct mailbox
 {
     struct pcb *process;                /* */
     struct mcb msg_queue[MSG_PER_Q];    /* */
-    int head;                   /* */
-    int tail;                   /* */
+    int head;                           /* */
+    int tail;                           /* */
     int cnt;                            /* */
     /* these elements are message info in event of process blocking */
     int  src_id;
