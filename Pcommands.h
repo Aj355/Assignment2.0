@@ -11,8 +11,7 @@
 #define MAX_MSG_QUEUE   32  /* Maximum number of mailboxes */
 #define MAX_MSG_SZ      64  /* Done for memory constraints */
 
-/* */
-#define SVC()   __asm(" SVC #0")
+
 
 
 /* */

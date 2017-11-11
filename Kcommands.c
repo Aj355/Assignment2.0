@@ -132,7 +132,7 @@ int ksend(struct msg_request *req)
     else /* if process not blocked */
     {
         /*put message, its size, and source id into the receive mailbox*/
-        enqueue_msg(req);
+        //enqueue_msg(req);
     }
 
     /*EXIT with the number of copied bytes*/
