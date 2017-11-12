@@ -18,10 +18,13 @@
 #include "UART.h"
 #include "Queue.h"
 #include "process_support.h"
+#include "Kcommands.h"
+
+#define OLD_UART
 
 /* Globals */
 volatile int UART_state;    /* BUSY|IDLE */
-
+struct UART_entry current_msg; /*message currently being printed*/
 
 void UART0_Init(void)
 {
@@ -96,14 +99,36 @@ void UART0_IntHandler(void)
 
     if (UART0_MIS_R & UART_INT_TX)
     {
+
         /* XMIT done - clear interrupt */
         UART0_ICR_R |= UART_INT_TX;
-
+#ifdef OLD_UART
         // if there is an entry in the output queue, dequeue it
         if (dequeue(OUTPUT, &x))
             UART0_DR_R = x.character;   // output the character
         else // if the output queue is empty, then set the state to IDLE
             UART_state = IDLE;
+#endif
+#ifdef NEW_UART
+        // if the current message is not done
+        if (*(current_msg.dsp_msg))
+        {
+            UART0_DR_R = *(current_msg.dsp_msg);
+            current_msg.dsp_msg++;
+        }
+        else // if the current message is done xmit
+        {
+            //unblock the process
+            running[current_priority]->sp = get_PSP();
+            enqueue_pcb(current_msg.proc);
+            set_PSP(running[current_priority]->sp);
+            // if there is an entry in the UART list
+            if (dequeue_UART(&current_msg))
+                UART0_DR_R = *(current_msg.dsp_msg);
+            else // if the list is empty
+                UART_state = IDLE;
+        }
+#endif
     }
 }
 
@@ -168,6 +193,43 @@ void init_UART (void)
     UART0_Init();                               // Initialize UART0
     InterruptEnable(INT_VEC_UART0);             // Enable UART0 interrupts
     UART0_IntEnable(UART_INT_RX | UART_INT_TX); // Enable RCV & Xmit interrupts
+}
+
+/*******************************************************************************
+* Purpose:
+*             This function prints a string by putting a display request into
+*             the UART list if the UART is busy or putting it directly into
+*             the data register if it is idle.
+* Arguments:
+*             dsp_msg:  message to be displayed (string)
+* Return :
+*             SUCCESS   if enqueuing of the message is successful
+*             FAIL      if enqueuing is not successful
+*******************************************************************************/
+void kdisplay(char *dsp)
+{
+    struct UART_entry new_entry;
+
+    new_entry.dsp_msg = dsp;
+    new_entry.proc = running[current_priority];
+    if (UART_state == BUSY)
+    {
+        //enqueue the message into the UART list
+    }
+    else /*if UART is idle*/
+    {
+        UART_state = BUSY;
+        current_msg.dsp_msg = new_entry.dsp_msg;
+        current_msg.proc    = new_entry.proc;
+        UART0_DR_R = *dsp;
+        new_entry.dsp_msg++;
+    }
+    //block the process
+    running[current_priority]->sp = get_PSP();
+    dequeue_pcb();
+    set_PSP(running[current_priority]->sp);
+
+    return;
 }
 
 

@@ -160,6 +160,9 @@ else /* Subsequent SVCs */
         case RECV:
             kcaptr -> rtnvalue = krecv(kcaptr -> pkmsg);
             break;
+        case DISPLAY:
+            kdisplay(kcaptr -> pkmsg);
+            break;
         default:
             kcaptr -> rtnvalue = -1;
     }

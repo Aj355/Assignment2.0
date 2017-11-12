@@ -11,7 +11,12 @@
 #define MAX_MSG_QUEUE   32  /* Maximum number of mailboxes */
 #define MAX_MSG_SZ      64  /* Done for memory constraints */
 #define MAX_UART_REQ    32          // # UART requests in the queue
-
+#define UART_MAX_MSG    128
+#define MAX_ROW         24
+#define MAX_COLUMN      80
+#define ESC_SEQ_SZ      8
+#define NUL             0x00
+#define ESC             0x1b
 
 
 
@@ -44,11 +49,6 @@ int rtnvalue;  /* Result of operation (specific to each code) */
 void *pkmsg;   /* Address (32-bit value) of process message */
 };
 
-struct UART_request
-{
-    int   proc_id;
-    char *dsp_msg;
-};
 
 /* Function entry points */
 void pterm(void);
@@ -56,6 +56,7 @@ int pgetid(void);
 int pnice (int);
 int pbind(int);
 int psend(int dst_id,char *msg, int sz);
+int pdisplay_str(unsigned int col, unsigned int row, char *str);
 
 
 #endif /* PCOMMANDS_H_ */

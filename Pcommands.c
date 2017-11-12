@@ -145,3 +145,51 @@ int precv(int *src_id,char *msg, int maxsz)
     *src_id = recv_msg.id;          // sender ID stored in structure after pkcall
     return recv_msg.sz;
 }
+
+/*******************************************************************************
+* Purpose:
+*             This function prepares a UART request by filling up the escape
+*             sequence corresponding to the row and column number provided
+*             by the calling process then calling SVC which will handle
+*             printing the string.
+* Arguments:
+*             str:      pointer to the string to be printed
+*             col:      column number for the cursor
+*             row:      row number for the cursor
+* Return :
+*             SUCCESS   if the UART request has been sent successfully
+*             FAIL      if the request is not successful
+*******************************************************************************/
+int pdisplay_str(unsigned int col, unsigned int row, char *str)
+{
+    char  dsp_msg[UART_MAX_MSG];
+    int allowed_size = UART_MAX_MSG-1; // last char is NULL;
+    int i=0;
+
+    /*the column number and the row number must be within the acceptable range*/
+    if (col>MAX_COLUMN || row>MAX_ROW || !str)
+        return FAIL;
+    /*if column and row are acceptable, then do the following*/
+    /*fill the beginning of the string with the escape sequence*/
+    dsp_msg[0] = ESC;
+    dsp_msg[1] = '[';
+    dsp_msg[2] = row/10 + '0';
+    dsp_msg[3] = row%10 + '0';
+    dsp_msg[4] = ';';
+    dsp_msg[5] = col/10 + '0';
+    dsp_msg[6] = col%10 + '0';
+    dsp_msg[7] = 'H';
+    /*copy the message directly after*/
+    while(str[i])
+    {
+        dsp_msg[ESC_SEQ_SZ+i] = str[i];
+        i++;
+        if (i==allowed_size)
+            break;
+    }
+    dsp_msg[ESC_SEQ_SZ+i] = NUL;
+
+    pkcall(DISPLAY,dsp_msg);
+
+    return SUCCESS;
+}

@@ -15,7 +15,7 @@
 #include "Queue.h"
 
 struct mailbox mailboxes[MAX_MSG_QUEUE]; /* List of message queues */
-struct UART_requests UART_list;
+struct UART_reqs UART_list;
 
 /*******************************************************************************
 * Purpose:
@@ -183,17 +183,6 @@ int krecv(struct msg_request *req)
     }
 }
 
-/*******************************************************************************
-* Purpose:
-*             This function puts a UART request into the UART requests circular
-*             queue.
-* Arguments:
-*             NONE
-* Return :
-*             process id
-*******************************************************************************/
-int kdisplay(void)
-{return 0;}
 /*******************************************************************************
 * Purpose:
 *             get the process's id from the running PCCB

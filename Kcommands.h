@@ -37,11 +37,11 @@ struct UART_entry
     struct pcb  *proc;
     char        *dsp_msg;
 };
-struct UART_requests
+struct UART_reqs
 {
     int head;
     int tail;
-    struct UART_entry UART_Q[MAX_UART_REQ];
+    struct UART_entry queue[MAX_UART_REQ];
 };
 
 extern struct mailbox mailboxes[];
