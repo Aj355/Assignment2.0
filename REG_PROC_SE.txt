@@ -166,17 +166,11 @@ EXIT with number of bytes sent and sender id.
 ---------------------------------------------------------------------------
 Structured English: krecv
 ---------------------------------------------------------------------------
-IF the current process is not bound to a mailbox 
-	THEN EXIT with error code
+IF the current process is not bound to a mailbox
+	EXIT with error code
 ELSE
-	IF a message is found in the mailbox
-		THEN EXIT with message back to precv routine
-	ELSE
-		store address of process mcb in mailbox
-		Store current psp to pcb's sp
-		block running process by removing it from WTR queue
-		change current psp to next pcb's sp
-		
+	CALL pkcall routine with RECV code messsage and an mcb to store msg
+	EXIT with success code
 ENDIF
 
 ---------------------------------------------------------------------------
