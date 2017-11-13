@@ -24,9 +24,9 @@ void proc1 (void)
     int size;
     int src_id;
     char h[10];
-    pbind(1);
-    size = precv(&src_id,h,10);
-    pnice(2);
+    pdisplay_str(1,1,"proc1");
+    //pbind(1);
+    //size = precv(&src_id,h,10);
     while(1);
 
 }
@@ -34,8 +34,9 @@ void proc1 (void)
 void proc2 (void)
 {
     int size;
-    pbind(2);
-    size = psend(1,"hello",6);
+    pdisplay_str(1,2,"proc2");
+    //pbind(2);
+    //size = psend(1,"hello",6);
     while (1);
 
 }
