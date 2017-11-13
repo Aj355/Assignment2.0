@@ -102,14 +102,6 @@ void UART0_IntHandler(void)
 
         /* XMIT done - clear interrupt */
         UART0_ICR_R |= UART_INT_TX;
-#ifdef OLD_UART
-        // if there is an entry in the output queue, dequeue it
-        if (dequeue(OUTPUT, &x))
-            UART0_DR_R = x.character;   // output the character
-        else // if the output queue is empty, then set the state to IDLE
-            UART_state = IDLE;
-#endif
-#ifdef NEW_UART
         // if the current message is not done
         if (*(current_msg.dsp_msg))
         {
@@ -124,11 +116,13 @@ void UART0_IntHandler(void)
             set_PSP(running[current_priority]->sp);
             // if there is an entry in the UART list
             if (dequeue_UART(&current_msg))
+            {
                 UART0_DR_R = *(current_msg.dsp_msg);
+                current_msg.dsp_msg++;
+            }
             else // if the list is empty
                 UART_state = IDLE;
         }
-#endif
     }
 }
 
@@ -144,48 +138,6 @@ void InterruptMasterDisable (void)
     __asm(" cpsid   i");
 }
 
-/* This function takes a character and prints it
- * using the UART module
- * Arguments:
- *      prnt: The character to be printed
- * Returns:
- *      NONE
- */
-void print_char (char prnt)
-{
-    struct entry temp;  // temporary entry to hold information
-
-    if (UART_state == BUSY) //IF the UART_state is busy THEN
-    {
-        //Enqueue the character to be sent on the output queue
-        temp.character = prnt;
-        enqueue(OUTPUT, temp);
-        // no need to fill the type because it can only be UART
-        // (there is no SYSTICK for output)
-    }
-    else    // if the UART is IDLE
-    {
-        // set state to be busy and put the character to be sent in UART0 data register
-        UART_state = BUSY;
-        UART0_DR_R = prnt;
-    }
-}
-
-/* This function prints a string to the user using the UART
- * module by making use of the print_char function.
- * Arguments:
- *      str: string to be printed to the user
- * Returns:
- *      NONE
- */
-void print_str (char *str)
-{
-    while (*str)    // while it is not null
-    {
-        print_char(*str);   // print
-        str++;  // go to the next character
-    }
-}
 
 void init_UART (void)
 {
@@ -214,7 +166,7 @@ void kdisplay(char *dsp)
     new_entry.proc = running[current_priority];
     if (UART_state == BUSY)
     {
-        //enqueue the message into the UART list
+        enqueue_UART(new_entry);
     }
     else /*if UART is idle*/
     {
@@ -229,7 +181,4 @@ void kdisplay(char *dsp)
     dequeue_pcb();
     set_PSP(running[current_priority]->sp);
 
-    return;
 }
-
-

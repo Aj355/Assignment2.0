@@ -4,7 +4,6 @@
  *  Created on: Nov 8, 2017
  *      Author: AbdullahAlhadlaq
  */
-
 #ifndef KCOMMANDS_H_
 #define KCOMMANDS_H_
 
@@ -37,12 +36,6 @@ struct UART_entry
 {
     struct pcb  *proc;
     char        *dsp_msg;
-};
-struct UART_reqs
-{
-    int head;
-    int tail;
-    struct UART_entry queue[MAX_UART_REQ];
 };
 
 extern struct mailbox mailboxes[];
