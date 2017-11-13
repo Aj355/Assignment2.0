@@ -23,7 +23,7 @@
 /* */
 enum CODE_TYPE {TERMINATE, GETID, NICE, BIND, SEND, RECV, DISPLAY, SLEEP};
 
-enum TIME_SERVER_REQ {_TIME, _SLEEP}
+enum TIME_SERVER_REQ {_TIME, _SLEEP};
 
 /* Message control block */
 struct mcb

@@ -13,7 +13,7 @@ struct sleeping_proc *sleep_list;
 
 
 
-int enqueue_sleep(struct sleeping_proc *req)
+void enqueue_sleep(struct sleeping_proc *req)
 {
     struct sleeping_proc *entry;
     struct sleeping_proc *ptr;
@@ -82,7 +82,7 @@ void time_server (void)
         else // if message is from a process
         {
             // if it is a time request
-            if (tmp[0] == 1)
+            if (tmp[0] == _TIME)
             {
                 //send the global counter to the mailbox of the requesting process
                 sprintf(tmp, "%l", global_counter);
