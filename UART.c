@@ -205,7 +205,7 @@ void kdisplay(char *dsp)
     new_entry.proc = running[current_priority];
     if (UART_state == BUSY)
     {
-        enqueue_UART(new_entry);
+        enqueue_UART(&new_entry);
     }
     else /*if UART is idle*/
     {

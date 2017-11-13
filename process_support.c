@@ -86,8 +86,10 @@ int reg_proc( void (*func)(void), unsigned id, unsigned short priority)
     struct stack_frame *regs;
     struct pcb *ptr;
 
-    if (priority > HIGH_ || priority < LOW_)
+    if (priority > HIGH_ )
+    {
         return FAIL;
+    }
     /* allocate stack memory*/
     sp = (unsigned long *)malloc(STACKSIZE);
     /* account for space for the stack frame*/
