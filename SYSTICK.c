@@ -69,8 +69,6 @@ __asm(" cpsie   i");
 
 void SysTickHandler(void)
 {
-    struct entry temp;  // temporary to hold info
-
     // increment the time adjust counter
     t_adj_cntr ++;
 
@@ -83,8 +81,6 @@ void SysTickHandler(void)
         t_adj_cntr = 0;
 
         // enqueue the entry in the input queue
-        temp.type = SYSTICK;
-        //enqueue (INPUT, temp);
     }
 
     /* Signal that the PendSV handler is to be called on exit */

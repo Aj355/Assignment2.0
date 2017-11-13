@@ -136,15 +136,17 @@ int psend(int dst_id,char *msg, int sz)
 *             BYTE_NUM  the number of bytes copied to the receiver
 *             FAIL      if sending is unsuccessful
 *******************************************************************************/
-int precv(int *src_id,char *msg, int maxsz)
+int precv(int *src_id,char *msg, unsigned short maxsz)
 {
-    struct msg_request recv_msg;
-    recv_msg.msg = msg;
-    recv_msg.sz = maxsz;
-    if (pkcall(RECV,&recv_msg) == FAIL)
+    struct msg_request recv_msg;            /* */
+    if (msg == NULL || maxsz == 0)          /**/
         return FAIL;
-    *src_id = recv_msg.id;          // sender ID stored in structure after pkcall
-    return recv_msg.sz;
+    recv_msg.msg = msg;                     /* */
+    recv_msg.sz = maxsz;                    /* */
+    if (pkcall(RECV,&recv_msg) == FAIL)     /* */
+        return FAIL;
+    *src_id = recv_msg.id;                  /* src ID stored in req after pkcall */
+    return recv_msg.sz;                     /* msg sz stored in req after pkcall */
 }
 
 /*******************************************************************************
@@ -187,7 +189,7 @@ int pdisplay_str(unsigned int col, unsigned int row, char *str)
         return FAIL;
     /*if column and row are acceptable, then do the following*/
     /*fill the beginning of the string with the escape sequence*/
-    dsp_msg[0] = ESC;
+    dsp_msg[0] = '\e';
     dsp_msg[1] = '[';
     dsp_msg[2] = row/10 + '0';
     dsp_msg[3] = row%10 + '0';

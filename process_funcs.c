@@ -6,17 +6,8 @@
  */
 
 
-#include "UART.h"
 #include "Pcommands.h"
 
-
-
-
-void process (void)
-{
-    print_str("I am a process\n\r");
-    while(1);
-}
 
 
 void proc1 (void)

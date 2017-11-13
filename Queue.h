@@ -24,42 +24,13 @@
 #define FALSE   0
 #define TRUE    1
 
-/* two types of entries in a queue: either a character for
- * UART, or an entry signaling that one-tenth a second has
- * elapsed.
- */
-enum entry_type {UART, SYSTICK};
 
-/* an index for the type of queue (input or output) */
-enum Queue_Type {INPUT, OUTPUT};
-
-/* the structure of a queue entry. It is the same
- * for both input and output queues.
- */
-struct entry
-{
-    unsigned short type;        /* SYSTICK | UART */
-    unsigned char character;    /* if it is of type UART */
-};
-
-/* structure for a queue */
-struct queue
-{
-    unsigned short head;                // index to the top of the queue
-    unsigned short tail;                // index to the bottom of the queue
-    unsigned short counter;             // the current content of the queue
-    struct entry entries[MAX_ENTRIES];  // the nodes of the queue
-};
-
-/* external definition of the input and output queues
- * (contained in the array called queues)
- */
-extern struct queue queues[];   // contains input and output queues
 
 /* function prototypes */
-unsigned short enqueue (unsigned short queue_type, struct entry added_entry);
-unsigned short dequeue (unsigned short queue_type, struct entry *removed_entry);
 int enqueue_msg(struct msg_request *);
 int dequeue_msg(struct msg_request *);
+int enqueue_UART(struct UART_entry * req);
+int dequeue_UART(struct UART_entry *req);
+
 
 #endif /* QUEUE_H_ */
