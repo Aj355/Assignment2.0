@@ -94,7 +94,7 @@ void UART0_IntHandler(void)
         x.type = UART;
         x.character = UART0_DR_R;
         //enqueue the entry in the input queue for the control module
-        enqueue(INPUT, x);
+        //enqueue(INPUT, x);
     }
 
     if (UART0_MIS_R & UART_INT_TX)

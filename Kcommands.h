@@ -28,6 +28,7 @@ struct mailbox
     int cnt;                            /* */
     /* these elements are message info in event of process blocking */
     int  *src_id;
+    int  *buffer_size;
     int  sz;
     char *buffer_addr;
 };
@@ -53,4 +54,7 @@ void knice(int*);
 int kbind(int);
 int ksend(struct msg_request *req);
 int krecv(struct msg_request *req);
+void ksleep(void);
+void kdisplay(char *dsp);
+
 #endif /* KCOMMANDS_H_ */

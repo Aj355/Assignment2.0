@@ -158,10 +158,11 @@ int dequeue_msg(struct msg_request *msg)
     ptr = &mailboxes[running[current_priority]->mailbox_num];
     if (ptr->cnt > 0)                              // IF the queue is not empty
     {
-        msg->sz = ptr->msg_queue[ptr->head].sz;
-        msg->id = ptr->msg_queue[ptr->head].src_id;
+        msg->sz = (ptr->msg_queue[ptr->tail].sz > msg->sz) ? msg->sz : ptr->msg_queue[ptr->tail].sz;
+        msg->id = ptr->msg_queue[ptr->tail].src_id;
         for(i = 0; i<msg->sz ; i++)
-            msg->msg[i] = ptr->msg_queue[ptr->head].msg[i];
+            msg->msg[i] = ptr->msg_queue[ptr->tail].msg[i];
+        msg->msg[--i] = '\0';
         ptr->tail = (ptr->tail + 1) % MSG_PER_Q;
                                                                 // Increment tail to entry
         ptr->cnt--;                                // Decrement queue counter
