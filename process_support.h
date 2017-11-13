@@ -5,6 +5,20 @@
  *      Author: AbdullahAlhadlaq
  */
 
+/* -------------------------------------------------------------------------- *
+ * Author: Abdulrahman  Aljedaibi
+ * Author: Abdullah     Alhadlaq
+ * Course: Real time systems
+ * ECED 4402
+ * Date assigned :   26  Sept  2017
+ * Date created  :   24  Oct  2017
+ * Editing       :   15  Sept - Disable interrupt upon entry and enable upon
+ *                                  leaving
+ * Submission date : 15 Nov 2017
+ * File name : Queue.c
+ * Purpose: Implement a static circular queue in order to organize interrupts
+ *              According to their type (UART or SYSTICK)
+ * ------------------------------------------------------------------------- */
 #ifndef PROCESS_SUPPORT_H_
 #define PROCESS_SUPPORT_H_
 
@@ -67,14 +81,16 @@ struct pcb
     struct pcb *prev;
 };
 
-void set_LR(volatile unsigned long);
-unsigned long get_PSP();
-void set_PSP(volatile unsigned long);
+void set_LR  (volatile unsigned long);
+void set_PSP (volatile unsigned long);
+void set_MSP (volatile unsigned long);
+void assignR7(volatile unsigned long);
+
+unsigned long get_PSP(void);
 unsigned long get_MSP(void);
-void set_MSP(volatile unsigned long);
-unsigned long get_SP();
+unsigned long get_SP (void);
+
 int reg_proc( void (*func)(void), unsigned id, unsigned short priority);
-void assignR7(volatile unsigned long data);
 int enqueue_pcb(struct pcb*);
 void dequeue_pcb(void);
 
