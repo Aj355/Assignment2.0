@@ -1,6 +1,6 @@
-
 /* -------------------------------------------------------------------------- *
- * Author: Abdulrahman Aljedaibi and Abdullah alhadlaq
+ * Author: Abdulrahman  Aljedaibi
+ * Author: Abdullah     Alhadlaq
  * Course: Real time systems
  * ECED 4402
  * Date assigned :   07  Sept  2017

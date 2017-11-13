@@ -13,6 +13,7 @@
 #include "Pcommands.h"
 #include "process_support.h"
 #include "Queue.h"
+#include "UART.h"
 
 #define PENDSV_R        (*((volatile unsigned long *) 0xE000ED04))
 #define PENDSV_INVOKE   0x10000000
@@ -210,6 +211,42 @@ void ksleep(void)
 }
 
 
+
+/*******************************************************************************
+* Purpose:
+*             This function prints a string by putting a display request into
+*             the UART list if the UART is busy or putting it directly into
+*             the data register if it is idle.
+* Arguments:
+*             dsp_msg:  message to be displayed (string)
+* Return :
+*             SUCCESS   if enqueuing of the message is successful
+*             FAIL      if enqueuing is not successful
+*******************************************************************************/
+void kdisplay(char *dsp)
+{
+    struct UART_entry new_entry;
+    new_entry.dsp_msg = dsp;
+    new_entry.proc = running[current_priority];
+    if (UART_state == BUSY)
+    {
+        enqueue_UART(&new_entry);
+    }
+    else /*if UART is idle*/
+    {
+        UART_state = BUSY;
+        current_msg.dsp_msg = new_entry.dsp_msg;
+        current_msg.proc    = new_entry.proc;
+        UART0_DR_R = *dsp;
+        new_entry.dsp_msg++;
+    }
+
+    //block the process
+    running[current_priority]->sp = get_PSP();
+    dequeue_pcb();
+    set_PSP(running[current_priority]->sp);
+
+}
 /*******************************************************************************
 * Purpose:
 *             get the process's id from the running PCCB

@@ -109,16 +109,14 @@ int pbind(int num)
 *             BYTE_NUM  the number of bytes copied to the receiver
 *             FAIL      if sending is unsuccessful
 *******************************************************************************/
-int psend(int dst_id,char *msg, int sz)
+int psend(int dst_id,void *msg, unsigned short sz)
 {
-    struct msg_request req;
-
-    if (sz > MAX_MSG_SZ)
+    struct msg_request req;                 /* */
+    if (sz > MAX_MSG_SZ || msg == NULL)     /* */
         return FAIL;
-
-    req.id = dst_id;
-    req.msg = msg;
-    req.sz = sz;
+    req.id = dst_id;                        /* */
+    req.msg = (char *) msg;                 /* */
+    req.sz = sz;                            /* */
 
     return pkcall(SEND,&req);
 }
@@ -136,12 +134,12 @@ int psend(int dst_id,char *msg, int sz)
 *             BYTE_NUM  the number of bytes copied to the receiver
 *             FAIL      if sending is unsuccessful
 *******************************************************************************/
-int precv(int *src_id,char *msg, unsigned short maxsz)
+int precv(int *src_id,void *msg, unsigned short maxsz)
 {
     struct msg_request recv_msg;            /* */
-    if (msg == NULL || maxsz == 0)          /**/
+    if (msg == NULL || maxsz == 0)          /* */
         return FAIL;
-    recv_msg.msg = msg;                     /* */
+    recv_msg.msg = (char *)msg;             /* */
     recv_msg.sz = maxsz;                    /* */
     if (pkcall(RECV,&recv_msg) == FAIL)     /* */
         return FAIL;

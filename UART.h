@@ -90,8 +90,8 @@
 #define IDLE    0
 
 /* Globals */
-extern volatile int UART_state; /* BUSY|IDLE */
-
+extern volatile int UART_state;             /* BUSY|IDLE */
+extern struct UART_entry current_msg;       /* message currently being printed */
 /* function prototypes */
 void UART0_Init(void);
 void InterruptEnable(unsigned long InterruptIndex);

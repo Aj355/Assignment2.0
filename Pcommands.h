@@ -55,8 +55,8 @@ void pterm(void);
 int pgetid(void);
 int pnice (int);
 int pbind(int);
-int psend(int dst_id,char *msg, int sz);
-int precv(int *src_id,char *msg, unsigned short maxsz);
+int psend(int dst_id, void *msg, unsigned short sz);
+int precv(int *src_id,void *msg, unsigned short maxsz);
 void psleep(void);
 int pdisplay_str(unsigned int col, unsigned int row, char *str);
 
