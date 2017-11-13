@@ -17,13 +17,85 @@
 #include "process_support.h"
 
 /* an array of the queues: input and output */
+
+
+#include "Queue.h"
 struct queue queues[QUEUE_NUM];
 
 
+struct UART_queue UQ;
 struct UART_entry queue[MAX_UART_REQ];
 int head;
 int tail;
 volatile int cnt;     // Initialize both queue counters
+
+
+
+
+
+/* -------------------------------------------------------------------------- *
+ * Purpose: Insert an entry into the input or output queue.
+ * Parameters:
+ *                c = Queue type (OUTPUT  or INPUT)
+ *                s = Entry type (SYSTICK or UART )
+ *                data = Character to be stored in Queue (matters in UART)
+ * Returns: none
+ * -------------------------------------------------------------------------- */
+int enqueue_TS(struct UART_entry * req)
+{
+    int state;
+    InterruptMasterDisable();               // Disable all interrupt
+    if (UQ.cnt == MAX_UART_REQ)              // IF queue is full
+        state = FALSE;
+    else
+    {
+        state = TRUE;
+        UQ.queue[UQ.head].dsp_msg = req->dsp_msg;
+        UQ.queue[UQ.head].proc = req->proc;
+        // Increment head to next entry
+        UQ.head = (UQ.head + 1) % MAX_UART_REQ;
+        // Increment Queue entry counter
+        UQ.cnt++;
+    }
+    InterruptMasterEnable();                // Enable all interrupts
+    return state;
+}
+
+
+/* -------------------------------------------------------------------------- *
+ * Purpose: remove an element from an Input or Output queue
+ * Parameters:
+ *                c = Queue type (OUTPUT  or INPUT)
+ *                element = pointer desired entry to be removed from the queue
+ * Returns: none
+ * -------------------------------------------------------------------------- */
+int dequeue_TS(struct UART_entry *req)
+{
+    int state;
+    InterruptMasterDisable();                    // Disable all interrupt
+    if (UQ.cnt > 0)                            // IF the queue is not empty
+    {
+        state = TRUE;
+        req->dsp_msg = queue[UQ.tail].dsp_msg;
+        req->proc = queue[UQ.tail].proc;
+        UQ.tail = (UQ.tail + 1) % MAX_UART_REQ;        // Increment tail to entry
+        UQ.cnt--;                                   // Decrement queue counter
+    }
+    else
+        state = FALSE;
+    InterruptMasterEnable();                     // Enable all interrupts
+    return state;
+}
+
+
+
+
+
+
+
+
+
+
 
 /* -------------------------------------------------------------------------- *
  * Purpose: Insert an entry into the input or output queue.
@@ -37,17 +109,17 @@ int enqueue_UART(struct UART_entry * req)
 {
     int state;
     InterruptMasterDisable();               // Disable all interrupt
-    if (cnt == MAX_UART_REQ)              // IF queue is full
+    if (UQ.cnt == MAX_UART_REQ)              // IF queue is full
         state = FALSE;
     else
     {
         state = TRUE;
-        queue[head].dsp_msg = req->dsp_msg;
-        queue[head].proc = req->proc;
+        UQ.queue[UQ.head].dsp_msg = req->dsp_msg;
+        UQ.queue[UQ.head].proc = req->proc;
         // Increment head to next entry
-        head = (head + 1) % MAX_UART_REQ;
+        UQ.head = (UQ.head + 1) % MAX_UART_REQ;
         // Increment Queue entry counter
-        cnt++;
+        UQ.cnt++;
     }
     InterruptMasterEnable();                // Enable all interrupts
     return state;
@@ -64,13 +136,13 @@ int dequeue_UART(struct UART_entry *req)
 {
     int state;
     InterruptMasterDisable();                    // Disable all interrupt
-    if (ptr->cnt > 0)                            // IF the queue is not empty
+    if (UQ.cnt > 0)                            // IF the queue is not empty
     {
         state = TRUE;
-        req->dsp_msg = queue[head].dsp_msg;
-        req->proc = queue[head].proc;
-        tail = (tail + 1) % MAX_UART_REQ;        // Increment tail to entry
-        cnt--;                                   // Decrement queue counter
+        req->dsp_msg = UQ.queue[UQ.tail].dsp_msg;
+        req->proc = UQ.queue[UQ.tail].proc;
+        UQ.tail = (UQ.tail + 1) % MAX_UART_REQ;        // Increment tail to entry
+        UQ.cnt--;                                   // Decrement queue counter
     }
     else
         state = FALSE;

@@ -19,7 +19,6 @@
 
 
 struct mailbox mailboxes[MAX_MSG_QUEUE]; /* List of message queues */
-struct UART_reqs UART_list;
 
 /*******************************************************************************
 * Purpose:

@@ -147,6 +147,42 @@ void init_UART (void)
     UART0_IntEnable(UART_INT_RX | UART_INT_TX); // Enable RCV & Xmit interrupts
 }
 
+
+void print_char (char prnt)
+{
+    struct entry temp;  // temporary entry to hold information
+
+    if (UART_state == BUSY) //IF the UART_state is busy THEN
+    {
+        //Enqueue the character to be sent on the output queue
+        temp.character = prnt;
+        //enqueue(OUTPUT, temp);
+        // no need to fill the type because it can only be UART
+        // (there is no SYSTICK for output)
+    }
+    else    // if the UART is IDLE
+    {
+        // set state to be busy and put the character to be sent in UART0 data register
+        UART_state = BUSY;
+        UART0_DR_R = prnt;
+    }
+}
+
+/* This function prints a string to the user using the UART
+ * module by making use of the print_char function.
+ * Arguments:
+ *      str: string to be printed to the user
+ * Returns:
+ *      NONE
+ */
+void print_str (char *str)
+{
+    while (*str)    // while it is not null
+    {
+        print_char(*str);   // print
+        str++;  // go to the next character
+    }
+}
 /*******************************************************************************
 * Purpose:
 *             This function prints a string by putting a display request into

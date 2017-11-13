@@ -24,7 +24,7 @@ struct mailbox
     struct mcb msg_queue[MSG_PER_Q];    /* */
     int head;                           /* */
     int tail;                           /* */
-    int cnt;                            /* */
+    volatile int cnt;                            /* */
     /* these elements are message info in event of process blocking */
     int  *src_id;
     int  *buffer_size;
@@ -36,6 +36,15 @@ struct UART_entry
 {
     struct pcb  *proc;
     char        *dsp_msg;
+};
+
+
+struct UART_queue
+{
+    struct UART_entry queue[MAX_UART_REQ];
+    int head;
+    int tail;
+    volatile int cnt;     // Initialize both queue counters
 };
 
 extern struct mailbox mailboxes[];

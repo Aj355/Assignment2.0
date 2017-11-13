@@ -84,7 +84,7 @@ void SysTickHandler(void)
 
         // enqueue the entry in the input queue
         temp.type = SYSTICK;
-        enqueue (INPUT, temp);
+        //enqueue (INPUT, temp);
     }
 
     /* Signal that the PendSV handler is to be called on exit */
