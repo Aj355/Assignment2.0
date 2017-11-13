@@ -145,37 +145,3 @@ int dequeue_msg(struct msg_request *msg)
     return state;
 }
 
-int enqueue_sleep(struct sleeping_proc *req)
-{
-    struct sleeping_proc *entry;
-    struct sleeping_proc *ptr;
-
-    /* Construct entry */
-    InterruptMasterDisable();                    // Disable all interrupt
-    entry = (struct sleeping_proc *) malloc(sizeof(struct sleeping_proc));
-    InterruptMasterEnable();                     // Enable all interrupts
-    entry -> mailbox_num = req -> mailbox_num;
-    entry -> counter = req -> counter;
-
-    /* Add device to head of the queue */
-    if (sleep_list == NULL || /* if the queue is empty */
-        /* if it has the soonest status change time*/
-        entry -> counter < sleep_list -> counter)
-    {
-        entry -> next = sleep_list;
-        sleep_list = sleep_list;
-    }
-    else
-    {
-        ptr = sleep_list;
-        /* Traverse the list as long as list is not empty AND SC time is lower
-         than next entry OR priority is higher if time is equal */
-        while (ptr -> next != NULL && (entry -> counter > ptr -> next ->counter ))
-        {
-            ptr = ptr -> next;
-        }
-        /* add entry to after node ptr */
-        entry -> next = ptr -> next;
-        ptr -> next = entry;
-    }
-}
