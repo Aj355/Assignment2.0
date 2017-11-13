@@ -1,10 +1,3 @@
-/*
- * process_funcs.h
- *
- *  Created on: Oct 24, 2017
- *      Author: AbdullahAlhadlaq
- */
-
 /* -------------------------------------------------------------------------- *
  * Author: Abdulrahman  Aljedaibi
  * Author: Abdullah     Alhadlaq
