@@ -205,9 +205,26 @@ EXIT
 ---------------------------------------------------------------------------
 Structured English: time server
 ---------------------------------------------------------------------------
-Set
 
-EXIT
+Receive a message from the mailbox
+IF the message is from SYSTICK
+	THEN increment the global counter
+	IF counter of first entry in the UART list = global counter
+		THEN send a wake up message to the process
+		remove the entry from the sleeping list		
+	ENDIF
+ELSE
+	IF the message is a time request
+		THEN send the global counter to the mailbox of the requesting process
+	ELSE
+		extract the mailbox id and the sleeping duration from the received message
+		create a sleeping process entry
+		set counter element in sleeping process entry = requested time + global counter
+		set the mailbox id element = mailbox id of the sleeping process
+		enqueue the entry in the sleep list and place it according to counter value
+	ENDIF
+ENDIF   
+REPEAT
 
 ---------------------------------------------------------------------------
 Structured English: window manager
