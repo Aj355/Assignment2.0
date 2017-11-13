@@ -25,7 +25,6 @@
 #define TRUE    1
 
 
-
 /* function prototypes */
 int enqueue_msg(struct msg_request *);
 int dequeue_msg(struct msg_request *);
