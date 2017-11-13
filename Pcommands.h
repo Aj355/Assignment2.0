@@ -23,6 +23,14 @@
 /* */
 enum CODE_TYPE {TERMINATE, GETID, NICE, BIND, SEND, RECV, DISPLAY};
 
+enum TIME_CODE {_TIME, _SLEEP};
+
+struct time_req
+{
+    int code;       // TIME | SLEEP
+    int counter;    // number of syticks to sleep
+};
+
 
 
 /* Message control block */
@@ -57,6 +65,7 @@ int pnice (int);
 int pbind(int);
 int psend(int dst_id,char *msg, int sz);
 int pdisplay_str(unsigned int col, unsigned int row, char *str);
+int precv(int *src_id,char *msg, int maxsz);
 
 
 #endif /* PCOMMANDS_H_ */
