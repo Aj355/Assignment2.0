@@ -171,7 +171,8 @@ int enqueue_pcb (struct pcb *in_pcb)
         running[in_pcb->priority] = in_pcb;
         in_pcb -> next            = in_pcb;
         in_pcb -> prev            = in_pcb;
-    }else {
+    }else
+    {
         /* if the queue is not empty, add the current pcb to the end of the queue*/
         in_pcb -> next                      = running[in_pcb->priority];
         in_pcb -> prev                      = running[in_pcb->priority]->prev;
@@ -180,7 +181,9 @@ int enqueue_pcb (struct pcb *in_pcb)
     }
     /*if the inserted process has higher priority, then change the current priority*/
     if (current_priority < in_pcb->priority )
+    {
         current_priority = in_pcb->priority;
+    }
 
     pcb_counter++;
 
@@ -210,6 +213,7 @@ void dequeue_pcb(void)
     }
     else /* if it is the last process */
     {
+        running[current_priority] = NULL;
         /* decrease the priority until a process PCB is present */
         while (!running[--current_priority]);
     }

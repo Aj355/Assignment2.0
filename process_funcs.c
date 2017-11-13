@@ -9,6 +9,9 @@
 #include "UART.h"
 #include "Pcommands.h"
 
+
+
+
 void process (void)
 {
     print_str("I am a process\n\r");
@@ -18,15 +21,23 @@ void process (void)
 
 void proc1 (void)
 {
+    int size;
+    int src_id;
+    char h[10];
     pbind(1);
-    psend(1, "hello", 6);
-    while (1);
+    size = precv(&src_id,h,10);
+    pnice(2);
+    while(1);
+
 }
 
 void proc2 (void)
 {
+    int size;
     pbind(2);
-    while(1); //
+    size = psend(1,"hello",6);
+    while (1);
+
 }
 
 void idle (void)

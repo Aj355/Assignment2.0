@@ -21,7 +21,7 @@
 
 
 /* */
-enum CODE_TYPE {TERMINATE, GETID, NICE, BIND, SEND, RECV, DISPLAY};
+enum CODE_TYPE {TERMINATE, GETID, NICE, BIND, SEND, RECV, DISPLAY, SLEEP};
 
 enum TIME_CODE {_TIME, _SLEEP};
 
@@ -64,6 +64,8 @@ int pgetid(void);
 int pnice (int);
 int pbind(int);
 int psend(int dst_id,char *msg, int sz);
+int precv(int *src_id,char *msg, int maxsz);
+void psleep(void);
 int pdisplay_str(unsigned int col, unsigned int row, char *str);
 int precv(int *src_id,char *msg, int maxsz);
 

@@ -141,10 +141,26 @@ int precv(int *src_id,char *msg, int maxsz)
     struct msg_request recv_msg;
     recv_msg.msg = msg;
     recv_msg.sz = maxsz;
-    pkcall(RECV,&recv_msg);
+    if (pkcall(RECV,&recv_msg) == FAIL)
+        return FAIL;
     *src_id = recv_msg.id;          // sender ID stored in structure after pkcall
     return recv_msg.sz;
 }
+
+/*******************************************************************************
+* Purpose:
+*             This function context switches the current process out.
+* Arguments:
+*             NONE
+* Return :
+*             NONE
+*******************************************************************************/
+void psleep(void)
+{
+    pkcall(SLEEP,NULL);
+}
+
+
 
 /*******************************************************************************
 * Purpose:
@@ -180,12 +196,10 @@ int pdisplay_str(unsigned int col, unsigned int row, char *str)
     dsp_msg[6] = col%10 + '0';
     dsp_msg[7] = 'H';
     /*copy the message directly after*/
-    while(str[i])
+    while(str[i] && i < allowed_size)
     {
         dsp_msg[ESC_SEQ_SZ+i] = str[i];
         i++;
-        if (i==allowed_size)
-            break;
     }
     dsp_msg[ESC_SEQ_SZ+i] = NUL;
 

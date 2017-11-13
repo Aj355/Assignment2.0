@@ -4,7 +4,6 @@
  *  Created on: Nov 8, 2017
  *      Author: AbdullahAlhadlaq
  */
-
 #ifndef KCOMMANDS_H_
 #define KCOMMANDS_H_
 
@@ -28,6 +27,7 @@ struct mailbox
     int cnt;                            /* */
     /* these elements are message info in event of process blocking */
     int  *src_id;
+    int  *buffer_size;
     int  sz;
     char *buffer_addr;
 };
@@ -36,12 +36,6 @@ struct UART_entry
 {
     struct pcb  *proc;
     char        *dsp_msg;
-};
-struct UART_reqs
-{
-    int head;
-    int tail;
-    struct UART_entry queue[MAX_UART_REQ];
 };
 
 extern struct mailbox mailboxes[];
@@ -53,4 +47,7 @@ void knice(int*);
 int kbind(int);
 int ksend(struct msg_request *req);
 int krecv(struct msg_request *req);
+void ksleep(void);
+void kdisplay(char *dsp);
+
 #endif /* KCOMMANDS_H_ */

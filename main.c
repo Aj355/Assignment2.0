@@ -26,7 +26,7 @@ void main(void)
     /* reg_proc(process name, id, priority) */
     reg_proc(idle, 0, 0);
     reg_proc(proc1, 1, 3);
-    reg_proc(proc2, 2, 1);
+    reg_proc(proc2, 2, 2);
 
     /* run first process */
     SVC();

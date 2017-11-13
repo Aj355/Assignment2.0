@@ -14,6 +14,10 @@
 #include "process_support.h"
 #include "Queue.h"
 
+#define PENDSV_R        (*((volatile unsigned long *) 0xE000ED04))
+#define PENDSV_INVOKE   0x10000000
+
+
 struct mailbox mailboxes[MAX_MSG_QUEUE]; /* List of message queues */
 struct UART_reqs UART_list;
 
@@ -124,14 +128,21 @@ int ksend(struct msg_request *req)
          * whichever is smaller */
         max_sz = (dst_mail->sz > req->sz) ? req->sz : dst_mail->sz;
         /*so that the receiver knows the number of bytes copied*/
-        dst_mail -> sz = max_sz;
+        *(dst_mail ->buffer_size) = max_sz;
         /*THEN give source id to receiver*/
         *(dst_mail->src_id) = running[current_priority]->mailbox_num;
         /*copy message into receiver buffer until it's full or message is complete*/
         for (i=0; i<max_sz; i++)
             dst_mail->buffer_addr[i] = req->msg[i];
+
+        dst_mail->buffer_addr[--i] = '\0';
         /*Unblock receiver by inserting its PCB into WTR queue*/
+
+        running[current_priority]->sp = get_PSP();
         enqueue_pcb(dst_mail->process);
+
+        set_PSP(running[current_priority] -> sp);
+
         /*put a null in the buffer_addr in mailbox to signify that process is not blocked*/
         dst_mail->buffer_addr = NULL;
     }
@@ -168,20 +179,38 @@ int krecv(struct msg_request *req)
         {
             mailboxes[running[current_priority]->mailbox_num].src_id = &(req->id);
             mailboxes[running[current_priority]->mailbox_num].sz = req->sz;
+            mailboxes[running[current_priority]->mailbox_num].buffer_size = &(req->sz);
             mailboxes[running[current_priority]->mailbox_num].buffer_addr = req->msg;
             running[current_priority]->sp = get_PSP();
             dequeue_pcb();
             set_PSP(running[current_priority] -> sp);
-            return mailboxes[running[current_priority]->mailbox_num].sz;
+
+            (*req).sz = mailboxes[running[current_priority]->mailbox_num].sz;
         }
         else
         {
             dequeue_msg(req);
-            return req->sz;
         }
 
     }
+    return TRUE;
 }
+
+
+
+/*******************************************************************************
+* Purpose:
+*             This function context switches the current process out.
+* Arguments:
+*             NONE
+* Return :
+*             NONE
+*******************************************************************************/
+void ksleep(void)
+{
+    PENDSV_R |= PENDSV_INVOKE;
+}
+
 
 /*******************************************************************************
 * Purpose:

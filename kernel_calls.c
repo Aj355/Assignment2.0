@@ -163,6 +163,9 @@ else /* Subsequent SVCs */
         case DISPLAY:
             kdisplay(kcaptr -> pkmsg);
             break;
+        case SLEEP:
+            ksleep();
+            break;
         default:
             kcaptr -> rtnvalue = -1;
     }
