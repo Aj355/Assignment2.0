@@ -93,6 +93,7 @@ void UART0_IntHandler(void)
         // fill the entry with the incoming information
         x.type = UART;
         x.character = UART0_DR_R;
+
         //enqueue the entry in the input queue for the control module
         //enqueue(INPUT, x);
     }
@@ -111,9 +112,11 @@ void UART0_IntHandler(void)
         else // if the current message is done xmit
         {
             //unblock the process
+            save_registers();
             running[current_priority]->sp = get_PSP();
             enqueue_pcb(current_msg.proc);
             set_PSP(running[current_priority]->sp);
+            restore_registers();
             // if there is an entry in the UART list
             if (dequeue_UART(&current_msg))
             {
