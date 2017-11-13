@@ -15,6 +15,7 @@
 
 #include "SYSTICK.h"
 #include "Queue.h"
+#include "Pcommands.h"
 
 #define NVIC_INT_CTRL_R (*((volatile unsigned long *) 0xE000ED04))
 #define TRIGGER_PENDSV 0x10000000
@@ -69,6 +70,8 @@ __asm(" cpsie   i");
 
 void SysTickHandler(void)
 {
+    struct msg_request tmp;
+
     // increment the time adjust counter
     t_adj_cntr ++;
 
@@ -82,6 +85,11 @@ void SysTickHandler(void)
 
         // enqueue the entry in the input queue
     }
+
+    tmp.id = TIME_SERVER;
+    tmp.sz = 0;
+
+    ksend(&tmp);
 
     /* Signal that the PendSV handler is to be called on exit */
     NVIC_INT_CTRL_R |= TRIGGER_PENDSV;

@@ -8,7 +8,6 @@
 #ifndef SYSTEM_PROCS_H_
 #define SYSTEM_PROCS_H_
 
-#define SYSTICK_ID  100 // signals that incoming message is from systick
 
 struct sleeping_proc
 {
@@ -16,6 +15,9 @@ struct sleeping_proc
     unsigned long counter;      // number of systicks asleep
     struct sleeping_proc *next;
 };
+
+void enqueue_sleep(struct sleeping_proc *req);
+void time_server (void);
 
 
 #endif /* SYSTEM_PROCS_H_ */

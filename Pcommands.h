@@ -17,6 +17,7 @@
 #define ESC_SEQ_SZ      8
 #define NUL             0x00
 #define ESC             0x1b
+#define TIME_SERVER     0
 
 
 
@@ -49,6 +50,11 @@ int rtnvalue;  /* Result of operation (specific to each code) */
 void *pkmsg;   /* Address (32-bit value) of process message */
 };
 
+struct time_req
+{
+    int code;  /* TIME | SLEEP */
+    unsigned long counter; /* duration of sleep in systicks */
+};
 
 /* Function entry points */
 void pterm(void);

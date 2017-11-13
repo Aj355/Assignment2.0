@@ -17,7 +17,6 @@
 
 #define PENDSV_R        (*((volatile unsigned long *) 0xE000ED04))
 #define PENDSV_INVOKE   0x10000000
-#define SYSTICK         -1
 
 struct mailbox mailboxes[MAX_MSG_QUEUE]; /* List of message queues */
 
@@ -116,7 +115,7 @@ int ksend(struct msg_request *req)
     struct mailbox *dst_mail = &mailboxes[req->id];
     int max_sz = req->sz;       /*maximum size to be copied*/
     /*IF sender does not own a mailbox OR destination mailbox not found*/
-    if (req ->id != SYSTICK && (running[current_priority]->mailbox_num == UNBOUND_Q ||
+    if (req ->id != TIME_SERVER && (running[current_priority]->mailbox_num == UNBOUND_Q ||
             dst_mail->process == NULL))
         /*THEN EXIT with error code*/
         return FAIL;

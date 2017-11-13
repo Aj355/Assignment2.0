@@ -5,7 +5,7 @@
 
 void proc1 (void)
 {
-    int size;
+    //int size;
     pbind(1);
     psleep();
     psend(4,"HELLO",6);
@@ -31,7 +31,7 @@ void proc3 (void)
 void proc4 (void)
 {
     char h[10];
-    int size;
+    volatile int size;
     int src_id;
     pbind(4);
     psleep();

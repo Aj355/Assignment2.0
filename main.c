@@ -9,6 +9,7 @@
 #include "process_funcs.h"
 #include "kernel_calls.h"
 #include "Pcommands.h"
+#include "system_procs.h"
 
 #define SVC()   __asm(" SVC #0")
 
@@ -25,10 +26,11 @@ void main(void)
     //init_display ();
     /* reg_proc(process name, id, priority) */
     reg_proc(idle, 0, 0);
-    reg_proc(proc1, 1, 3);
-    reg_proc(proc2, 2, 2);
-    reg_proc(proc3, 3, 1);
-    reg_proc(proc4, 4, 3);
+    reg_proc(time_server, 1, 3);
+    reg_proc(proc1, 2, 3);
+    reg_proc(proc2, 3, 2);
+    reg_proc(proc3, 4, 1);
+    reg_proc(proc4, 5, 3);
 
 
     /* run first process */
