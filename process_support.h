@@ -92,7 +92,7 @@ unsigned long get_SP (void);
 
 int reg_proc( void (*func)(void), unsigned id, unsigned short priority);
 int enqueue_pcb(struct pcb*);
-void dequeue_pcb(void);
+void dequeue_running_pcb(void);
 
 /* externals */
 extern struct pcb  *running[];

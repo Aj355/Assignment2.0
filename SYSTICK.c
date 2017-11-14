@@ -31,7 +31,7 @@
 #include "Pcommands.h"
 
 #define NVIC_INT_CTRL_R (*((volatile unsigned long *) 0xE000ED04))
-#define TRIGGER_PENDSV 0x10000000
+#define TRIGGER_PENDSV	0x10000000
 
 /* This an array used to adjust for time drifting
  * an average of 102.4 ticks is needed to generate
@@ -97,15 +97,17 @@ void SysTickHandler(void)
         t_adj_cntr = 0;
 
         // enqueue the entry in the input queue
+
+        tmp.dst_id = TIME_SERVER;
+        tmp.sz = 0;
+        tmp.src_id = 0;
+        ksend(&tmp);
+
+        /* Signal that the PendSV handler is to be called on exit */
+        NVIC_INT_CTRL_R |= TRIGGER_PENDSV;
     }
 
-    tmp.id = TIME_SERVER;
-    tmp.sz = 0;
 
-    ksend(&tmp);
-
-    /* Signal that the PendSV handler is to be called on exit */
-    NVIC_INT_CTRL_R |= TRIGGER_PENDSV;
 }
 
 void init_systick (void)

@@ -1,0 +1,37 @@
+written by: 	Abdullah 	Alhadlaq		B00623068
+		Abdulrahman 	Aljedaibi		B00656986
+
+Purpose: This test is written to see how the kernel will handle get ID command 
+		The result is displayed to the screen using UART display command
+
+Date: 10 Nov 2017
+
+Setup: The following processes are used as input to the kernel system:
+
+    void proc1 (void)
+{
+    
+    char ID[2];
+    ID[0] = pgetid() + '0';
+    ID[1] = '\0';
+    pdisplay_str(1,1,ID);
+    while(1);
+}
+
+
+
+Steps:
+	1- write process code in specified file
+	2- register processes in registration list
+	3- configure UART terminal to see output
+	4- Compile program
+	5- Run
+
+Expected output:
+The first line in the UART terminal should display 5 since proc1 is the 
+first user (and only) user process to be registered. process IDs 0 to 4 are
+reserved for system (kernel) use.
+
+
+Result:
+Success

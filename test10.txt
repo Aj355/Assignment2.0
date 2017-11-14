@@ -1,0 +1,26 @@
+written by: 	Abdullah 	Alhadlaq		B00623068
+		Abdulrahman 	Aljedaibi		B00656986
+
+Purpose: This test is written to see how the kernel will handle time server
+		requests where a process requests to sleep a certain amount 
+		of time
+
+Date: 10 Nov 2017
+
+Setup: The following processes are used as input to the kernel system:
+
+
+Steps:
+	1- write process code in specified file
+	2- register processes in registration list
+	3- configure UART terminal to see output
+	4- Compile program
+	5- Run
+
+Expected output:
+
+
+
+
+Result:
+Success

@@ -31,6 +31,10 @@ struct sleeping_proc
 
 void enqueue_sleep(struct sleeping_proc *req);
 void time_server (void);
+void idle (void);
+void reserved1 (void);
+void reserved2 (void);
+void reserved3 (void);
 
 
 #endif /* SYSTEM_PROCS_H_ */

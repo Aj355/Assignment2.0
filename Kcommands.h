@@ -1,9 +1,3 @@
-/*
- * Kcommands.h
- *
- *  Created on: Nov 8, 2017
- *      Author: AbdullahAlhadlaq
- */
 
 /* -------------------------------------------------------------------------- *
  * Author: Abdulrahman  Aljedaibi
@@ -11,11 +5,11 @@
  * Course: Real time systems
  * ECED 4402
  * Date assigned :   26  Sept  2017
- * Date created  :   24  Oct  2017
+ * Date created  :    8  Nov   2017
  * Editing       :   15  Sept - Disable interrupt upon entry and enable upon
  *                                  leaving
  * Submission date : 15 Nov 2017
- * File name : Queue.c
+ * File name : Kcommands.h
  * Purpose: Implement a static circular queue in order to organize interrupts
  *              According to their type (UART or SYSTICK)
  * ------------------------------------------------------------------------- */
@@ -35,17 +29,17 @@
 /* Message queue */
 struct mailbox
 {
-    struct pcb *process;                /* */
-    struct mcb msg_queue[MSG_PER_Q];    /* */
-    int head;                           /* */
-    int tail;                           /* */
-    volatile int cnt;                   /* */
+    struct pcb *process;                /* store PCB if a process is blocked */
+    struct mcb msg_queue[MSG_PER_Q];    /* circular queue of msgs in mailbox */
+    int head;                           /* first message in the queue        */
+    int tail;                           /* last  message in the queue        */
+    volatile int cnt;                   /* number of messages in the queue   */
 
     /* these elements are message info in event of process blocking */
-    int  *src_id;                       /* */
-    int  *buffer_size;                  /* */
-    int  sz;                            /* */
-    char *buffer_addr;
+    char *buffer_addr;                  /* Address of process's buffer       */
+    int  *buffer_size;                  /* Size of process buffer            */
+    int  *src_id;                       /* slot to store sender ID           */
+    int  sz;                            /* Actual size of the message        */
 };
 
 struct UART_entry
@@ -65,7 +59,12 @@ struct UART_queue
 
 extern struct mailbox mailboxes[];
 
-/* function prototypes */
+/* function prototypes  */
+void init_kernel(void);
+
+void SVCall(void);
+void PendSV(void);
+
 int kgetid(void);
 void kterm(void);
 void knice(int*);

@@ -1,0 +1,51 @@
+written by: 	Abdullah 	Alhadlaq		B00623068
+		Abdulrahman 	Aljedaibi		B00656986
+
+Purpose: This test is written to see how the kernel will handle the messaging system
+by sending a message to a process that is not actively receiving a message. The reciever
+buffer is larger than the sender.
+
+Date: 10 Nov 2017
+
+Setup: The following processes are used as input to the kernel system:
+void proc1 (void)
+{
+    pbind(1);
+    pnice(2);
+    psend(2,"Hello", 6);
+    while(1);
+}
+
+void proc2 (void)
+{
+    int src_id,size;
+    char x[10];
+    char p[10] = "proc = x";
+    char s[10] = "size = x";
+    pbind(2);
+    pnice(2);
+    size = precv(&src_id,x,10);
+    p[7] = src_id + '0';
+    s[7] = size   + '0';
+    pdisplay_str(1,1,p);
+    pdisplay_str(1,2,s);
+    pdisplay_str(1,3,x);
+    while (1);
+}
+Steps:
+	1- write process code in specified file
+	2- register processes in registration list
+	3- configure UART terminal to see output
+	4- Compile program
+	5- Run
+
+Expected output:
+
+The first three lines in the UART terminal are going to look like:
+proc = 1
+size = 6
+Hello
+
+
+Result:
+Success

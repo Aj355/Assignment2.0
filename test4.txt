@@ -1,0 +1,44 @@
+written by: 	Abdullah 	Alhadlaq		B00623068
+		Abdulrahman 	Aljedaibi		B00656986
+
+Purpose: This test is written to see how the kernel will handle pnice command which
+		changes the priority of the calling process to the specified priority.
+
+Date: 10 Nov 2017
+
+Setup: The following processes are used as input to the kernel system:
+
+void proc1 (void)
+{
+    pdisplay_str(1,1,"I am proc 1, my priority is high");
+    pnice(2);
+    pdisplay_str(1,3,"I am proc 1, my priority is medium");
+    while (1);
+}
+
+void proc2 (void)
+{
+    pdisplay_str(1,2,"I am proc 2, my priority is high");
+    pnice(2);
+    pdisplay_str(1,4,"I am proc 2, my priority is medium");
+    while (1);
+}
+
+
+Steps:
+	1- write process code in specified file
+	2- register processes in registration list
+	3- configure UART terminal to see output
+	4- Compile program
+	5- Run
+
+Expected output:
+The first four lines in the UART terminal are going to look like:
+I am proc 1, my priority is high
+I am proc 2, my priority is high
+I am proc 1, my priority is medium
+I am proc 2, my priority is medium
+
+
+Result:
+Success

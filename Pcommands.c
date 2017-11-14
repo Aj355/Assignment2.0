@@ -1,24 +1,17 @@
-/*
- * Pcommands.c
- *
- *  Created on: Nov 8, 2017
- *      Author: AbdullahAlhadlaq
- */
-
 /* -------------------------------------------------------------------------- *
  * Author: Abdulrahman  Aljedaibi
  * Author: Abdullah     Alhadlaq
  * Course: Real time systems
  * ECED 4402
  * Date assigned :   26  Sept  2017
- * Date created  :   24  Oct  2017
+ * Date created  :    8  Nov  2017
  * Editing       :   15  Sept - Disable interrupt upon entry and enable upon
  *                                  leaving
  * Submission date : 15 Nov 2017
  * File name : Queue.c
  * Purpose: Implement a static circular queue in order to organize interrupts
  *              According to their type (UART or SYSTICK)
- * ------------------------------------------------------------------------- */
+ * -------------------------------------------------------------------------- */
 #include <stdio.h>
 #include "Pcommands.h"
 #include "process_support.h"
@@ -57,7 +50,7 @@ return arglist . rtnvalue;
 *******************************************************************************/
 void pterm(void)
 {
-    pkcall(TERMINATE, NULL);
+	pkcall(TERMINATE, NULL);   /* Call PKCALL routine with TERMINATE code msg */
 }
 
 /*******************************************************************************
@@ -67,12 +60,11 @@ void pterm(void)
 * Arguments:
 *             NONE
 * Return :
-*             process id
+*             process id (PID)
 *******************************************************************************/
 int pgetid(void)
 {
-    /* the id should be returned by pkcall */
-    return pkcall(GETID, NULL);
+    return pkcall(GETID, NULL);     /* PID is returned by pkcall */
 }
 
 /*******************************************************************************
@@ -129,7 +121,7 @@ int psend(int dst_id,void *msg, unsigned short sz)
     struct msg_request req;                 /* */
     if (sz > MAX_MSG_SZ || msg == NULL)     /* */
         return FAIL;
-    req.id = dst_id;                        /* */
+    req.dst_id = dst_id;                        /* */
     req.msg = (char *) msg;                 /* */
     req.sz = sz;                            /* */
 
@@ -158,7 +150,7 @@ int precv(int *src_id,void *msg, unsigned short maxsz)
     recv_msg.sz = maxsz;                    /* */
     if (pkcall(RECV,&recv_msg) == FAIL)     /* */
         return FAIL;
-    *src_id = recv_msg.id;                  /* src ID stored in req after pkcall */
+    *src_id = recv_msg.src_id;                  /* src ID stored in req after pkcall */
     return recv_msg.sz;                     /* msg sz stored in req after pkcall */
 }
 
@@ -176,6 +168,45 @@ void psleep(void)
 }
 
 
+/*******************************************************************************
+* Purpose:
+*             This function context switches the current process out.
+* Arguments:
+*             duration: multiples of a tenth of a second
+* Return :
+*             NONE
+*******************************************************************************/
+
+void sleep(int duration)
+{
+    struct time_req time;
+    int src_id=0;
+    time.counter = duration;
+    time.code = _SLEEP;
+    psend(TIME_SERVER, &time, sizeof(struct time_req));
+    precv(&src_id,&src_id,src_id);
+}
+
+
+/*******************************************************************************
+* Purpose:
+*             This function context switches the current process out.
+* Arguments:
+*             duration: multiples of a tenth of a second
+* Return :
+*             NONE
+*******************************************************************************/
+
+unsigned long get_time(void)
+{
+    struct time_req time;
+    int src_id;
+    time.counter = 0;
+    time.code = _TIME;
+    psend(TIME_SERVER, &time, sizeof(struct time_req));
+    precv(&src_id,&time.counter,src_id);
+    return time.counter;
+}
 
 /*******************************************************************************
 * Purpose:
@@ -191,6 +222,7 @@ void psleep(void)
 *             SUCCESS   if the UART request has been sent successfully
 *             FAIL      if the request is not successful
 *******************************************************************************/
+
 int pdisplay_str(unsigned int col, unsigned int row, char *str)
 {
     char  dsp_msg[UART_MAX_MSG];

@@ -22,6 +22,10 @@
 #include <stdlib.h>
 #include "Pcommands.h"
 #include "system_procs.h"
+#include "system_requests.h"
+
+
+#define TIME_SERVER_PID_QID		0	/* Queue ID and Process ID of the time server */
 
 struct sleeping_proc *sleep_list;
 
@@ -113,6 +117,12 @@ void time_server (void)
         }
     }
 
+}
 
 
+
+
+void idle (void)
+{
+    while (1);
 }

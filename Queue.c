@@ -17,14 +17,88 @@
 #include "UART.h"
 #include "Kcommands.h"
 #include "process_support.h"
-
-
-
 #include "Queue.h"
 
 
 struct UART_queue UQ;
 
+
+/*******************************************************************************
+* Purpose:
+*             This process inserts a PCB into its corresponding priority
+*             WTR queue and adjusts the current_priority global variable
+*             if needed.
+* Arguments:
+*             in_pcb:   process control block to be inserted
+* Return :
+*             SUCCESS   if successful enqueuing of the PCB occurs
+*             FAIL      if the WTR queue is full
+*******************************************************************************/
+int enqueue_pcb(struct pcb *in_pcb)
+{
+	/*if the number of processes exceeds the allowable amount*/
+	if (pcb_counter == MAX_PROCESS)
+		/*exit with error code*/
+		return FAIL;
+	/*else if the number of messages does not exceed the maximum*/
+	/*Connect PCB to the end of the priority queue*/
+	if (running[in_pcb->priority] == NULL)
+	{
+		/* if the queue is empty, let the priority queue pointer point at this pcb.
+		* Make the next and previous pointer point to the same pcb (for circular queue)
+		*/
+		running[in_pcb->priority] = in_pcb;
+		in_pcb->next = in_pcb;
+		in_pcb->prev = in_pcb;
+	}
+	else
+	{
+		/* if the queue is not empty, add the current pcb to the end of the queue*/
+		in_pcb->next = running[in_pcb->priority];
+		in_pcb->prev = running[in_pcb->priority]->prev;
+		running[in_pcb->priority]->prev = in_pcb;
+		in_pcb->prev->next = in_pcb;
+	}
+	/*if the inserted process has higher priority, then change the current priority*/
+	if (current_priority < in_pcb->priority)
+	{
+		current_priority = in_pcb->priority;
+	}
+
+	pcb_counter++;
+
+	return SUCCESS;
+}
+
+/*******************************************************************************
+* Purpose:
+*             This process removes a PCB from its corresponding priority
+*             WTR queue and adjusts the current_priority global variable
+*             if needed. This function does not free the PCB.
+* Arguments:
+*             NONE (only dequeues the running processes pcb)
+* Return :
+*             NONE
+*******************************************************************************/
+void dequeue_running_pcb(void)
+{
+	/* if the running process is not the last one in the current priority WTR queue */
+	if (running[current_priority] != running[current_priority]->next)
+	{
+		/* remove the running process PCB from the WTR queue */
+		running[current_priority]->prev->next = running[current_priority]->next;
+		running[current_priority]->next->prev = running[current_priority]->prev;
+		/* make the next process the running process */
+		running[current_priority] = running[current_priority]->next;
+	}
+	else /* if it is the last process */
+	{
+		running[current_priority] = NULL;
+		/* decrease the priority until a process PCB is present */
+		while (!running[--current_priority]);
+	}
+	pcb_counter--;
+}
 /* -------------------------------------------------------------------------- *
  * Purpose: Insert an entry into the input or output queue.
  * Parameters:
@@ -93,7 +167,7 @@ int enqueue_msg(struct msg_request * msg)
     int i;
     struct mailbox *ptr;
     InterruptMasterDisable();               // Disable all interrupt
-    ptr = &mailboxes[msg->id];
+    ptr = &mailboxes[msg->dst_id];
     if (ptr->cnt == MSG_PER_Q) // IF queue is full
         state = FALSE;
     else
@@ -131,7 +205,7 @@ int dequeue_msg(struct msg_request *msg)
     if (ptr->cnt > 0)                              // IF the queue is not empty
     {
         msg->sz = (ptr->msg_queue[ptr->tail].sz > msg->sz) ? msg->sz : ptr->msg_queue[ptr->tail].sz;
-        msg->id = ptr->msg_queue[ptr->tail].src_id;
+        msg->src_id = ptr->msg_queue[ptr->tail].src_id;
         for(i = 0; i<msg->sz ; i++)
             msg->msg[i] = ptr->msg_queue[ptr->tail].msg[i];
         msg->msg[--i] = '\0';

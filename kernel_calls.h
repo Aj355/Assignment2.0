@@ -26,7 +26,7 @@
 
 /* function prototypes  */
 void init_kernel (void);
-void SVCHandler(struct stack_frame *argptr);
+//void SVCHandler(struct stack_frame *argptr);
 void SVCall(void);
 void PendSV (void);
 

@@ -1,13 +1,3 @@
-/*
- * Kernel code: Supervisor call (SVC) handler example
- * ECED 4402
- *
- * 04 Oct 2017 - Comments in SVCHandler()'s "second call"
- * 11 Mar 2013 - Handle passing argument to kernel by register
- * 05 Mar 2013 - Fix first SVC call to access PSP correctly
- *             - Updated comments
- * 20 Feb 2012 - First version
- */
 
 /* -------------------------------------------------------------------------- *
  * Author: Abdulrahman  Aljedaibi
@@ -25,14 +15,7 @@
  * Acknowledgment: This code is based on the source code provided in class
  * ------------------------------------------------------------------------- */
 
-#include <stdio.h>
-#include "SYSTICK.h"
-#include "UART.h"
-#include "Queue.h"
-#include "process_support.h"
-#include "kernel_calls.h"
-#include "Pcommands.h"
-#include "Kcommands.h"
+
 
 #define NVIC_SYS_PRI3_R (*((volatile unsigned long *) 0xE000ED20))
 #define PENDSV_LOWEST_PRIORITY 0x00E00000

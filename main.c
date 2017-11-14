@@ -13,14 +13,19 @@
  *              According to their type (UART or SYSTICK)
  * ------------------------------------------------------------------------- */
 
+#include<stdio.h>
 #include "UART.h"
 #include "process_support.h"
 #include "process_funcs.h"
 #include "kernel_calls.h"
 #include "Pcommands.h"
 #include "system_procs.h"
+#include "system_requests.h"
+
 
 #define SVC()   __asm(" SVC #0")
+#define SYS_PROC_NUM    5
+
 
 void init_display ()
 {
@@ -34,12 +39,15 @@ void main(void)
     init_kernel();
     //init_display ();
     /* reg_proc(process name, id, priority) */
-    reg_proc(idle, 0, 0);
-    reg_proc(time_server, 1, 3);
-    reg_proc(proc1, 2, 3);
-    reg_proc(proc2, 3, 2);
-    reg_proc(proc3, 4, 1);
-    reg_proc(proc4, 5, 3);
+    int i;
+    for (i = 0; i < 2/* sizeof(processes)/sizeof(processes[0]) */; i++)
+    {
+        reg_proc(processes[i].func, i+SYS_PROC_NUM, processes[i].priority);
+    }
+    //reg_proc(proc1, 2, 3);
+    //reg_proc(proc2, 3, 3);
+    //reg_proc(proc3, 4, 1);
+    //reg_proc(proc4, 5, 3);
 
 
     /* run first process */

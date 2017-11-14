@@ -1,0 +1,38 @@
+written by: 	Abdullah 	Alhadlaq		B00623068
+		Abdulrahman 	Aljedaibi		B00656986
+
+Purpose: This test is written to see how the kernel will handle termination of processes
+		by running a high priority process, terminate it, and then run a lower 
+		priority process
+
+Date: 10 Nov 2017
+
+Setup: The following processes are used as input to the kernel system:
+
+void proc1 (void)
+{
+    pdisplay_str(1,1,"I am process 1, my priority is high, and I am terminating now");
+}
+
+void proc2 (void)
+{
+    pdisplay_str(1,2,"I am process 2.");
+    while (1);
+}
+
+
+Steps:
+	1- write process code in specified file
+	2- register processes in registration list
+	3- configure UART terminal to see output
+	4- Compile program
+	5- Run
+
+Expected output:
+The first two lines in the UART terminal are going to look like:
+I am process 1, my priority is high, and I am terminating now
+I am process 2.
+
+
+Result:
+Success

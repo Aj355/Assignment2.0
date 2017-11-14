@@ -1,9 +1,4 @@
-/*
- * Pcommands.h
- *
- *  Created on: Nov 8, 2017
- *      Author: AbdullahAlhadlaq
- */
+
 /* -------------------------------------------------------------------------- *
  * Author: Abdulrahman  Aljedaibi
  * Author: Abdullah     Alhadlaq
@@ -21,63 +16,55 @@
 #ifndef PCOMMANDS_H_
 #define PCOMMANDS_H_
 
-#define MAX_MSG_QUEUE   32  /* Maximum number of mailboxes */
-#define MAX_MSG_SZ      64  /* Done for memory constraints */
-#define MAX_UART_REQ    32          // # UART requests in the queue
-#define UART_MAX_MSG    128
-#define MAX_ROW         24
-#define MAX_COLUMN      80
-#define ESC_SEQ_SZ      8
-#define NUL             0x00
-#define ESC             0x1b
-#define TIME_SERVER     0
+#define MAX_MSG_QUEUE   32    /* Maximum number of mailboxes                 */
+#define MAX_MSG_SZ      64    /* Done for memory constraints				 */
+#define MAX_UART_REQ    32    /* Number of UART requests in the queue		 */
+#define UART_MAX_MSG    128   /* Maximum number of bytes in a UART message   */
+#define MAX_ROW         24    /* Maximum number of rows in a window		     */
+#define MAX_COLUMN      80    /* Maximum number of columns in a window       */
+#define ESC_SEQ_SZ      8	  /* Number of bytes of cursor position sequence */
+#define NUL             '\0'  /* NUL character to terminate strings			 */
+#define ESC             '\e'  /* Escape character to begin an escape sequence*/
+#define TIME_SERVER     0     /* Time server process ID and mailbox number   */
 
 
 
-/* */
+/* Kernel command codes */
 enum CODE_TYPE {TERMINATE, GETID, NICE, BIND, SEND, RECV, DISPLAY, SLEEP};
 
+/* Time server requests */
 enum TIME_SERVER_REQ {_TIME, _SLEEP};
 
-/* Message control block */
+/* Message control block as stored in mailbox */
 struct mcb
 {
-    int  src_id;                 /* */
-    char msg[MAX_MSG_SZ];        /* */
-    int  sz;                     /* */
+    int  src_id;                 /* Source id */
+    char msg[MAX_MSG_SZ];        /* Store a message if dest is not recieving */
+    int  sz;                     /* Size of the message inside the buffer    */
 };
 
-
+/* Message request block used by both send and recieve */
 struct msg_request
 {
-    int  id;                 /* dst or src */
-    int  sz;
-    char *msg;
+    int  src_id;                  /* Source mailbox ID */
+	int  dst_id;				  /* Destination mailbox ID */
+    int  sz;					  /* Message byte size */
+    char *msg;					  /* Pointer to the message */
 };
 
-/* */
+/* arguments to pass to the kernel during a kernel request */
 struct krequest
 {
-int code;      /* Unique (and defined) kernel code */
-int rtnvalue;  /* Result of operation (specific to each code) */
-void *pkmsg;   /* Address (32-bit value) of process message */
+enum CODE_TYPE code;    /* Unique (and defined) kernel code		       */
+int rtnvalue;			/* Result of operation (specific to each code) */
+void *pkmsg;		    /* Address (32-bit value) of process message   */
 };
 
 struct time_req
 {
-    int code;  /* TIME | SLEEP */
-    unsigned long counter; /* duration of sleep in systicks */
+	enum TIME_SERVER_REQ code;  /* TIME | SLEEP */
+    unsigned long counter;		/* duration of sleep in systicks */
 };
-
-/* Function entry points */
-void pterm(void);
-int pgetid(void);
-int pnice (int);
-int pbind(int);
-int psend(int dst_id, void *msg, unsigned short sz);
-int precv(int *src_id,void *msg, unsigned short maxsz);
-void psleep(void);
-int pdisplay_str(unsigned int col, unsigned int row, char *str);
 
 
 #endif /* PCOMMANDS_H_ */
