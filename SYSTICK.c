@@ -100,7 +100,7 @@ void SysTickHandler(void)
 
         tmp.dst_id = TIME_SERVER;
         tmp.sz = 0;
-        tmp.src_id = 0;
+        tmp.src_id = -1;
         ksend(&tmp);
 
         /* Signal that the PendSV handler is to be called on exit */

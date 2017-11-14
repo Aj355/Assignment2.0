@@ -352,7 +352,7 @@ int ksend(struct msg_request *req)
         /*so that the receiver knows the number of bytes copied*/
         *(dst_mail ->buffer_size) = max_sz;
         /*THEN give source id to receiver*/
-        *(dst_mail->src_id) = running[current_priority]->mailbox_num;
+        *(dst_mail->src_id) = (req->src_id == -1)? -1:running[current_priority]->mailbox_num;
         /*copy message into receiver buffer until it's full or message is complete*/
         for (i=0; i<max_sz; i++)
             dst_mail->buffer_addr[i] = req->msg[i];

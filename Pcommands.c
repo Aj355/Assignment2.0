@@ -121,7 +121,7 @@ int psend(int dst_id,void *msg, unsigned short sz)
     struct msg_request req;                 /* */
     if (sz > MAX_MSG_SZ || msg == NULL)     /* */
         return FAIL;
-    req.dst_id = dst_id;                        /* */
+    req.dst_id = dst_id;                    /* */
     req.msg = (char *) msg;                 /* */
     req.sz = sz;                            /* */
 
@@ -203,6 +203,7 @@ unsigned long get_time(void)
     int src_id;
     time.counter = 0;
     time.code = _TIME;
+
     psend(TIME_SERVER, &time, sizeof(struct time_req));
     precv(&src_id,&time.counter,src_id);
     return time.counter;
