@@ -1,30 +1,16 @@
-/******************************************************************************/
-/* Filename: SYSTICK.c
- * Author: Abdullah Alhadlaq
- * Date: 25 Sep 2017
- * Purpose: This file contains the initialization routines, as well as the
- *          IST for the SYSTICK module.
- * Disclaimer: A large portion of this file is taken from the ECED4402 course
- *             website.
- * Edits:
- * 27 Sep 2017: -Added support for the queue module
- *
- * 29 sep 2017: -Added support for time drifting
- */
-/******************************************************************************/
+
 /* -------------------------------------------------------------------------- *
  * Author: Abdulrahman  Aljedaibi
  * Author: Abdullah     Alhadlaq
  * Course: Real time systems
  * ECED 4402
- * Date assigned :   26  Sept  2017
+ * Date assigned :   26  Sept 2017
  * Date created  :   24  Oct  2017
- * Editing       :   15  Sept - Disable interrupt upon entry and enable upon
- *                                  leaving
- * Submission date : 15 Nov 2017
- * File name : Queue.c
- * Purpose: Implement a static circular queue in order to organize interrupts
- *              According to their type (UART or SYSTICK)
+ * Editing       :   10  Nov  2017 - added support of time server
+ * Submission date : 15  Nov  2017
+ * File name : Systick.c
+ * Purpose: This file contains the initialization routines, as well as the
+ *          ISR for the SYSTICK module.
  * Acknowledgment: This code is based on the source code provided in class
  * ------------------------------------------------------------------------- */
 #include "SYSTICK.h"
