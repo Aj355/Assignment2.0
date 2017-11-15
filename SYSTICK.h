@@ -1,30 +1,16 @@
+
 /* -------------------------------------------------------------------------- *
  * Author: Abdulrahman  Aljedaibi
  * Author: Abdullah     Alhadlaq
  * Course: Real time systems
  * ECED 4402
- * Date assigned :   26  Sept  2017
- * Date created  :   24  Oct  2017
+ * Date assigned :   07  Sept  2017
+ * Date created  :   12  Sept  2017
  * Editing       :   15  Sept - Disable interrupt upon entry and enable upon
  *                                  leaving
  * Submission date : 15 Nov 2017
- * File name : Queue.c
- * Purpose: Implement a static circular queue in order to organize interrupts
- *              According to their type (UART or SYSTICK)
- * ------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------- *
- * Author: Abdulrahman  Aljedaibi
- * Author: Abdullah     Alhadlaq
- * Course: Real time systems
- * ECED 4402
- * Date assigned :   26  Sept  2017
- * Date created  :   24  Oct  2017
- * Editing       :   15  Sept - Disable interrupt upon entry and enable upon
- *                                  leaving
- * Submission date : 15 Nov 2017
- * File name : Queue.c
- * Purpose: Implement a static circular queue in order to organize interrupts
- *              According to their type (UART or SYSTICK)
+ * File name : SYSTICK.h
+ * Purpose: Implement the systick module and necessary data structures.
  * ------------------------------------------------------------------------- */
 #ifndef SYSTICK_H_
 #define SYSTICK_H_
@@ -43,16 +29,16 @@
 
 // Maximum period
 #define MAX_WAIT       0x1000000   /* 2^24 */
-#define USED_PERIOD    16384       /* 2^14 this will give 1 sec per 1024 ticks */
+#define USED_PERIOD    16384       /* 2^14 this will give 1 sec per 1024 ticks*/
 #define T_ADJ_SZ       5          // size of the t_adj array
 
 #define TRUE    1
 #define FALSE   0
 
 /* Global variables */
-extern int t_adj [];    // array used for adjusting time drift
-extern volatile int t_adj_cntr; // counter for the t_adj array
-extern volatile int t_adj_indx;   // index for the t_adj_array
+extern int t_adj [];                // array used for adjusting time drift
+extern volatile int t_adj_cntr;     // counter for the t_adj array
+extern volatile int t_adj_indx;     // index for the t_adj_array
 
 /* function prototypes */
 void SysTickStart(void);
