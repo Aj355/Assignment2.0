@@ -11,6 +11,7 @@
  * File name : main.c
  * Purpose: Implement a static circular queue in order to organize interrupts
  *              According to their type (UART or SYSTICK)
+ * Acknowledgment: This code is based on the source code provided in class
  * ------------------------------------------------------------------------- */
 
 #include<stdio.h>
@@ -40,7 +41,7 @@ void main(void)
     //init_display ();
     /* reg_proc(process name, id, priority) */
     int i;
-    for (i = 0; i < 2/* sizeof(processes)/sizeof(processes[0]) */; i++)
+    for (i = 0; i < NUM_OF_PROCESSES/* sizeof(processes)/sizeof(processes[0]) */; i++)
     {
         reg_proc(processes[i].func, i+SYS_PROC_NUM, processes[i].priority);
     }

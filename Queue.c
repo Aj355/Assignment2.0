@@ -82,7 +82,7 @@ int enqueue_pcb(struct pcb *in_pcb)
 *******************************************************************************/
 void dequeue_running_pcb(void)
 {
-	/* if the running process is not the last one in the current priority WTR queue */
+	/* IF the running process is not alone in the current priority WTR queue  */
 	if (running[current_priority] != running[current_priority]->next)
 	{
 		/* remove the running process PCB from the WTR queue */

@@ -69,7 +69,7 @@ void enqueue_sleep(struct sleeping_proc *req)
 void time_server (void)
 {
     int src_id;
-    unsigned long global_counter=0;
+    unsigned long global_counter=17;
     //char tmp[MAX_MSG_SZ];
     struct time_req tmp;
     struct sleeping_proc *tmp_entry;
@@ -80,7 +80,7 @@ void time_server (void)
         precv(&src_id, &tmp, sizeof(struct time_req));
 
         // if it is from systick, then increment the counter
-        if (src_id == TIME_SERVER)
+        if (src_id == SYSTICK)
         {
             global_counter++;
             if (sleep_list && sleep_list->counter == global_counter)

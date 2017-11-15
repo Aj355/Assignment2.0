@@ -25,6 +25,7 @@
  * File name : Queue.c
  * Purpose: Implement a static circular queue in order to organize interrupts
  *              According to their type (UART or SYSTICK)
+ * Acknowledgment: This code is based on the source code provided in class
  * ------------------------------------------------------------------------- */
 #include "SYSTICK.h"
 #include "Queue.h"
@@ -100,13 +101,14 @@ void SysTickHandler(void)
 
         tmp.dst_id = TIME_SERVER;
         tmp.sz = 0;
-        tmp.src_id = -1;
+        tmp.src_id = SYSTICK;
+        save_registers();
         ksend(&tmp);
-
-        /* Signal that the PendSV handler is to be called on exit */
-        NVIC_INT_CTRL_R |= TRIGGER_PENDSV;
+        restore_registers();
     }
 
+    /* Signal that the PendSV handler is to be called on exit */
+    NVIC_INT_CTRL_R |= TRIGGER_PENDSV;
 
 }
 

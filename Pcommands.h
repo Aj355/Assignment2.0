@@ -12,6 +12,7 @@
  * File name : Queue.c
  * Purpose: Implement a static circular queue in order to organize interrupts
  *              According to their type (UART or SYSTICK)
+ * Acknowledgment: This code is based on the source code provided in class
  * ------------------------------------------------------------------------- */
 #ifndef PCOMMANDS_H_
 #define PCOMMANDS_H_
@@ -26,6 +27,7 @@
 #define NUL             '\0'  /* NUL character to terminate strings			 */
 #define ESC             '\e'  /* Escape character to begin an escape sequence*/
 #define TIME_SERVER     0     /* Time server process ID and mailbox number   */
+#define SYSTICK         -2
 
 
 

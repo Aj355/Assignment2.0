@@ -2,18 +2,13 @@ written by: 	Abdullah 	Alhadlaq		B00623068
 		Abdulrahman 	Aljedaibi		B00656986
 
 Purpose: This test is written to see how the kernel will handle time server
-		requests where a process inquires about time.
+		requests where a process requests to sleep a certain amount 
+		of time
 
 Date: 10 Nov 2017
 
 Setup: The following processes are used as input to the kernel system:
 
-void proc1 (void)
-{
-    int i;
-    i = get_time();
-    while (1);
-}
 
 Steps:
 	1- write process code in specified file

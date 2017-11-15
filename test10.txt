@@ -9,6 +9,18 @@ Date: 10 Nov 2017
 
 Setup: The following processes are used as input to the kernel system:
 
+void proc1 (void)
+{
+    sleep(1000);
+    psidplay_str(1,1,"I am process one. I should run first but i slept by mistake");
+    while (1);
+}
+
+void proc2 (void)
+{
+    psidplay_str(1,2,"I am process two, i sneaked in when process one was asleep");
+    while(1);
+}
 
 Steps:
 	1- write process code in specified file
@@ -20,6 +32,8 @@ Steps:
 Expected output:
 
 
+I am process one. I should run first but i slept by mistake
+I am process two, i sneaked in when process one was asleep
 
 
 Result:

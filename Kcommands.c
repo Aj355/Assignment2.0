@@ -4,13 +4,15 @@
  * Course: Real time systems
  * ECED 4402
  * Date assigned :   26  Sept  2017
- * Date created  :   24  Oct  2017
- * Editing       :   15  Sept - Disable interrupt upon entry and enable upon
- *                                  leaving
- * Submission date : 15 Nov 2017
- * File name : Queue.c
- * Purpose: Implement a static circular queue in order to organize interrupts
- *              According to their type (UART or SYSTICK)
+ * Date created  :   24  Oct   2017
+ * Editing       :   25  Oct - Used code from course website to context switch
+ *                   28  Oct - written nice command and get ID
+ *                    1  Nov - bind command is done
+ *                    9  Nov - messaging system is complete
+ * Submission date : 15  Nov   2017
+ * File name : Kcommands.c
+ * Purpose: Implementation of kernel calls and kernel commands.
+ * Acknowledgment: This code is based on the source code provided in class
  * ------------------------------------------------------------------------- */
 
 #include <stdlib.h>
@@ -24,10 +26,6 @@
 #include "SYSTICK.h"
 #include "system_procs.h"
 
-
-#define PENDSV_R        (*((volatile unsigned long *) 0xE000ED04))
-#define PENDSV_INVOKE   0x10000000
-
 #define NVIC_SYS_PRI3_R (*((volatile unsigned long *) 0xE000ED20))
 #define PENDSV_LOWEST_PRIORITY 0x00E00000
 
@@ -37,8 +35,10 @@ struct mailbox mailboxes[MAX_MSG_QUEUE]; /* List of message queues */
 
 /*******************************************************************************
 * Purpose:
-*             Terminate a process by removing it from the waiting to run queue
-*             and deallocate all its memory.
+*             Supervisory call issued when pkcall uses SVC(); macro. This is the
+*             Supervisor call (trap) entry point. From here, all registers are
+*             saved, SVCHandler is called, and when it returns, all registers
+*             are loaded again.
 * Arguments:
 *             NONE
 * Return :
@@ -46,7 +46,7 @@ struct mailbox mailboxes[MAX_MSG_QUEUE]; /* List of message queues */
 *******************************************************************************/
 void SVCall(void)
 {
-	/* Supervisor call (trap) entry point
+	/*
 	* Using MSP - trapping process either MSP or PSP (specified in LR)
 	* Source is specified in LR: F9 (MSP) or FD (PSP)
 	* Save r4-r11 on trapping process stack (MSP or PSP)
@@ -58,13 +58,13 @@ void SVCall(void)
 	__asm("     PUSH    {LR}");
 
 	/* Trapping source: MSP or PSP? */
-	__asm("     TST     LR,#4");    /* Bit #4 indicates MSP (0) or PSP (1) */
+	__asm("     TST     LR,#4");      /* Bit #4 indicates MSP (0) or PSP (1) */
 	__asm("     BNE     RtnViaPSP");
 
 	/* Trapping source is MSP - save r4-r11 on stack (default, so just push) */
 	__asm("     PUSH    {r4-r11}");
 	__asm("     MRS r0,msp");
-	__asm("     BL  SVCHandler");   /* r0 is MSP */
+	__asm("     BL  SVCHandler");       /* r0 is MSP */
 	__asm("     POP {r4-r11}");
 	__asm("     POP     {PC}");
 
@@ -73,9 +73,9 @@ void SVCall(void)
 	__asm("     mrs     r0,psp");
 	__asm("     stmdb   r0!,{r4-r11}"); /* Store multiple, decrement before */
 	__asm("     msr psp,r0");
-	__asm("     BL  SVCHandler");   /* r0 Is PSP */
+	__asm("     BL  SVCHandler");       /* r0 Is PSP */
 
-									/* Restore r4..r11 from trapping process stack  */
+	/* Restore r4..r11 from trapping process stack  */
 	__asm("     mrs     r0,psp");
 	__asm("     ldmia   r0!,{r4-r11}"); /* Load multiple, increment after */
 	__asm("     msr psp,r0");
@@ -85,8 +85,10 @@ void SVCall(void)
 
 /*******************************************************************************
 * Purpose:
-*             Terminate a process by removing it from the waiting to run queue
-*             and deallocate all its memory.
+*             Initialize essential kernel structures such as registration of
+*             system processes (IDLE, time server, etc) and the initialization
+*             of the UART module as well as enabling CPU interrupts and setting
+*             PENDSV priority to lowest possible.
 * Arguments:
 *             NONE
 * Return :
@@ -104,42 +106,34 @@ void init_kernel(void)
 	/* give PendSV the lowest priority */
 	NVIC_SYS_PRI3_R |= PENDSV_LOWEST_PRIORITY;
 
-	/* Register system processes */
+	/* Register system processes (name,ID,Priority) */
     reg_proc(time_server, 0, 3);
     reg_proc(idle, 1, 0);
-    //reg_proc(reserved1, 2, 0);
-    //reg_proc(reserved2, 3, 0);
-    //reg_proc(reserved3, 4, 0);
+    //reg_proc(reserved1, 2, 3);
+    //reg_proc(reserved2, 3, 3);
+    //reg_proc(reserved3, 4, 3);
 
 
 }
 
-
 /*******************************************************************************
 * Purpose:
-*             Terminate a process by removing it from the waiting to run queue
-*             and deallocate all its memory.
+*             Supervisor call handler. Handles the startup of the first initial
+*             process and all other SVCs such as geid, terminate, the messaging
+*             system, etc. Assumes that the first call is to start up the first
+*             process. Since this has been called as a trap (Cortex exception),
+*              the code is in Handler mode and uses the MSP.
 * Arguments:
-*             NONE
+*             argptr: Argptr points to the full stack consisting of both hardware
+*              and software register pushes. it is R0 as setup in SVCall()
 * Return :
 *             NONE
 *******************************************************************************/
 void SVCHandler(struct stack_frame *argptr)
 {
-	/*
-	* Supervisor call handler
-	* Handle startup of initial process
-	* Handle all other SVCs such as getid, terminate, etc.
-	* Assumes first call is from startup code
-	* Argptr points to (i.e., has the value of) either:
-	- the top of the MSP stack (startup initial process)
-	- the top of the PSP stack (all subsequent calls)
-	* Argptr points to the full stack consisting of both hardware and software
-	register pushes (i.e., R0..xPSR and R4..R10); this is defined in type
-	stack_frame
-	* Argptr is actually R0 -- setup in SVCall(), above.
-	* Since this has been called as a trap (Cortex exception), the code is in
-	Handler mode and uses the MSP
+	/* Argptr points to (i.e., has the value of) either:
+	-  the top of the MSP stack (startup initial process)
+	-  the top of the PSP stack (all subsequent calls)
 	*/
 	static int firstSVCcall = TRUE;
 	struct krequest *kcaptr;
@@ -189,44 +183,62 @@ void SVCHandler(struct stack_frame *argptr)
 
 		kcaptr = (struct krequest *) argptr->r7;
 
+		/* Switch on kernel command code message */
 		switch (kcaptr->code)
 		{
+
+		/* Terminate a process */
 		case TERMINATE:
-			kterm();
+			kterm();		   /* CALL ther kernel termination process */
 			break;
+
+		/* Inquire about process ID */
 		case GETID:
-			kcaptr->rtnvalue = kgetid();
+			kcaptr->rtnvalue = kgetid(); 
 			break;
+
+		/* Update the priority of a process */
 		case NICE:
 			knice(kcaptr->pkmsg);
 			break;
+
+		/* Bind a process to a message mailbox */
 		case BIND:
 			kcaptr->rtnvalue = kbind(*((int *)kcaptr->pkmsg));
 			break;
+
+		/* Send a message to another process, or a server (system process) */
 		case SEND:
 			kcaptr->rtnvalue = ksend(kcaptr->pkmsg);
 			break;
+
+		/* Recieve a message from another process, or a server */
 		case RECV:
 			kcaptr->rtnvalue = krecv(kcaptr->pkmsg);
 			break;
+
+		/* Display a string to output terminal via UART */
 		case DISPLAY:
 			kdisplay(kcaptr->pkmsg);
 			break;
-		case SLEEP:
-			ksleep();
-			break;
+
+		/* Undefined command */
 		default:
 			kcaptr->rtnvalue = -1;
 		}
-
 	}
-
 }
 
 /*******************************************************************************
 * Purpose:
-*             Terminate a process by removing it from the waiting to run queue
-*             and deallocate all its memory.
+*             PENDSV handler. Registers r0..r3, xpsr,pc,lr are pushed implicitly
+*					While registers R4..R11 are pushed explictly by 
+*					save_registers() function. Stores the current SP into PCB 
+*					and context switches the current process tothe next one in
+*					the waiting to run (WTR) queue. R4..R11 are then restored 
+*					manually to for the next process to run properly. Finally, 
+*				the implicitly saved registers of the now running process
+*				are implicitly popped. 
 * Arguments:
 *             NONE
 * Return :
@@ -235,11 +247,11 @@ void SVCHandler(struct stack_frame *argptr)
 void PendSV(void)
 {
 	//InterruptMasterDisable();
-	save_registers();
-	running[current_priority]->sp = get_PSP();
-	running[current_priority] = running[current_priority]->next;
-	set_PSP(running[current_priority]->sp);
-	restore_registers();
+	save_registers();							/* Save registers R4..R11     */
+	running[current_priority]->sp = get_PSP();	/* Store current SP in PCB    */
+	running[current_priority] = running[current_priority]->next;/* Con-switch */
+	set_PSP(running[current_priority]->sp);		/* restore process SP to PSP  */
+	restore_registers();						/* Load registers R4..R11     */
 	//InterruptMasterEnable();
 }
 
@@ -254,53 +266,36 @@ void PendSV(void)
 *******************************************************************************/
 void kterm(void)
 {
-
-    struct pcb *temp = running[current_priority];
-
-    /* if the running process is not the last one in the current priority WTR queue */
-    if (running[current_priority] != running[current_priority]->next)
-    {
-        /* remove the running process PCB from the WTR queue */
-        running[current_priority]->prev->next = running[current_priority]->next;
-        running[current_priority]->next->prev = running[current_priority]->prev;
-        /* make the next process the running process */
-        running[current_priority] = running[current_priority] -> next;
-    }
-
-    else /* if it is the last process */
-    {
-        /* decrease the priority until a process PCB is present */
-        while (!running[--current_priority]);
-    }
-
-    free (temp -> stack_addr);
-    free (temp);
-
-    set_PSP(running[current_priority] -> sp);
-
+    struct pcb *temp = running[current_priority];	
+	dequeue_running_pcb();			 /* Remove calling process from WTR queue */
+    free (temp -> stack_addr);	     /* Free its allocated stack memory       */
+    free (temp);					 /* Free allocated memory of PCB          */
+    set_PSP(running[current_priority] -> sp); /* Set PSP to next process's SP */
 }
 
 /*******************************************************************************
 * Purpose:
-*             get the process's id from the running PCB
+*             get the currently running process's id from the its PCB.
 * Arguments:
 *             NONE
 * Return :
-*             process id
+*             running process id is returned
 *******************************************************************************/
 int kgetid(void)
 {
-    return running[current_priority] -> id;
+    return running[current_priority] -> id;	
 }
 
 /*******************************************************************************
 * Purpose:
-*             bind a process to a queue
+*             bind the calling process to the specified mailbox number. IF the
+*						the process is already bound to a mailbox or if the 
+*						queue is already bound to a process, this command fails.
 * Arguments:
 *             num:      queue number for binding
 * Return :
 *             QUEUE NUM if successful binding is done
-*             FAIL     if invalid number is given by process or binding failed
+*             FAIL (-1) if invalid number is given by process or binding failed
 *******************************************************************************/
 int kbind(int num)
 {
@@ -326,20 +321,20 @@ int kbind(int num)
 *             directly to the receiving process of stores it in the receiving
 *             process's mailbox.
 * Arguments:
-*             req:      message request containing (msg, sz, dst_id)
+*             req:      message request containing (msg, sz, dst_id, src_id)
 * Return :
 *             QUEUE NUM if successful binding is done
 *             FAIL      if invalid number is given by process or binding failed
 *******************************************************************************/
 int ksend(struct msg_request *req)
 {
-
     int i;
     struct mailbox *dst_mail = &mailboxes[req->dst_id];
     int max_sz = req->sz;       /*maximum size to be copied*/
     /*IF sender does not own a mailbox OR destination mailbox not found*/
-    if (req ->dst_id != TIME_SERVER && (running[current_priority]->mailbox_num == UNBOUND_Q ||
-            dst_mail->process == NULL))
+    if (req ->src_id != SYSTICK &&
+		(running[current_priority]->mailbox_num == UNBOUND_Q ||
+			dst_mail->process == NULL))
         /*THEN EXIT with error code*/
         return FAIL;
 
@@ -352,7 +347,7 @@ int ksend(struct msg_request *req)
         /*so that the receiver knows the number of bytes copied*/
         *(dst_mail ->buffer_size) = max_sz;
         /*THEN give source id to receiver*/
-        *(dst_mail->src_id) = (req->src_id == -1)? -1:running[current_priority]->mailbox_num;
+        *(dst_mail->src_id) = (req->src_id == SYSTICK)? SYSTICK:running[current_priority]->mailbox_num;
         /*copy message into receiver buffer until it's full or message is complete*/
         for (i=0; i<max_sz; i++)
             dst_mail->buffer_addr[i] = req->msg[i];
@@ -382,21 +377,30 @@ int ksend(struct msg_request *req)
 
 /*******************************************************************************
 * Purpose:
-*             This function takes a message request and either gives it
-*             directly to the receiving process of stores it in the receiving
-*             process's mailbox.
+*             This function checks if the calling process is bound to a queue. 
+*					Then, the mailbox is checked for messages. If there are no
+*					messages, the calling process is blocked while it waits to 
+*					for a message to arrive. When a process is blocked, it will
+*					will have left the address of its buffer to store the next 
+*					arriving message right before it blocks. Otherwise, this 
+*					function will get the next message from its mailbox and 
+*					returns it by address to the calling process.
 * Arguments:
-*             req:      message request containing (msg, sz, dst_id)
+*             req:      message request containing (msg, sz, dst_id, src_id)
 * Return :
-*             QUEUE NUM if successful binding is done
-*             FAIL      if invalid number is given by process or binding failed
+*             TRUE      if successful binding is done
+*             FALSE     if invalid number is given by process or binding failed
 *******************************************************************************/
 int krecv(struct msg_request *req)
 {
-    if (running[current_priority]->mailbox_num == UNBOUND_Q)
+	/* */
+    if (running[current_priority]->mailbox_num == UNBOUND_Q) 
         return FALSE;
-    else
+
+	/* */
+    else 
     {
+		/* */
         if (mailboxes[running[current_priority]->mailbox_num].cnt == 0)
         {
             mailboxes[running[current_priority]->mailbox_num].src_id = &(req->src_id);
@@ -408,31 +412,14 @@ int krecv(struct msg_request *req)
             set_PSP(running[current_priority] -> sp);
             (*req).sz = mailboxes[running[current_priority]->mailbox_num].sz;
         }
+
+		/* */
         else
-        {
             dequeue_msg(req);
-        }
 
     }
     return TRUE;
 }
-
-
-
-/*******************************************************************************
-* Purpose:
-*             This function context switches the current process out.
-* Arguments:
-*             NONE
-* Return :
-*             NONE
-*******************************************************************************/
-void ksleep(void)
-{
-    PENDSV_R |= PENDSV_INVOKE;
-}
-
-
 
 /*******************************************************************************
 * Purpose:

@@ -11,6 +11,7 @@
  * File name : Queue.c
  * Purpose: Implement a static circular queue in order to organize interrupts
  *              According to their type (UART or SYSTICK)
+ * Acknowledgment: This code is based on the source code provided in class
  * -------------------------------------------------------------------------- */
 #include <stdio.h>
 #include "Pcommands.h"
@@ -119,9 +120,10 @@ int pbind(int num)
 int psend(int dst_id,void *msg, unsigned short sz)
 {
     struct msg_request req;                 /* */
-    if (sz > MAX_MSG_SZ || msg == NULL)     /* */
+    req.src_id = 0;     // signify it is a user process
+    if (sz > MAX_MSG_SZ)     /* */
         return FAIL;
-    req.dst_id = dst_id;                    /* */
+    req.dst_id = dst_id;                        /* */
     req.msg = (char *) msg;                 /* */
     req.sz = sz;                            /* */
 
@@ -144,7 +146,7 @@ int psend(int dst_id,void *msg, unsigned short sz)
 int precv(int *src_id,void *msg, unsigned short maxsz)
 {
     struct msg_request recv_msg;            /* */
-    if (msg == NULL || maxsz == 0)          /* */
+    if (msg == NULL)          /* */
         return FAIL;
     recv_msg.msg = (char *)msg;             /* */
     recv_msg.sz = maxsz;                    /* */
@@ -152,19 +154,6 @@ int precv(int *src_id,void *msg, unsigned short maxsz)
         return FAIL;
     *src_id = recv_msg.src_id;                  /* src ID stored in req after pkcall */
     return recv_msg.sz;                     /* msg sz stored in req after pkcall */
-}
-
-/*******************************************************************************
-* Purpose:
-*             This function context switches the current process out.
-* Arguments:
-*             NONE
-* Return :
-*             NONE
-*******************************************************************************/
-void psleep(void)
-{
-    pkcall(SLEEP,NULL);
 }
 
 
@@ -203,7 +192,6 @@ unsigned long get_time(void)
     int src_id;
     time.counter = 0;
     time.code = _TIME;
-
     psend(TIME_SERVER, &time, sizeof(struct time_req));
     precv(&src_id,&time.counter,src_id);
     return time.counter;

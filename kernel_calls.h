@@ -1,9 +1,3 @@
-/*
- * kernel_calls.h
- *
- *  Created on: Oct 24, 2017
- *      Author: AbdullahAlhadlaq
- */
 
 /* -------------------------------------------------------------------------- *
  * Author: Abdulrahman  Aljedaibi
@@ -18,6 +12,7 @@
  * File name : Queue.c
  * Purpose: Implement a static circular queue in order to organize interrupts
  *              According to their type (UART or SYSTICK)
+ * Acknowledgment: This code is based on the source code provided in class
  * ------------------------------------------------------------------------- */
 #ifndef KERNEL_CALLS_H_
 #define KERNEL_CALLS_H_

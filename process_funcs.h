@@ -15,8 +15,10 @@
 #ifndef PROCESS_FUNCS_H_
 #define PROCESS_FUNCS_H_
 
+#define NUM_OF_PROCESSES    1
+
 /* function prototypes */
-void idle (void);
+
 void process (void);
 void proc1 (void);
 void proc2 (void);

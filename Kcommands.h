@@ -6,12 +6,11 @@
  * ECED 4402
  * Date assigned :   26  Sept  2017
  * Date created  :    8  Nov   2017
- * Editing       :   15  Sept - Disable interrupt upon entry and enable upon
- *                                  leaving
  * Submission date : 15 Nov 2017
  * File name : Kcommands.h
  * Purpose: Implement a static circular queue in order to organize interrupts
  *              According to their type (UART or SYSTICK)
+ * Acknowledgment: This code is based on the source code provided in class
  * ------------------------------------------------------------------------- */
 #ifndef KCOMMANDS_H_
 #define KCOMMANDS_H_
@@ -22,6 +21,7 @@
 #define MSG_PER_Q       8
 #define UNBOUND_Q       -1  /* signals that a process does not have a queue */
 #define MAX_MSG_SZ      64  /* done for memory constraints */
+
 
 
 

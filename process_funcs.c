@@ -6,6 +6,8 @@
 #include "system_requests.h"
 
 
+
+
 /* Register your processes here please in the following way:
  * {process name, priority} where priority ranges from 1,
  * lowest, to 3, highest. Any other number will result in
@@ -24,7 +26,11 @@ struct process_reg processes[] =
 void proc1 (void)
 {
     int i;
-    i = get_time();
+    pbind(10);
+//    i = get_time();
+    pdisplay_str(1,1,"I am sleeping");
+    sleep(30);
+    pdisplay_str(1, 2, "I finished sleeping");
     while (1);
 }
 
@@ -39,13 +45,12 @@ void proc3 (void)
 {
     pdisplay_str(1,3,"I am process # 3");
     while (1);
-
 }
 
 
 void proc4 (void)
 {
-    int src_id,size;
+     int src_id,size;
      char x[10];
      char p[10] = "proc = x";
      char s[10] = "size = x";
@@ -57,5 +62,4 @@ void proc4 (void)
      pdisplay_str(1,2,s);
      pdisplay_str(1,3,x);
      while (1);
-
 }
