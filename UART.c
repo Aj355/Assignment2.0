@@ -1,32 +1,14 @@
-/******************************************************************************/
-/* Filename: UART.c
- * Author: Abdullah Alhadlaq
- * Date: 25 Sep 2017
- * Purpose: This file contains the initialization routines for the UART module.
- *          It also has the UART ISR
- * Disclaimer: A large portion of this file is taken from the ECED4402 course
- *             website.
- * Edits:
- * 27 Sep 2017: -Added InterruptMasterEnable function
- *              -Allowed ISR to support Queue module
- *
- * 28 Sep 2017: -Support for BUSY|ISLE UART states
- * 24 Oct 2017: -Added print_char and print_str funcs
- */
-/******************************************************************************/
 /* -------------------------------------------------------------------------- *
  * Author: Abdulrahman  Aljedaibi
  * Author: Abdullah     Alhadlaq
  * Course: Real time systems
  * ECED 4402
  * Date assigned :   26  Sept  2017
- * Date created  :   24  Oct  2017
- * Editing       :   15  Sept - Disable interrupt upon entry and enable upon
- *                                  leaving
+ * Date created  :   29  Oct  2017
  * Submission date : 15 Nov 2017
- * File name : Queue.c
- * Purpose: Implement a static circular queue in order to organize interrupts
- *              According to their type (UART or SYSTICK)
+ * File name : UART.c
+ * Purpose: This file contains the initialization routines for the UART module.
+ *          It also has the UART ISR
  * Acknowledgment: This code is based on the source code provided in class
  * ------------------------------------------------------------------------- */
 #include "UART.h"
@@ -36,7 +18,7 @@
 
 /* Globals */
 volatile int UART_state;                /* BUSY|IDLE */
-struct UART_entry current_msg;          /*message currently being printed*/
+struct UART_entry current_msg;          /* message currently being printed */
 
 void UART0_Init(void)
 {
@@ -119,12 +101,14 @@ void UART0_IntHandler(void)
         }
         else // if the current message is done xmit
         {
-            //unblock the process
-            save_registers();
-            running[current_priority]->sp = get_PSP();
-            enqueue_pcb(current_msg.proc);
-            set_PSP(running[current_priority]->sp);
-            restore_registers();
+            save_registers();  /* needed incase process is has higher priority*/
+            running[current_priority]->sp = get_PSP(); /* save current psp    */
+            
+            enqueue_pcb(current_msg.proc);             /* Unblock the process */
+            
+            set_PSP(running[current_priority]->sp);    /* load new psp, if any*/
+            restore_registers();/* needed incase proc is has higher priority  */
+            
             // if there is an entry in the UART list
             if (dequeue_UART(&current_msg))
             {

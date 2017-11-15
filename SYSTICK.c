@@ -83,14 +83,13 @@ void SysTickHandler(void)
         // reset the counter
         t_adj_cntr = 0;
 
-        // send a message to the time server
-
-        tmp.dst_id = TIME_SERVER;
-        tmp.sz = 0;
-        tmp.src_id = SYSTICK;
-        save_registers();
-        ksend(&tmp);
-        restore_registers();
+        /* Send a message to time server */
+        tmp.dst_id = TIME_SERVER; /* Destination */
+        tmp.sz = 0;               /* Size of msg */
+        tmp.src_id = SYSTICK;     /* Source is systick (unique ID) */
+        save_registers();         /* incase send wakes up higher priority proc*/
+        ksend(&tmp);              /* send systick notification of 1/10 second */
+        restore_registers();      /* restore registers for same reason of sv  */
     }
 
     /* Signal that the PendSV handler is to be called on exit */
