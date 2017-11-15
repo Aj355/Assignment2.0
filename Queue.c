@@ -20,7 +20,7 @@
 #include "Queue.h"
 
 
-struct UART_queue UQ;
+struct UART_queue UQ;   /*contains list of string pointers to be printed*/
 
 
 /*******************************************************************************
@@ -100,12 +100,13 @@ void dequeue_running_pcb(void)
 	pcb_counter--;
 }
 /* -------------------------------------------------------------------------- *
- * Purpose: Insert an entry into the input or output queue.
- * Parameters:
- *                c = Queue type (OUTPUT  or INPUT)
- *                s = Entry type (SYSTICK or UART )
- *                data = Character to be stored in Queue (matters in UART)
- * Returns: none
+ * Purpose:       Insert an entry into the UART queue
+ *
+ * Arguments:
+ *                req:  uart entry to be enqueued
+ * Returns:
+ *                TRUE  if enqueuing is successful
+ *                FALSE if enqueuing is not successful
  * -------------------------------------------------------------------------- */
 int enqueue_UART(struct UART_entry * req)
 {
@@ -128,11 +129,12 @@ int enqueue_UART(struct UART_entry * req)
 }
 
 /* -------------------------------------------------------------------------- *
- * Purpose: remove an element from an Input or Output queue
- * Parameters:
- *                c = Queue type (OUTPUT  or INPUT)
- *                element = pointer desired entry to be removed from the queue
- * Returns: none
+ * Purpose:       remove an element from the UART queue
+ * Arguments:
+ *                req: UART entry to be dequeued
+ * Returns:
+ *                TRUE  if dequeuing is successful
+ *                FALSE if dequeuing is not successful
  * -------------------------------------------------------------------------- */
 int dequeue_UART(struct UART_entry *req)
 {
@@ -152,14 +154,13 @@ int dequeue_UART(struct UART_entry *req)
     return state;
 }
 
-
 /* -------------------------------------------------------------------------- *
- * Purpose: Insert an entry into the input or output queue.
- * Parameters:
- *                c = Queue type (OUTPUT  or INPUT)
- *                s = Entry type (SYSTICK or UART )
- *                data = Character to be stored in Queue (matters in UART)
- * Returns: none
+ * Purpose:       Insert a message request into a mailbox
+ * Arguments:
+ *                msg:  message request
+ * Returns:
+ *                TRUE  if enqueuing is successful
+ *                FALSE if enqueuing is not successful
  * -------------------------------------------------------------------------- */
 int enqueue_msg(struct msg_request * msg)
 {
@@ -168,7 +169,7 @@ int enqueue_msg(struct msg_request * msg)
     struct mailbox *ptr;
     InterruptMasterDisable();               // Disable all interrupt
     ptr = &mailboxes[msg->dst_id];
-    if (ptr->cnt == MSG_PER_Q) // IF queue is full
+    if (ptr->cnt == MSG_PER_Q)              // IF queue is full
         state = FALSE;
     else
     {
@@ -188,11 +189,12 @@ int enqueue_msg(struct msg_request * msg)
 }
 
 /* -------------------------------------------------------------------------- *
- * Purpose: remove an element from an Input or Output queue
- * Parameters:
- *                c = Queue type (OUTPUT  or INPUT)
- *                element = pointer desired entry to be removed from the queue
- * Returns: none
+ * Purpose:       remove an element from a mailbox
+ * Arguments:
+ *                msg:  message request
+ * Returns:
+ *                TRUE  if dequeuing is successful
+ *                FALSE if dequeuing is not successful
  * -------------------------------------------------------------------------- */
 int dequeue_msg(struct msg_request *msg)
 {

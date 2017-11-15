@@ -28,28 +28,17 @@
 #define SYS_PROC_NUM    5
 
 
-void init_display ()
-{
-    //print_str("\e[36m"); // Enable the Cyan font colour
-    //print_str("\e[3J");  // Clear to top of terminal
-    //print_str("\e[;H");  // Cursor goes to top left
-}
-
 void main(void)
  {
-    init_kernel();
-    //init_display ();
-    /* reg_proc(process name, id, priority) */
     int i;
-    for (i = 0; i < NUM_OF_PROCESSES/* sizeof(processes)/sizeof(processes[0]) */; i++)
+
+    init_kernel();
+
+    /* reg_proc(process name, id, priority) */
+    for (i = 0; i < NUM_OF_PROCESSES; i++)
     {
         reg_proc(processes[i].func, i+SYS_PROC_NUM, processes[i].priority);
     }
-    //reg_proc(proc1, 2, 3);
-    //reg_proc(proc2, 3, 3);
-    //reg_proc(proc3, 4, 1);
-    //reg_proc(proc4, 5, 3);
-
 
     /* run first process */
     SVC();

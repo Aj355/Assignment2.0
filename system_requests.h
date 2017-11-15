@@ -4,6 +4,8 @@
 #ifndef SYSTEM_REQUESTS_H_
 #define SYSTEM_REQUESTS_H_
 
+#define NUM_OF_PROCESSES    2   /*number of processes registered*/
+
 /* Use this structure to register processes */
 struct process_reg
 {
@@ -17,7 +19,6 @@ extern struct process_reg processes[];
 /* Process prototypes are written here */
 void proc1 (void);
 void proc2 (void);
-void proc3 (void);
 
 
 

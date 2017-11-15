@@ -83,7 +83,7 @@ void SysTickHandler(void)
         // reset the counter
         t_adj_cntr = 0;
 
-        // enqueue the entry in the input queue
+        // send a message to the time server
 
         tmp.dst_id = TIME_SERVER;
         tmp.sz = 0;

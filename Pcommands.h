@@ -27,7 +27,7 @@
 #define TIME_SERVER     0     /* Time server process ID and mailbox number    */
 #define SYSTICK         -2
 
-
+#define SVC()   __asm(" SVC #0")
 
 /* Kernel command codes */
 enum CODE_TYPE {TERMINATE, GETID, NICE, BIND, SEND, RECV, DISPLAY};

@@ -17,9 +17,6 @@
 #include "Pcommands.h"
 #include "process_support.h"
 
-/* */
-#define SVC()   __asm(" SVC #0")
-
 
 /* pkcall */
 int pkcall(int code, void *pkmsg)
@@ -76,7 +73,7 @@ int pgetid(void)
 *             pr:       desired priority given by process
 * Return :
 *             SUCCESS      priority is valid
-*             FAIL     otherwise.
+*             FAIL         otherwise.
 *******************************************************************************/
 int pnice(int pr)
 {
@@ -119,18 +116,19 @@ int pbind(int num)
 *******************************************************************************/
 int psend(int dst_id,void *msg, unsigned short sz)
 {
-    struct msg_request req;                 /* */
-    req.src_id = 0;     // signify it is a user process
-    if (sz > MAX_MSG_SZ)     /* */
+    struct msg_request req;
+
+    req.src_id = 0;         /*signify that running process is the one sending*/
+
+    if (sz > MAX_MSG_SZ)    /*if message is larger than the allowable*/
         return FAIL;
-    req.dst_id = dst_id;                        /* */
-    req.msg = (char *) msg;                 /* */
-    req.sz = sz;                            /* */
+
+    req.dst_id = dst_id;
+    req.msg = (char *) msg;
+    req.sz = sz;
 
     return pkcall(SEND,&req);
 }
-
-
 
 /*******************************************************************************
 * Purpose:
@@ -145,18 +143,21 @@ int psend(int dst_id,void *msg, unsigned short sz)
 *******************************************************************************/
 int precv(int *src_id,void *msg, unsigned short maxsz)
 {
-    struct msg_request recv_msg;            /* */
-    if (msg == NULL)          /* */
+    struct msg_request recv_msg;
+
+    if (msg == NULL)                        /*if buffer cant contain message*/
         return FAIL;
-    recv_msg.msg = (char *)msg;             /* */
-    recv_msg.sz = maxsz;                    /* */
-    if (pkcall(RECV,&recv_msg) == FAIL)     /* */
+
+    recv_msg.msg = (char *)msg;
+    recv_msg.sz = maxsz;
+
+    if (pkcall(RECV,&recv_msg) == FAIL)
         return FAIL;
-    *src_id = recv_msg.src_id;                  /* src ID stored in req after pkcall */
+
+    *src_id = recv_msg.src_id;              /* src ID stored in req after pkcall */
     return recv_msg.sz;                     /* msg sz stored in req after pkcall */
 }
 
-
 /*******************************************************************************
 * Purpose:
 *             This function context switches the current process out.
@@ -165,27 +166,28 @@ int precv(int *src_id,void *msg, unsigned short maxsz)
 * Return :
 *             NONE
 *******************************************************************************/
-
 void sleep(int duration)
 {
     struct time_req time;
-    int src_id=0;
+    int tmp;
+
     time.counter = duration;
     time.code = _SLEEP;
-    psend(TIME_SERVER, &time, sizeof(struct time_req));
-    precv(&src_id,&src_id,src_id);
-}
 
+    psend(TIME_SERVER, &time, sizeof(struct time_req));
+
+    precv(&tmp,&tmp,0);
+}
 
 /*******************************************************************************
 * Purpose:
-*             This function context switches the current process out.
+*             This function gets the time from the time server and gives it
+*             to the requesting process.
 * Arguments:
-*             duration: multiples of a tenth of a second
-* Return :
 *             NONE
+* Return :
+*             TIME      in tenths of a second from the start of the program
 *******************************************************************************/
-
 unsigned long get_time(void)
 {
     struct time_req time;
@@ -193,7 +195,7 @@ unsigned long get_time(void)
     time.counter = 0;
     time.code = _TIME;
     psend(TIME_SERVER, &time, sizeof(struct time_req));
-    precv(&src_id,&time.counter,src_id);
+    precv(&src_id,&time.counter,sizeof(unsigned long));
     return time.counter;
 }
 
@@ -211,7 +213,6 @@ unsigned long get_time(void)
 *             SUCCESS   if the UART request has been sent successfully
 *             FAIL      if the request is not successful
 *******************************************************************************/
-
 int pdisplay_str(unsigned int col, unsigned int row, char *str)
 {
     char  dsp_msg[UART_MAX_MSG];
@@ -221,6 +222,7 @@ int pdisplay_str(unsigned int col, unsigned int row, char *str)
     /*the column number and the row number must be within the acceptable range*/
     if (col>MAX_COLUMN || row>MAX_ROW || !str)
         return FAIL;
+
     /*if column and row are acceptable, then do the following*/
     /*fill the beginning of the string with the escape sequence*/
     dsp_msg[0] = '\e';
@@ -231,6 +233,7 @@ int pdisplay_str(unsigned int col, unsigned int row, char *str)
     dsp_msg[5] = col/10 + '0';
     dsp_msg[6] = col%10 + '0';
     dsp_msg[7] = 'H';
+
     /*copy the message directly after*/
     while(str[i] && i < allowed_size)
     {

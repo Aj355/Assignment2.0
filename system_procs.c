@@ -27,10 +27,16 @@
 
 #define TIME_SERVER_PID_QID		0	/* Queue ID and Process ID of the time server */
 
-struct sleeping_proc *sleep_list;
+struct sleeping_proc *sleep_list;   /*contains sleeping PCBs and duration*/
 
-
-
+/*******************************************************************************
+* Purpose:
+*             This function enqueues a sleep request into the sleeping list
+* Arguments:
+*             req:      sleep request
+* Return :
+*             NONE
+*******************************************************************************/
 void enqueue_sleep(struct sleeping_proc *req)
 {
     struct sleeping_proc *entry;
@@ -66,14 +72,27 @@ void enqueue_sleep(struct sleeping_proc *req)
     }
 }
 
+/*******************************************************************************
+* Purpose:
+*             This is a process and its purpose is to maintain the time by
+*             incrementing the global counter every one-tenth of a second
+*             every time it receives a message from SYSTICK. It also gives
+*             the time to requesting processes and is able to satisfy
+*             sleep requests for certain duration of time.
+* Arguments:
+*             NONE
+* Return :
+              NONE
+*******************************************************************************/
 void time_server (void)
 {
     int src_id;
     unsigned long global_counter=17;
-    //char tmp[MAX_MSG_SZ];
     struct time_req tmp;
     struct sleeping_proc *tmp_entry;
-    pbind(0);
+
+    pbind(TIME_SERVER);
+
     while (1)
     {
         // get a message from the mailbox
@@ -116,12 +135,18 @@ void time_server (void)
             }
         }
     }
-
 }
 
-
-
-
+/*******************************************************************************
+* Purpose:
+*             This is the IDLE process and it has the lowest priority. This
+*             process must will work when either all other processes are
+*             blocked or terminated.
+* Arguments:
+*             NONE
+* Return :
+*             NONE
+*******************************************************************************/
 void idle (void)
 {
     while (1);
