@@ -46,8 +46,11 @@ proc = 1
 size = 4
 Hel
 
-Note: Only three letters show, even though the buffer size is four, because 
-	the NUL character is enforced as the last character in the buffer.
+
+This test is different than test 6 because the buffer of process 2 is now only 4 
+	Characters wide which is not enough to hold "HELLO". Therefore,
+	Only three letters show, even though the buffer size is four, because 
+	the NUL character is enforced as the last character in the buffer by precv
 
 Result:
 Success

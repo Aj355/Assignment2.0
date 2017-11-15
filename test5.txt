@@ -3,7 +3,7 @@ written by: 	Abdullah 	Alhadlaq		B00623068
 
 Purpose: This test is written to see how the kernel will bind processes to message mailboxes
 
-Date: 10 Nov 2017
+Date: 11 Nov 2017
 
 Setup: The following processes are used as input to the kernel system:
 
@@ -40,8 +40,11 @@ The first three lines in the UART terminal are going to look like:
 1
 2
 0 
-Note: the bind command returns -1 on a failure. in order to display -1 in UART as a character
-	+ '1' is added to it which yeilds the number 0 as expected. 
+
+
+This is correct since the first process has mailbox ID of 1 and the second process
+has mailbox ID of 2. The 0 is also expected since the bind command returns -1 on a failure.
+in order to display '-1' as a character in UART, a '1' is added to it which yields the number 0 as expected. 
 
 Result:
 Success

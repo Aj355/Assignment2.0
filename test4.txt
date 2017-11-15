@@ -4,7 +4,7 @@ written by: 	Abdullah 	Alhadlaq		B00623068
 Purpose: This test is written to see how the kernel will handle pnice command which
 		changes the priority of the calling process to the specified priority.
 
-Date: 10 Nov 2017
+Date: 11 Nov 2017
 
 Setup: The following processes are used as input to the kernel system:
 
@@ -38,6 +38,7 @@ I am proc 1, my priority is high
 I am proc 2, my priority is high
 I am proc 1, my priority is medium
 I am proc 2, my priority is medium
+
 
 
 Result:

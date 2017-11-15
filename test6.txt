@@ -2,12 +2,13 @@ written by: 	Abdullah 	Alhadlaq		B00623068
 		Abdulrahman 	Aljedaibi		B00656986
 
 Purpose: This test is written to see how the kernel will handle the messaging system
-by sending a message to a process that is not actively receiving a message. The reciever
+by sending a message to a process that is not actively receiving a message. The receiver
 buffer is larger than the sender.
 
 Date: 10 Nov 2017
 
 Setup: The following processes are used as input to the kernel system:
+
 void proc1 (void)
 {
     pbind(1);
@@ -46,6 +47,12 @@ proc = 1
 size = 6
 Hello
 
+This is correct since the send function needs to have both processes bound to 
+	a mailbox which is why nice is used so that proc1 becomes priority 2 
+	(both are initially 3). Then, proc2 is bound to a queue and nice is used 
+	to context switch the processes again (both now on priority 2). The message
+	Hello is sent to proc2. Proc 2 receives the message, extracts its information
+	and displays it to the terminal via UART, as seen above.
 
 Result:
 Success

@@ -5,7 +5,7 @@ Purpose: This test is written to see how the kernel will handle termination of p
 		by running a high priority process, terminate it, and then run a lower 
 		priority process
 
-Date: 10 Nov 2017
+Date: 11 Nov 2017
 
 Setup: The following processes are used as input to the kernel system:
 
@@ -33,6 +33,8 @@ The first two lines in the UART terminal are going to look like:
 I am process 1, my priority is high, and I am terminating now
 I am process 2.
 
+This is correct because one will terminate before the second process prints to the screen.
+Therefore, the termination routine works as expected
 
 Result:
 Success
