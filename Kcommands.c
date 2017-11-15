@@ -122,7 +122,7 @@ void init_kernel(void)
 *             process and all other SVCs such as geid, terminate, the messaging
 *             system, etc. Assumes that the first call is to start up the first
 *             process. Since this has been called as a trap (Cortex exception),
-*              the code is in Handler mode and uses the MSP.
+*             the code is in Handler mode and uses the MSP.
 * Arguments:
 *             argptr: Argptr points to the full stack consisting of both hardware
 *              and software register pushes. it is R0 as setup in SVCall()
@@ -266,7 +266,18 @@ void PendSV(void)
 *******************************************************************************/
 void kterm(void)
 {
-    struct pcb *temp = running[current_priority];	
+    struct pcb *temp = running[current_priority];
+    
+    /* IF a process is bound to a queue */
+    if (temp -> mailbox_num != UNBOUND_Q)
+    {
+        /* free its message queue and unbind */
+        mailboxes[temp -> mailbox_num].head = 0;
+        mailboxes[temp -> mailbox_num].tail = 0;
+        mailboxes[temp -> mailbox_num].cnt  = 0;
+        mailboxes[temp -> mailbox_num].process = NULL;
+    }
+    
 	dequeue_running_pcb();			 /* Remove calling process from WTR queue */
     free (temp -> stack_addr);	     /* Free its allocated stack memory       */
     free (temp);					 /* Free allocated memory of PCB          */
