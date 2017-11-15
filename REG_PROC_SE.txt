@@ -50,7 +50,6 @@ Structured English: pterm
 ---------------------------------------------------------------------------
 
 CALL pkcall subroutine with TERMINATE code message 
-EXIT
 
 ---------------------------------------------------------------------------
 Structured English: kterm
@@ -70,7 +69,7 @@ Structured English: pgetid
 
 CALL pkcall subroutine with GETID code message
 provide the id number to the calling process 
-EXIT
+EXIT 
 
 ---------------------------------------------------------------------------
 Structured English: kgetid

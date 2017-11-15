@@ -8,15 +8,16 @@
  * Editing       :   15  Sept - Disable interrupt upon entry and enable upon
  *                                  leaving
  * Submission date : 15 Nov 2017
- * File name : Queue.c
- * Purpose: Implement a static circular queue in order to organize interrupts
- *              According to their type (UART or SYSTICK)
+ * File name : System_procs.c
+ * Purpose: Define data structures that aid in waking and putting processes to
+ *              sleep. System processes entry points are also declared here.
  * Acknowledgment: This code is based on the source code provided in class
  * ------------------------------------------------------------------------- */
 #ifndef SYSTEM_PROCS_H_
 #define SYSTEM_PROCS_H_
 
 
+/* structure to manage sleep requesting processes */
 struct sleeping_proc
 {
     int mailbox_id;             // of the sleeping proc
@@ -24,6 +25,7 @@ struct sleeping_proc
     struct sleeping_proc *next;
 };
 
+/* System processes entry points */
 void enqueue_sleep(struct sleeping_proc *req);
 void time_server (void);
 void idle (void);

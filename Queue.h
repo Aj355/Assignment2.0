@@ -1,14 +1,18 @@
 /* -------------------------------------------------------------------------- *
- * Author: Abdulrahman Aljedaibi
+ * Author: Abdulrahman  Aljedaibi
+ * Author: Abdullah     Alhadlaq
  * Course: Real time systems
  * ECED 4402
- * Date assigned :   07  Sept  2017
- * Date created  :   20  Sept  2017
- * Submission date : 02 Oct 2017
+ * Date assigned :   26  Sept  2017
+ * Date created  :   12  Oct  2017
+ * Editing       :   28  Oct  - Added enqueue/dequeue messages
+ *                   01  Nov  - Added enqueue/dequeue UART
+ * Submission date : 15  Nov 2017
  * File name : Queue.h
- * Purpose: Implement a static circular queue in order to organize interrupts
- *              According to their type (UART or SYSTICK)
- * -------------------------------------------------------------------------- */
+ * Purpose: Implement a static circular queue in order to manage UART and 
+ *              messaging system queues.
+ * Acknowledgment: This code is based on the source code provided in class
+ * ------------------------------------------------------------------------- */
 
 #ifndef QUEUE_H_
 #define QUEUE_H_
