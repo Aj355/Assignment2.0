@@ -11,6 +11,7 @@ struct process_reg
     int priority;
 };
 
+/* */
 extern struct process_reg processes[];
 
 /* Process prototypes are written here */
@@ -18,7 +19,11 @@ void proc1 (void);
 void proc2 (void);
 void proc3 (void);
 
+
+
 /*******************************************************************************
+*                             SYSTEM COMMANDS                                  *
+********************************************************************************
 * Purpose:
 *             Terminate a process automatically by having the process's return
 *             address point to this function. Calls Pkcall to invoke kernel
@@ -88,16 +93,6 @@ int psend(int dst_id, void *msg, unsigned short sz);
 *             FAIL      if sending is unsuccessful
 *******************************************************************************/
 int precv(int *src_id,void *msg, unsigned short maxsz);
-
-/*******************************************************************************
-* Purpose:
-*             This function context switches the current process out.
-* Arguments:
-*             NONE
-* Return :
-*             NONE
-*******************************************************************************/
-void psleep(void);
 
 /*******************************************************************************
 * Purpose:

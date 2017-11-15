@@ -477,7 +477,7 @@ void kdisplay(char *dsp)
 *******************************************************************************/
 void knice(int* pr)
 {
-	    struct pcb *temp = running[current_priority];
+    struct pcb *temp = running[current_priority];
 
     running[current_priority]->sp = get_PSP();
 

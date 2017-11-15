@@ -1,16 +1,17 @@
-/******************************************************************************/
-/* Filename: SYSTICK.h
- * Author: Abdullah Alhadlaq
- * Date: 25 Sep 2017
- * Purpose: This file contains the definitions, external global variables and
- *          function prototypes for the SYSTICK module.
- * Disclaimer: A large portion of this file is taken from the ECED4402 course
- *             website.
- * Edits:
- * 29 Sep 2017: -Added the USED_PERIOD definition
- *              -Added support for time drifting
- */
-/******************************************************************************/
+/* -------------------------------------------------------------------------- *
+ * Author: Abdulrahman  Aljedaibi
+ * Author: Abdullah     Alhadlaq
+ * Course: Real time systems
+ * ECED 4402
+ * Date assigned :   26  Sept  2017
+ * Date created  :   24  Oct  2017
+ * Editing       :   15  Sept - Disable interrupt upon entry and enable upon
+ *                                  leaving
+ * Submission date : 15 Nov 2017
+ * File name : Queue.c
+ * Purpose: Implement a static circular queue in order to organize interrupts
+ *              According to their type (UART or SYSTICK)
+ * ------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- *
  * Author: Abdulrahman  Aljedaibi
  * Author: Abdullah     Alhadlaq

@@ -32,7 +32,7 @@
 
 
 /* Kernel command codes */
-enum CODE_TYPE {TERMINATE, GETID, NICE, BIND, SEND, RECV, DISPLAY, SLEEP};
+enum CODE_TYPE {TERMINATE, GETID, NICE, BIND, SEND, RECV, DISPLAY};
 
 /* Time server requests */
 enum TIME_SERVER_REQ {_TIME, _SLEEP};
