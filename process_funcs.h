@@ -15,7 +15,7 @@
 #ifndef PROCESS_FUNCS_H_
 #define PROCESS_FUNCS_H_
 
-#define NUM_OF_PROCESSES    1
+#define NUM_OF_PROCESSES    2
 
 /* function prototypes */
 

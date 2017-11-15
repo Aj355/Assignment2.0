@@ -87,7 +87,20 @@ __asm(" bx  lr");
 return 0;
 }
 
-
+/*******************************************************************************
+* Purpose:
+*             This function registers a process by creating a PCB and
+*             allocating a stack for the process. Then it fills the PCB
+*             and the stack with the necessary initial values and finally
+*             inserts the PCB into the appropriate WTR queue.
+* Arguments:
+*             func:     entry point to the process
+*             id:       unique identification number for the process
+*             priority: priority level 0..3
+* Return :
+*             SUCCESS   if enqueuing of the PCB into the WTR is successful
+*             FAIL      if enqueuing is not successful
+*******************************************************************************/
 int reg_proc( void (*func)(void), unsigned id, unsigned short priority)
 {
     unsigned long *sp;

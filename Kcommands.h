@@ -22,7 +22,8 @@
 #define UNBOUND_Q       -1  /* signals that a process does not have a queue */
 #define MAX_MSG_SZ      64  /* done for memory constraints */
 
-
+#define NVIC_SYS_PRI3_R (*((volatile unsigned long *) 0xE000ED20))
+#define PENDSV_LOWEST_PRIORITY 0x00E00000
 
 
 

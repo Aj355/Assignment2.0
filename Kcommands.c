@@ -26,9 +26,6 @@
 #include "SYSTICK.h"
 #include "system_procs.h"
 
-#define NVIC_SYS_PRI3_R (*((volatile unsigned long *) 0xE000ED20))
-#define PENDSV_LOWEST_PRIORITY 0x00E00000
-
  
 struct mailbox mailboxes[MAX_MSG_QUEUE]; /* List of message queues */
 
@@ -109,10 +106,8 @@ void init_kernel(void)
 	/* Register system processes (name,ID,Priority) */
     reg_proc(time_server, 0, 3);
     reg_proc(idle, 1, 0);
-    //reg_proc(reserved1, 2, 3);
-    //reg_proc(reserved2, 3, 3);
-    //reg_proc(reserved3, 4, 3);
 
+    /* here future system functions can be registered */
 
 }
 
@@ -232,13 +227,13 @@ void SVCHandler(struct stack_frame *argptr)
 /*******************************************************************************
 * Purpose:
 *             PENDSV handler. Registers r0..r3, xpsr,pc,lr are pushed implicitly
-*					While registers R4..R11 are pushed explictly by 
-*					save_registers() function. Stores the current SP into PCB 
-*					and context switches the current process tothe next one in
-*					the waiting to run (WTR) queue. R4..R11 are then restored 
-*					manually to for the next process to run properly. Finally, 
-*				the implicitly saved registers of the now running process
-*				are implicitly popped. 
+*			  While registers R4..R11 are pushed explictly by
+*			  save_registers() function. Stores the current SP into PCB
+*			  and context switches the current process tothe next one in
+*			  the waiting to run (WTR) queue. R4..R11 are then restored
+*			  manually to for the next process to run properly. Finally,
+*			  the implicitly saved registers of the now running process
+*			  are implicitly popped.
 * Arguments:
 *             NONE
 * Return :
@@ -246,13 +241,13 @@ void SVCHandler(struct stack_frame *argptr)
 *******************************************************************************/
 void PendSV(void)
 {
-	//InterruptMasterDisable();
+	InterruptMasterDisable();
 	save_registers();							/* Save registers R4..R11     */
 	running[current_priority]->sp = get_PSP();	/* Store current SP in PCB    */
 	running[current_priority] = running[current_priority]->next;/* Con-switch */
 	set_PSP(running[current_priority]->sp);		/* restore process SP to PSP  */
 	restore_registers();						/* Load registers R4..R11     */
-	//InterruptMasterEnable();
+	InterruptMasterEnable();
 }
 
 /*******************************************************************************
@@ -334,8 +329,8 @@ int kbind(int num)
 * Arguments:
 *             req:      message request containing (msg, sz, dst_id, src_id)
 * Return :
-*             QUEUE NUM if successful binding is done
-*             FAIL      if invalid number is given by process or binding failed
+*             max_sz    if successful sending of message
+*             FAIL      if sending failed
 *******************************************************************************/
 int ksend(struct msg_request *req)
 {
@@ -399,36 +394,39 @@ int ksend(struct msg_request *req)
 * Arguments:
 *             req:      message request containing (msg, sz, dst_id, src_id)
 * Return :
-*             TRUE      if successful binding is done
-*             FALSE     if invalid number is given by process or binding failed
+*             TRUE      if successful reception of message
+*             FALSE     if reception of message is unsuccessful
 *******************************************************************************/
 int krecv(struct msg_request *req)
 {
-	/* */
+	/*if receiving process doe not have a mailbox*/
     if (running[current_priority]->mailbox_num == UNBOUND_Q) 
         return FALSE;
 
-	/* */
+	/*if it has a mailbox*/
     else 
     {
-		/* */
+		/*if the mailbox is empty*/
         if (mailboxes[running[current_priority]->mailbox_num].cnt == 0)
         {
+            /*store important information*/
             mailboxes[running[current_priority]->mailbox_num].src_id = &(req->src_id);
             mailboxes[running[current_priority]->mailbox_num].sz = req->sz;
             mailboxes[running[current_priority]->mailbox_num].buffer_size = &(req->sz);
             mailboxes[running[current_priority]->mailbox_num].buffer_addr = req->msg;
+
+            /*block the process*/
             running[current_priority]->sp = get_PSP();
             dequeue_running_pcb();
             set_PSP(running[current_priority] -> sp);
             (*req).sz = mailboxes[running[current_priority]->mailbox_num].sz;
         }
 
-		/* */
+		/*if the mailbox is not empty*/
         else
             dequeue_msg(req);
-
     }
+
     return TRUE;
 }
 
@@ -448,6 +446,7 @@ void kdisplay(char *dsp)
     struct UART_entry new_entry;
     new_entry.dsp_msg = dsp;
     new_entry.proc = running[current_priority];
+
     if (UART_state == BUSY)
     {
         enqueue_UART(&new_entry);
@@ -469,7 +468,8 @@ void kdisplay(char *dsp)
 }
 /*******************************************************************************
 * Purpose:
-*             get the process's id from the running PCCB
+*             This function changes the processes priority by removing the
+*             PCB and placing it in the desired priority WTR queue.
 * Arguments:
 *             pr:       desired priority supplied by process
 * Return :
@@ -477,38 +477,19 @@ void kdisplay(char *dsp)
 *******************************************************************************/
 void knice(int* pr)
 {
-	    struct pcb *temp = running[current_priority];
+	struct pcb *temp = running[current_priority];   /* running PCB */
 
-    running[current_priority]->sp = get_PSP();
+    running[current_priority]->sp = get_PSP();      /*store current PSP*/
+    running[current_priority] ->priority = *pr;     /*change priority in PCB*/
 
-    running[current_priority] ->priority = *pr;
-
-    if (*pr == current_priority)
+    if (*pr == current_priority)                    /*if same priority*/
         return;
 
-    dequeue_running_pcb();
+    /*if the requested priority is different the current one*/
 
-    /* Connect PCB to the end of the priority queue*/
-    if (running[*pr] == NULL)
-    {
-        /* if the queue is empty, let the priority queue pointer point at this pcb.
-         * Make the next and previous pointer point to the same pcb (for circular queue)
-         */
-        running[*pr] = temp;
-        temp -> next         = temp;
-        temp -> prev         = temp;
-    }else {
-        /* if the queue is not empty, add the current pcb to the end of the queue*/
-        temp -> next                 = running[*pr];
-        temp -> prev                 = running[*pr]->prev;
-        running[*pr] -> prev   = temp;
-        temp -> prev-> next          = temp;
-    }
-
-    if (current_priority < *pr )
-        current_priority = *pr;
-
-    set_PSP(running[current_priority] -> sp);
+    dequeue_running_pcb();                          /*remove PCB from WTR*/
+    enqueue_pcb(temp);                              /*Place PCB in new WTR*/
+    set_PSP(running[current_priority] -> sp);       /*restore PSP*/
 }
 
 
