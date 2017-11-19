@@ -5,13 +5,13 @@ Purpose: This test is written to see how the kernel will handle time server
 		requests where a process requests to sleep a certain amount 
 		of time
 
-Date: 10 Nov 2017
+Date: 14 Nov 2017
 
 Setup: The following processes are used as input to the kernel system:
 
 void proc1 (void)
 {
-    sleep(1000);
+    sleep(50);
     psidplay_str(1,1,"I am process one. I should run first but i slept by mistake");
     while (1);
 }
@@ -35,6 +35,7 @@ Expected output:
 I am process one. I should run first but i slept by mistake
 I am process two, i sneaked in when process one was asleep
 
-
+The order of the statement is the second statement, delay for about 5 second, 
+	and the first statement appears
 Result:
 Success

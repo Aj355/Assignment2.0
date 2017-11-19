@@ -5,7 +5,7 @@ Purpose: This test is written to see how the kernel will handle the messaging sy
 by sending a message to a process that is not actively receiving a message. The reciever
 buffer is larger than the sender.
 
-Date: 10 Nov 2017
+Date: 12 Nov 2017
 
 Setup: The following processes are used as input to the kernel system:
 void proc1 (void)

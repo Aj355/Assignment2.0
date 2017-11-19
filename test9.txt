@@ -4,7 +4,7 @@ written by: 	Abdullah 	Alhadlaq		B00623068
 Purpose: This test is written to see how the kernel will handle time server
 		requests where a process inquires about time.
 
-Date: 10 Nov 2017
+Date: 14 Nov 2017
 
 Setup: The following processes are used as input to the kernel system:
 
@@ -24,7 +24,7 @@ Steps:
 
 Expected output:
 
-
+using the debugger to check the value of i yields the time in multiples of tenth of a second.
 
 
 Result:
