@@ -42,13 +42,7 @@ void enqueue_sleep(struct sleeping_proc *req)
     struct sleeping_proc *entry;
     struct sleeping_proc *ptr;
 
-    /* Construct entry */
-//    InterruptMasterDisable();                    // Disable all interrupt
-    entry = (struct sleeping_proc *) malloc(sizeof(struct sleeping_proc));
-//    InterruptMasterEnable();                     // Enable all interrupts
-    entry -> mailbox_id = req -> mailbox_id;
-    entry -> counter = req -> counter;
-
+    entry = req;
     /* Add device to head of the queue */
     if (sleep_list == NULL || /* if the queue is empty */
         /* if it has the soonest status change time*/
@@ -102,17 +96,14 @@ void time_server (void)
         if (src_id == SYSTICK)
         {
             global_counter++;
-            if (sleep_list && sleep_list->counter == global_counter)
+            while (sleep_list && sleep_list->counter == global_counter)
             {
                 // send a wake up message to the process
                 psend(sleep_list->mailbox_id, NULL, 0);
 
                 // remove the entry from the sleeping list
                 tmp_entry = sleep_list;
-                if (sleep_list->next)
-                {
-                    sleep_list = sleep_list->next;
-                }
+                sleep_list = sleep_list->next;
                 free(tmp_entry);
             }
         }
