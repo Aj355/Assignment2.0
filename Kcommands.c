@@ -357,13 +357,11 @@ int ksend(struct msg_request *req)
         /*copy message into receiver buffer until it's full or message is complete*/
         for (i=0; i<max_sz; i++)
             dst_mail->buffer_addr[i] = req->msg[i];
-
         dst_mail->buffer_addr[--i] = '\0';
-        /*Unblock receiver by inserting its PCB into WTR queue*/
 
+        /*Unblock receiver by inserting its PCB into WTR queue*/
         running[current_priority]->sp = get_PSP();
         enqueue_pcb(dst_mail->process);
-
         set_PSP(running[current_priority] -> sp);
 
         /*put a null in the buffer_addr in mailbox to signify that process is not blocked*/
