@@ -24,24 +24,5 @@
 #include "system_requests.h"
 
 
-#define SVC()   __asm(" SVC #0")
-#define SYS_PROC_NUM    5
 
 
-void main(void)
- {
-    int i;
-
-    init_kernel();
-
-    /* reg_proc(process name, id, priority) */
-    for (i = 0; i < NUM_OF_PROCESSES; i++)
-    {
-        reg_proc(processes[i].func, i+SYS_PROC_NUM, processes[i].priority);
-    }
-
-    /* run first process */
-    SVC();
-
-	return ;
-}
