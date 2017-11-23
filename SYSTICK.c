@@ -26,7 +26,7 @@
  * the time of day and stop watch counters.
  */
 int t_adj [] = {102, 102, 103, 102, 103};
-volatile int t_adj_cntr=0; // counter for the t_adj array
+volatile int t_adj_cntr=0;   // counter for the t_adj array
 volatile int t_adj_indx=0;   // index for the t_adj_array
 
 
