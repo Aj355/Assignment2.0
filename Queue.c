@@ -16,8 +16,7 @@
 #include "Queue.h"
 #include "UART.h"
 #include "Kcommands.h"
-#include "process_support.h"
-#include "Queue.h"
+#include "kernel.h"
 
 
 struct UART_queue UQ;   /*contains list of string pointers to be printed*/

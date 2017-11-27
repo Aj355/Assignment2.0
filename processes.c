@@ -4,7 +4,7 @@
  */
 
 #include <stdio.h>
-#include "system_requests.h"
+#include "processes.h"
 
 /* Register your processes here please in the following way:
  * {process name, priority} where priority ranges from 1,

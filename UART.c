@@ -14,6 +14,7 @@
 #include "UART.h"
 #include "Queue.h"
 #include "Kcommands.h"
+#include "kernel.h"
 
 
 /* Globals */

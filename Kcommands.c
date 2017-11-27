@@ -17,14 +17,14 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include "kernel_calls.h"
+#include "kernel.h"
 #include "Kcommands.h"
 #include "Pcommands.h"
 #include "process_support.h"
 #include "Queue.h"
 #include "UART.h"
 #include "SYSTICK.h"
-#include "system_procs.h"
+#include "Kprocesses.h"
 
  
 struct mailbox mailboxes[MAX_MSG_QUEUE]; /* List of message queues */
@@ -256,6 +256,10 @@ void kdisplay(char *dsp)
 void knice(int* pr)
 {
 	struct pcb *temp = running[current_priority];   /* running PCB */
+
+    /* the id should be returned by pkcall */
+    if (pr > HIGH_ || pr < LOW_)
+        return ;
 
     running[current_priority]->sp = get_PSP();      /*store current PSP*/
     running[current_priority] ->priority = *pr;     /*change priority in PCB*/

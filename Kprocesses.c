@@ -21,8 +21,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "Pcommands.h"
-#include "system_procs.h"
-#include "system_requests.h"
+#include "Kprocesses.h"
+#include "kernel.h"
 
 
 #define TIME_SERVER_PID_QID		0	/* Queue ID and Process ID of the time server */

@@ -15,7 +15,12 @@
  * -------------------------------------------------------------------------- */
 #include <stdio.h>
 #include "Pcommands.h"
-#include "process_support.h"
+
+
+#define FAIL 0
+#define SUCCESS 1
+void assignR7(volatile unsigned long data);
+
 
 
 /* pkcall */
@@ -77,10 +82,6 @@ int pgetid(void)
 *******************************************************************************/
 int pnice(int pr)
 {
-    /* the id should be returned by pkcall */
-    if (pr > HIGH_ || pr < LOW_)
-        return FAIL;
-
     pkcall(NICE, &pr);
     return SUCCESS;
 }

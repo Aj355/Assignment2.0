@@ -13,8 +13,8 @@
  * Purpose: Implement a static circular queue in order to organize interrupts
  *              According to their type (UART or SYSTICK)
  * ------------------------------------------------------------------------- */
-#ifndef PROCESS_SUPPORT_H_
-#define PROCESS_SUPPORT_H_
+#ifndef KERNEL_H_
+#define KERNEL_H_
 
 #define SUCCESS            1
 #define FAIL           -1
@@ -93,4 +93,4 @@ extern struct pcb  *running[];
 extern int current_priority;             /* Current priority level */
 extern int pcb_counter;                  /* keeps track of the number of WTR processes */
 
-#endif /* PROCESS_SUPPORT_H_ */
+#endif /* KERNEL_H_ */

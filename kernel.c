@@ -17,14 +17,14 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include "kernel_calls.h"
+#include "kernel.h"
 #include "Kcommands.h"
 #include "Pcommands.h"
-#include "process_support.h"
+#include "processes.h"
 #include "Queue.h"
 #include "UART.h"
 #include "SYSTICK.h"
-#include "system_procs.h"
+#include "Kprocesses.h"
 
 #define SVC()   __asm(" SVC #0")
 #define SYS_PROC_NUM    5
