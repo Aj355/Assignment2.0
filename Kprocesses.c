@@ -1,9 +1,4 @@
-/*
- * system_procs.c
- *
- *  Created on: Nov 12, 2017
- *      Author: AbdullahAlhadlaq
- */
+
 /* -------------------------------------------------------------------------- *
  * Author: Abdulrahman  Aljedaibi
  * Author: Abdullah     Alhadlaq
@@ -23,9 +18,11 @@
 #include "Pcommands.h"
 #include "Kprocesses.h"
 #include "kernel.h"
+#include "processes.h"
 
 
-#define TIME_SERVER_PID_QID		0	/* Queue ID and Process ID of the time server */
+
+#define TIME_SERVER_PID_QID		0	/* Queue ID and Process ID of time server */
 
 struct sleeping_proc *sleep_list;   /*contains sleeping PCBs and duration*/
 
@@ -142,3 +139,6 @@ void idle (void)
 {
     while (1);
 }
+
+
+
