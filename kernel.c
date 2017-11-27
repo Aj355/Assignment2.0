@@ -348,7 +348,7 @@ void SVCHandler(struct stack_frame *argptr)
                 
                 /* Undefined command */
             default:
-                kcaptr->rtnvalue = -1;
+                kcaptr->rtnvalue = FAIL;
         }
     }
 }

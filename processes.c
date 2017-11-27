@@ -13,7 +13,7 @@
 
 struct process_reg processes[] =
 {
- {proc1, 3}, {proc1, 2}, {proc1, 1}
+ {proc1, 3}, {proc1, 3}, {proc1, 3}
 };
 
 void proc1 (void)

@@ -20,7 +20,7 @@
 #include "kernel.h"
 #include "Kcommands.h"
 #include "Pcommands.h"
-#include "process_support.h"
+#include "processes.h"
 #include "Queue.h"
 #include "UART.h"
 #include "SYSTICK.h"
@@ -258,7 +258,7 @@ void knice(int* pr)
 	struct pcb *temp = running[current_priority];   /* running PCB */
 
     /* the id should be returned by pkcall */
-    if (pr > HIGH_ || pr < LOW_)
+    if (*pr > HIGH_ || *pr < LOW_)
         return ;
 
     running[current_priority]->sp = get_PSP();      /*store current PSP*/
