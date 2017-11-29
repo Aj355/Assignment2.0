@@ -15,8 +15,11 @@
 #include "Queue.h"
 #include "Kcommands.h"
 #include "kernel.h"
+#include "Trainsetprotocol.h"
+
 /* Globals */
 volatile int UART_state;                /* BUSY|IDLE */
+volatile int UART1_state;                /* BUSY|IDLE */
 struct UART_entry current_msg;          /* message currently being printed */
 
 void UART0_Init(void)
@@ -58,7 +61,7 @@ void UART1_Init(void)
 {
     volatile int wait;
     
-    UART_state = IDLE;  // initialize UART_state to be in IDLE mode
+    UART1_state = IDLE;  // initialize UART_state to be in IDLE mode
     
     /* Initialize UART1 */
     // Enable Clock Gating for UART0
@@ -67,21 +70,21 @@ void UART1_Init(void)
     SYSCTL_RCGCUART_R |= SYSCTL_RCGCGPIO_UART1;
     wait = 0; // give time for the clocks to activate
     
-    UART0_CTL_R &= ~UART_CTL_UARTEN;        // Disable the UART
+    UART1_CTL_R &= ~UART_CTL_UARTEN;        // Disable the UART
     wait = 0;   // wait required before accessing the UART config regs
     
     // Setup the BAUD rate
     // IBRD = int(16,000,000 / (16 * 115,200)) = 8.680555555555556
-    UART1_IBRD_R = 104;
+    UART1_IBRD_R = 8;
     // FBRD = int(.680555555555556 * 64 + 0.5) = 44.05555555555556
-    UART1_FBRD_R = 11;
+    UART1_FBRD_R = 44;
     
     // WLEN: 8, no parity, one stop bit, without FIFOs)
     UART1_LCRH_R = (UART_LCRH_WLEN_8);
     // Enable Receive and Transmit on PA1-0
     GPIO_PORTB_AFSEL_R = 0x3;
     // Enable UART RX/TX pins on PA1-0
-    GPIO_PORTB_PCTL_R = (0x01) | ((0x01) << 4);
+    GPIO_PORTB_PCTL_R = (0x01) | ((0x01) << 6);
     // Enable Digital I/O on PA1-0
     GPIO_PORTB_DEN_R = EN_DIG_PA0 | EN_DIG_PA1;
     
@@ -94,10 +97,10 @@ void InterruptEnable(unsigned long InterruptIndex)
 /* Indicate to CPU which device is to interrupt */
 if(InterruptIndex < 32)
     // Enable the interrupt in the EN0 Register
-    NVIC_EN0_R = 1 << InterruptIndex;
+    NVIC_EN0_R |= 1 << InterruptIndex;
 else
     // Enable the interrupt in the EN1 Register
-    NVIC_EN1_R = 1 << (InterruptIndex - 32);
+    NVIC_EN1_R |= 1 << (InterruptIndex - 32);
 }
 
 void UART_IntEnable(unsigned long flags)
@@ -157,18 +160,29 @@ void UART0_IntHandler(void)
     }
 }
 
+struct frame current;
+int escaped;
+int active;
+
 void UART1_IntHandler(void)
 {
     /*
      * Simplified UART ISR - handles receive and xmit interrupts
      * Application signalled when data received
      */
-    
+
     if (UART1_MIS_R & UART_INT_RX)
     {
         /* RECV done - clear interrupt and make char available to application */
         UART1_ICR_R |= UART_INT_RX;
         // fill the entry with the incoming information
+        if (!active && UART1_DR_R == STX && !escaped)
+        {
+            active = 1;
+            current.start_of_xmit = STX;
+            return;
+        }
+
     }
     
     if (UART1_MIS_R & UART_INT_TX)
@@ -195,11 +209,12 @@ void InterruptMasterDisable (void)
 void init_UART (void)
 {
     /* Initialize UART */
-    UART0_Init();                               // Initialize UART0
-    UART1_Init();                               // Initialize UART1
-    InterruptEnable(INT_VEC_UART0);             // Enable UART0 interrupts
-    InterruptEnable(INT_VEC_UART1);             // Enable UART1 interrupts
-    UART_IntEnable(UART_INT_RX | UART_INT_TX); // Enable RCV & Xmit interrupts
+    UART0_Init();                                // Initialize UART0
+    UART1_Init();                                // Initialize UART1
+    NVIC_EN0_R = 0;
+    InterruptEnable(INT_VEC_UART0);              // Enable UART0 interrupts
+    InterruptEnable(INT_VEC_UART1);              // Enable UART0 interrupts
+    UART_IntEnable(UART_INT_RX | UART_INT_TX);   // Enable RCV & Xmit interrupts
 }
 
 

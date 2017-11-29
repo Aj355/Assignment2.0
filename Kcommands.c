@@ -258,14 +258,12 @@ void knice(int* pr)
 	struct pcb *temp = running[current_priority];   /* running PCB */
 
     /* the id should be returned by pkcall */
-    if (*pr > HIGH_ || *pr < LOW_)
+    if (*pr > HIGH_ || *pr < LOW_ || *pr == current_priority)
         return ;
 
     running[current_priority]->sp = get_PSP();      /*store current PSP*/
     running[current_priority] ->priority = *pr;     /*change priority in PCB*/
 
-    if (*pr == current_priority)                    /*if same priority*/
-        return;
 
     /*if the requested priority is different the current one*/
 
