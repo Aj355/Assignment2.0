@@ -6,7 +6,7 @@ Code element in mesage structure = 0xC0
 first argument element in message structure = desired train number
 least three bits of second argument element in message structure = speed
 four following bits of second argument element in message structure = 0
-last bit of second argument element = direction
+last bit of second argument element in message structure = direction 
 CALL psend function with message, size, and the DLL process mailbox address
 
 ---------------------------------------------------------------------------
@@ -14,43 +14,37 @@ Structured English: Send switch algorithm
 ---------------------------------------------------------------------------
 
 Create message structure
-Code element in mesage structure = 0xC0
-first argument element in message structure = desired train number
-least three bits of second argument element in message structure = speed
-four following bits of second argument element in message structure = 0
-last bit of second argument element = direction
+Code element in mesage structure = 0xE0
+first argument element in message structure = desired switch number
+second argument element in message structure = direction of switch
 CALL psend function with message, size, and the DLL process mailbox address
 
 
 ---------------------------------------------------------------------------
-Structured English: Send switch algorithm
+Structured English: Reset hall queue algorithm
+---------------------------------------------------------------------------
+
+Create message structure
+Code element in mesage structure = 0xA8
+first argument element in message structure = 0
+second argument element in message structure = 0
+CALL psend function with message, size, and the DLL process mailbox address
+
+---------------------------------------------------------------------------
+Structured English: hall sensor acknowledgment
 ---------------------------------------------------------------------------
 
 Create message structure
 Code element in mesage structure = 0xC0
-first argument element in message structure = desired train number
-least three bits of second argument element in message structure = speed
-four following bits of second argument element in message structure = 0
-last bit of second argument element = direction
+first argument element in message structure = hall sensor number
+second argument element in message structure = 0
 CALL psend function with message, size, and the DLL process mailbox address
 
 ---------------------------------------------------------------------------
-Structured English: Send switch algorithm
+Structured English: Data link layer (DDL) process algorithm
 ---------------------------------------------------------------------------
 
-Create message structure
-Code element in mesage structure = 0xC0
-first argument element in message structure = desired train number
-least three bits of second argument element in message structure = speed
-four following bits of second argument element in message structure = 0
-last bit of second argument element = direction
-CALL psend function with message, size, and the DLL process mailbox address
 
----------------------------------------------------------------------------
-Structured English: pterm
----------------------------------------------------------------------------
-
-CALL pkcall subroutine with TERMINATE code message 
 
 ---------------------------------------------------------------------------
 Structured English: kterm
