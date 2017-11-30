@@ -43,7 +43,15 @@ CALL psend function with message, size, and the DLL process mailbox address
 ---------------------------------------------------------------------------
 Structured English: Data link layer (DDL) process algorithm
 ---------------------------------------------------------------------------
+Bind process to prechosen mailbox (5)
+WHILE TRUE
+	CALL RECV function
+	IF received from UART
+		
+	ELSE IF received from train manager
 
+	ENDIF
+ENDWHILE
 
 
 ---------------------------------------------------------------------------

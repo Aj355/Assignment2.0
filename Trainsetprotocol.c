@@ -47,7 +47,7 @@ int construct_packet(struct message *msg, enum PktType type)
         ns = (ns + 1) % 8;
         temp_pkt.ctr.type = type;
         temp_pkt.len = sizeof(*msg);
-        temp_pkt.msg = msg;
+        //temp_pkt.msg = msg;
         break;
 
     case ACK: /* FALL-THROUGH */
@@ -59,7 +59,7 @@ int construct_packet(struct message *msg, enum PktType type)
     default:
         return FALSE;
     }
-    return SUCESS;
+    return SUCCESS;
 }
 
 /*******************************************************************************
@@ -76,11 +76,11 @@ int construct_frame(struct packet pkt)
 {
     temp_frm.start_of_xmit = STX;
     temp_frm.pkt = pkt;
-    temp_frm.Chksum  = pkt.ctr;
+    temp_frm.Chksum  = pkt.ctr.cntrl;
     temp_frm.Chksum += pkt.len;
     temp_frm.Chksum += pkt.msg.code;
     temp_frm.Chksum += pkt.msg.arg1;
-    temp_frm.Chksum += pkt.ctr.arg2;
+    temp_frm.Chksum += pkt.msg.arg2;
     temp_frm.end_of_xmit = ETX;
 
 }
@@ -130,7 +130,7 @@ void send_md(unsigned char train_num, unsigned mag, enum Direction dir)
     msg.code = CHNG_SPDR_MSG;
     msg.arg1 = train_num;
     msg.arg2 = md.mag_dir;
-    psend(12,&msg,sizeof(struct message));
+    psend(5,&msg,sizeof(struct message));
 }
 
 /* -------------------------------------------------------------------------- *
@@ -147,7 +147,7 @@ void send_sw(unsigned char switch_num, enum Switch dir)
     msg.code = CHNG_SWTC_MSG;
     msg.arg1 = switch_num;
     msg.arg2 = (unsigned char) dir;
-    psend(12,&msg,sizeof(struct message));
+    psend(5,&msg,sizeof(struct message));
 }
 
 
@@ -165,7 +165,7 @@ void reset_hall_queue(void)
     msg.code = HALL_REST_MSG;
     msg.arg1 = 0;
     msg.arg2 = 0;
-    psend(12,&msg,sizeof(struct message));
+    psend(5,&msg,sizeof(struct message));
 }
 
 /* -------------------------------------------------------------------------- *
@@ -182,7 +182,7 @@ void hall_sensor_ack(unsigned char sensor_num)
     msg.code = HALL_TRGR_ACK;
     msg.arg1 = sensor_num;
     msg.arg2 = 0;
-    psend(12,&msg,sizeof(struct message));
+    psend(5,&msg,sizeof(struct message));
 }
 
 
@@ -197,5 +197,20 @@ void hall_sensor_ack(unsigned char sensor_num)
  * -------------------------------------------------------------------------- */
 void DLL(void)
 {
-    pbind(12);
+    int source_id;
+    long int data;
+
+    pbind(5);
+    while (1)
+    {
+        precv(&source_id,&data,sizeof(long int));
+        if (source_id == -3)
+        {
+
+        }
+        else if (source_id == 6)
+        {
+
+        }
+    }
 }

@@ -40,13 +40,19 @@ enum PktType {DATA, ACK, NACK};
 enum Direction {CW,CCW};
 enum Switch {STRAIGHT,DIVERTED};
 
+
 struct message
 {
-    unsigned char code; /* Message code (described below) */
-    unsigned char arg1; /* First argument (optional) */
-    unsigned char arg2; /* Second argument (optional) */
-};
+    union {
+        struct{
+            unsigned char code; /* Message code (described below) */
+            unsigned char arg1; /* First argument (optional) */
+            unsigned char arg2; /* Second argument (optional) */
+        };
+        unsigned long message;
+    };
 
+};
 
 struct mag_dir
 {
@@ -74,6 +80,7 @@ struct control
     };
 };
 
+
 struct packet
 {
     struct control ctr;
@@ -83,10 +90,16 @@ struct packet
 
 struct frame
 {
-    unsigned char start_of_xmit;
-    struct packet pkt;
-    unsigned char Chksum;
-    unsigned char end_of_xmit;
+    union {
+        struct{
+            unsigned char start_of_xmit;
+            struct packet pkt;
+            unsigned char Chksum;
+            unsigned char end_of_xmit;
+        };
+        unsigned long frame;
+    };
+
 };
 
 /* External variables*/
