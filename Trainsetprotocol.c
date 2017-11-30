@@ -84,19 +84,7 @@ int construct_frame(struct packet pkt)
     temp_frm.end_of_xmit = ETX;
 
 }
-/* -------------------------------------------------------------------------- *
- * Purpose:       Insert an entry into the UART queue
- *
- * Arguments:
- *                req:  uart entry to be enqueued
- * Returns:
- *                TRUE  if enqueuing is successful
- *                FALSE if enqueuing is not successful
- * -------------------------------------------------------------------------- */
-void DLL(void)
-{
-    pbind(12);
-}
+
 
 /* -------------------------------------------------------------------------- *
  * Purpose:       remove an element from the UART queue
@@ -141,7 +129,8 @@ void send_md(unsigned char train_num, unsigned mag, enum Direction dir)
     md.magnitude = mag;
     msg.code = CHNG_SPDR_MSG;
     msg.arg1 = train_num;
-    msg.arg2 = (unsigned char) md;
+    msg.arg2 = md.mag_dir;
+    psend(12,&msg,sizeof(struct message));
 }
 
 /* -------------------------------------------------------------------------- *
@@ -158,6 +147,7 @@ void send_sw(unsigned char switch_num, enum Switch dir)
     msg.code = CHNG_SWTC_MSG;
     msg.arg1 = switch_num;
     msg.arg2 = (unsigned char) dir;
+    psend(12,&msg,sizeof(struct message));
 }
 
 
@@ -175,6 +165,7 @@ void reset_hall_queue(void)
     msg.code = HALL_REST_MSG;
     msg.arg1 = 0;
     msg.arg2 = 0;
+    psend(12,&msg,sizeof(struct message));
 }
 
 /* -------------------------------------------------------------------------- *
@@ -191,4 +182,20 @@ void hall_sensor_ack(unsigned char sensor_num)
     msg.code = HALL_TRGR_ACK;
     msg.arg1 = sensor_num;
     msg.arg2 = 0;
+    psend(12,&msg,sizeof(struct message));
+}
+
+
+/* -------------------------------------------------------------------------- *
+ * Purpose:       Insert an entry into the UART queue
+ *
+ * Arguments:
+ *                req:  uart entry to be enqueued
+ * Returns:
+ *                TRUE  if enqueuing is successful
+ *                FALSE if enqueuing is not successful
+ * -------------------------------------------------------------------------- */
+void DLL(void)
+{
+    pbind(12);
 }

@@ -50,17 +50,28 @@ struct message
 
 struct mag_dir
 {
-    unsigned magnitude : 3; /* 0 – stop through 7 – maximum */
-    unsigned ignored : 4; /* Zero */
-    unsigned direction : 1; /* 1 for CCW and 0 for CW */
+    union {
+        struct{
+            unsigned magnitude : 3;   /* 0 – stop through 7 – maximum */
+            unsigned ignored : 4;     /* Zero */
+            unsigned direction : 1;   /* 1 for CCW and 0 for CW */
+        };
+        unsigned char mag_dir;
+    };
+
 };
 
 
 struct control
 {
-    unsigned nr : 3;
-    unsigned ns : 3;
-    enum PktType type : 2;
+    union {
+        struct{
+            unsigned nr : 3;
+            unsigned ns : 3;
+            enum PktType type : 2;
+        };
+        unsigned char cntrl;
+    };
 };
 
 struct packet
