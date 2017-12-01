@@ -137,6 +137,7 @@
 
 /* Globals */
 extern volatile int UART_state;             /* BUSY|IDLE */
+extern volatile int UART1_state;             /* BUSY|IDLE */
 extern struct UART_entry current_msg;       /* message currently being printed */
 /* function prototypes */
 void UART0_Init(void);

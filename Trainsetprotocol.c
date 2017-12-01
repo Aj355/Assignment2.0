@@ -123,19 +123,19 @@ int construct_packet(struct message *msg, enum PktType type)
 * Return :
 *             NONE
 *******************************************************************************/
-int encapsulate_enqueue(struct packet packet)
+void encapsulate(struct packet packet)
 {
     struct frame  temp_frm;
-    temp_frm.start_of_xmit = STX;
+    temp_frm.start_xmit = STX;
     temp_frm.pkt.pkt = packet.pkt;
     temp_frm.Chksum  = packet.ctr.cntrl;
     temp_frm.Chksum += packet.len;
     temp_frm.Chksum += packet.msg.code;
     temp_frm.Chksum += packet.msg.arg1;
     temp_frm.Chksum += packet.msg.arg2;
-    temp_frm.end_of_xmit = ETX;
+    temp_frm.end_xmit = ETX;
     
-    return enqueue_frame(&temp_frm);
+    send_frame(temp_frm);
 }
 
 
@@ -264,7 +264,23 @@ void DLL(void)
             ns = (ns + 1) % 8;
             packet.ctr.type = DATA;
             packet.len = 3;
-            encapsulate_enqueue(packet);
+            encapsulate(packet);
         }
+    }
+}
+
+
+void send_frame (struct frame temp)
+{
+    if ( UART1_state == BUSY )
+        enqueue_frame(&temp);
+        /* IF UART is idle - not transmitting any characters */
+    else
+    {
+        UART1_state = BUSY;          // Signal UART is busy
+
+        UART1_DR_R = STX;        // Load character into data reg.
+        counter++;
+
     }
 }

@@ -164,6 +164,7 @@ void UART0_IntHandler(void)
 }
 
 struct frame current;
+struct frame current_frame_send;
 int escaped;
 int escaped2;
 int counter;
@@ -229,7 +230,9 @@ void UART1_IntHandler(void)
     {
         
         /* XMIT done - clear interrupt */
+
         UART1_ICR_R |= UART_INT_TX;
+        /* IF Queue is not empty  */
         if (FQ.cnt > 0)
         {
             

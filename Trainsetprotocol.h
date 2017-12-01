@@ -30,7 +30,10 @@
 #define CHNG_SPDR_ACK   0xC2        /* Ack of Speed/Direction change msg  */
 #define CHNG_SWTC_MSG   0xE0        /* Change switch state message        */
 #define CHNG_SWTC_ACK   0xE2        /* Ack of change switch state message */
+
 #define ALL             0xFF        /* all switches or all trains as trgt */
+#define ETR             0x01        /* Number of the express locomotive   */
+#define LTR             0X02        /* Number of the local locomote       */
 
 #define STX             0x02        /* ASCII start-of-xmit control byte   */
 #define ETX             0x03        /* ASCII end-of-xmit   control byte   */
@@ -39,77 +42,82 @@
 #define WINDOW_SIZE     2           /* Maximum packets xmitted before ack */
 #define SWITCH_NUM      6           /* Number of switches within trainset */
 #define TRAIN_NUM       2           /* Number of trains moving within set */
+#define MSG_BYTE        3           /* Number of bytes within one message */
+#define PKT_BYTE        5           /* Number of bytes within one packet  */
+#define FRM_BYTE        8           /* Number of bytes within one frame   */
 
 
-enum PktType {DATA, ACK, NACK};     /* Packet type */
-enum Direction {CW,CCW};            /* Locomotive direction */
-enum Switch {STRAIGHT,DIVERTED};    /* Switch direction */
+enum PktType {DATA, ACK, NACK};         /* Packet type */
+enum Direction {CW,CCW};                /* Locomotive direction */
+enum Switch {STRAIGHT,DIVERTED};        /* Switch direction */
 
 
+/* Message structure */
 struct message
 {
     union {
         struct{
-            unsigned char code; /* Message code (described below) */
-            unsigned char arg1; /* First argument (optional) */
-            unsigned char arg2; /* Second argument (optional) */
+            unsigned char code;         /* Message code (described below) */
+            unsigned char arg1;         /* First argument (optional) */
+            unsigned char arg2;         /* Second argument (optional) */
         };
-        unsigned long message;
+        unsigned long message;          /* message viewed as a single unit */
     };
 
 };
 
+/* magnitude/direction structure */
 struct mag_dir
 {
     union {
         struct{
-            unsigned magnitude : 3;   /* 0 – stop through 7 – maximum */
-            unsigned ignored : 4;     /* Zero */
-            unsigned direction : 1;   /* 1 for CCW and 0 for CW */
+            unsigned magnitude : 3;     /* 0 – stop through 7 – maximum */
+            unsigned ignored : 4;       /* Zero */
+            unsigned direction : 1;     /* 1 for CCW and 0 for CW */
         };
-        unsigned char mag_dir;
+        unsigned char mag_dir;          /* argument viewed as one byte */
     };
 
 };
 
-
+/* */
 struct control
 {
     union {
         struct{
-            unsigned nr : 3;
-            unsigned ns : 3;
-            enum PktType type : 2;
+            unsigned nr : 3;            /* Response number */
+            unsigned ns : 3;            /* sequence number */
+            enum PktType type : 2;      /* Packet type */
         };
-        unsigned char cntrl;
+        unsigned char cntrl;            /* control viewed as a byte */
     };
 };
 
-
+/* */
 struct packet
 {
     union {
         struct{
-            struct control ctr;
-            unsigned char  len;
-            struct message msg;
+            struct control ctr;         /* Control field */
+            unsigned char  len;         /* length  field */
+            struct message msg;         /* message field */
         };
-        unsigned long pkt;
+        unsigned long pkt;              /* packet viewed as a single unit */
     };
 };
 
-
-
+/* */
 struct frame
 {
     union {
         struct{
-            unsigned char start_of_xmit;
-            struct packet pkt;
-            unsigned char Chksum;
-            unsigned char end_of_xmit;
+            unsigned char start_xmit;   /* start of transmission*/
+            struct packet pkt;          /* pscket field */
+            unsigned char Chksum;       /* checksum field */
+            unsigned char end_xmit;     /* end of transmission */
         };
-        unsigned long frame;
+        unsigned long frame;            /* frame viewed as a single unit */
+        char frames[8];                 /* frame viewed as a series of bytes */
     };
 
 };
@@ -117,15 +125,17 @@ struct frame
 /* List of UART display commands */
 struct frame_queue
 {
-    struct frame queue[WINDOW_SIZE];            /* UART queue of requests */
-    int head;                                   /* Head of circular queue */
-    int tail;                                   /* Tail of circular queue */
-    volatile int cnt;                           /* Number of rqs in queue */
+    struct frame queue[WINDOW_SIZE];    /* UART queue of requests */
+    int head;                           /* Head of circular queue */
+    int tail;                           /* Tail of circular queue */
+    volatile int cnt;                   /* Number of rqs in queue */
 };
 
 /* External variables*/
 extern unsigned NR;
 extern unsigned NS;
+extern int counter;
+extern struct current_frame_send;
 extern struct packet temp_pkt;
 extern struct frame_queue FQ;
 
