@@ -19,13 +19,64 @@
 #include "kernel.h"
 #include "Trainsetprotocol.h"
 #include "processes.h"
+#include "Pcommands.h"
 
-#define Window_size         2
 
 struct packet temp_pkt;
-struct frame  temp_frm;
+enum Switch switch_state[SWITCH_NUM];
+int train_loc[TRAIN_NUM];
 unsigned nr;
 unsigned ns;
+
+
+/*******************************************************************************
+ * Purpose:
+ *             This process inserts a PCB into its corresponding priority
+ *             WTR queue and adjusts the current_priority global variable
+ *             if needed.
+ * Arguments:
+ *             in_pcb:   process control block to be inserted
+ * Return :
+ *             SUCCESS   if successful enqueuing of the PCB occurs
+ *             FAIL      if the WTR queue is full
+ *******************************************************************************/
+void express_manager(void)
+{
+    pbind(6);
+    /* Send message to DLL with all switches straight   */
+    send_sw(ALL, STRAIGHT);
+    
+    /* Send message to DLL with hall sensor queue reset */
+    reset_hall_queue();
+    
+    /* Ask display to enter train sections and speed */
+    pdisplay_str(1,5,"Enter starting sections and speeds:\n");
+    /* RECV message from display */
+    
+    /* Load trains locations and speeds */
+     
+    /* Get next direction */
+     
+    /* Get next switch state */
+     
+    /* WHILE destination not reached */
+    while(1);
+    /* IF switch state needs to change */
+     
+    /* SEND change SWITCH message to DLL */
+    
+    /* SEND next direction and speed to specified train */
+    
+    /* wait to receive message back from DLL with new train location */
+    
+    /* Get next direction */
+    
+    /* Get next switch state */
+    
+    /* Send stop train message to DLL */
+    
+}
+
 /*******************************************************************************
 * Purpose:
 *             This process inserts a PCB into its corresponding priority
@@ -72,45 +123,23 @@ int construct_packet(struct message *msg, enum PktType type)
 * Return :
 *             NONE
 *******************************************************************************/
-int construct_frame(struct packet pkt)
+int encapsulate_enqueue(struct packet packet)
 {
+    struct frame  temp_frm;
     temp_frm.start_of_xmit = STX;
-    temp_frm.pkt = pkt;
-    temp_frm.Chksum  = pkt.ctr.cntrl;
-    temp_frm.Chksum += pkt.len;
-    temp_frm.Chksum += pkt.msg.code;
-    temp_frm.Chksum += pkt.msg.arg1;
-    temp_frm.Chksum += pkt.msg.arg2;
+    temp_frm.pkt.pkt = packet.pkt;
+    temp_frm.Chksum  = packet.ctr.cntrl;
+    temp_frm.Chksum += packet.len;
+    temp_frm.Chksum += packet.msg.code;
+    temp_frm.Chksum += packet.msg.arg1;
+    temp_frm.Chksum += packet.msg.arg2;
     temp_frm.end_of_xmit = ETX;
-
+    
+    return enqueue_frame(&temp_frm);
 }
 
 
-/* -------------------------------------------------------------------------- *
- * Purpose:       remove an element from the UART queue
- * Arguments:
- *                req: UART entry to be dequeued
- * Returns:
- *                TRUE  if dequeuing is successful
- *                FALSE if dequeuing is not successful
- * -------------------------------------------------------------------------- */
-int UART1(struct UART_entry *req)
-{
 
-}
-
-/* -------------------------------------------------------------------------- *
- * Purpose:       Insert a message request into a mailbox
- * Arguments:
- *                msg:  message request
- * Returns:
- *                TRUE  if enqueuing is successful
- *                FALSE if enqueuing is not successful
- * -------------------------------------------------------------------------- */
-int er(struct msg_request * msg)
-{
-
-}
 
 /* -------------------------------------------------------------------------- *
  * Purpose:       send speed and direction
@@ -198,19 +227,35 @@ void hall_sensor_ack(unsigned char sensor_num)
 void DLL(void)
 {
     int source_id;
-    long int data;
-
+    unsigned long int data;
+    struct packet packet;
+    struct message msg;
     pbind(5);
     while (1)
     {
         precv(&source_id,&data,sizeof(long int));
-        if (source_id == -3)
+        if (source_id == UART)
         {
-
+            packet.pkt = data;
+            nr = (nr + 1) % 8;
+            switch (packet.ctr.type) {
+                case DATA:
+                    
+                    break;
+                case ACK:
+                    break;
+                case NACK:
+                    break;
+                default:
+                    break;
+            }
+            
         }
         else if (source_id == 6)
         {
-
+            msg.message = data;
+            
+            
         }
     }
 }

@@ -43,28 +43,51 @@ CALL psend function with message, size, and the DLL process mailbox address
 ---------------------------------------------------------------------------
 Structured English: Data link layer (DDL) process algorithm
 ---------------------------------------------------------------------------
-Bind process to prechosen mailbox (5)
+Bind process to mailbox 
 WHILE TRUE
 	CALL RECV function
 	IF received from UART
-		
+		SELECT PacketType
+			CASE DATA
+				NR incremented modulo 8
+				CALL psend function to train process
+			CASE ACK
+			CASE NACK
+		ENDSELECT
 	ELSE IF received from train manager
-
+		SELECT PacketType
+			CASE DATA
+				NS incremented modulo 8
+				packet populated
+				packet given to UART
+			CASE ACK
+			CASE NACK
+		ENDSELECT		
 	ENDIF
 ENDWHILE
 
 
 ---------------------------------------------------------------------------
-Structured English: kterm
+Structured English: Train Manager Process Algorithm
 ---------------------------------------------------------------------------
-
-store the running process's PCB
-remove the running process from the WTR queue
-set the running process to the next one in the list
-free the stored process's stack
-free the stored process's PCB
-set the PSP to the current running process's SP
-restore the registers of the current running process
+Bind process to mailbox 
+Send message to DLL with all switches straight 
+Send message to DLL with hall sensor queue reset
+Ask display to enter train sections and speed
+RECV message from display
+Load trains locations and speeds
+Get next direction
+Get next switch state
+WHILE destination not reached
+	IF switch state needs to change
+		SEND change SWITCH message to DLL
+	ENDIF
+	SEND next direction and speed to specified train
+	wait to receive message back from DLL with new train location
+	Get next direction
+	Get next switch state
+ENDWHILE
+Send stop train message to DLL
 
 ---------------------------------------------------------------------------
 Structured English: pgetid

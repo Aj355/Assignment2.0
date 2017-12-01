@@ -16,10 +16,13 @@
 #include "Kcommands.h"
 #include "kernel.h"
 #include "Trainsetprotocol.h"
+#include "processes.h"
+
+#define MAX_LEN     32
 
 /* Globals */
 volatile int UART_state;                /* BUSY|IDLE */
-volatile int UART1_state;                /* BUSY|IDLE */
+volatile int UART1_state;               /* BUSY|IDLE */
 struct UART_entry current_msg;          /* message currently being printed */
 
 void UART0_Init(void)
@@ -162,7 +165,10 @@ void UART0_IntHandler(void)
 
 struct frame current;
 int escaped;
+int escaped2;
+int counter;
 int active;
+int len;
 
 void UART1_IntHandler(void)
 {
@@ -175,14 +181,48 @@ void UART1_IntHandler(void)
     {
         /* RECV done - clear interrupt and make char available to application */
         UART1_ICR_R |= UART_INT_RX;
-        // fill the entry with the incoming information
-        if (!active && UART1_DR_R == STX && !escaped)
+        
+        if (!active )
         {
-            active = 1;
-            current.start_of_xmit = STX;
-            return;
+            switch (UART1_DR_R) {
+                case STX:
+                    active = 1;
+                    len = 0;
+                    current.Chksum= 0;
+                    current.pkt.pkt = 0;
+                    break;
+                default:
+                    break;
+            }
         }
-
+        else
+        {
+            switch (UART1_DR_R) {
+                case DLE:
+                    if (escaped)
+                    {
+                        if (len > MAX_LEN)
+                            active = 0;
+                        else
+                            current.pkt.pkt += (UART1_DR_R << len*8);
+                    }
+                    escaped = 1;
+                    break;
+                case ETX:
+                    if (current.Chksum == 0xff)
+                        psend(5,&current.pkt,5);
+                    active = 0;
+                    break;
+                default:
+                    current.Chksum +=UART1_DR_R;
+                    len++;
+                    if (len > MAX_LEN)
+                        active = 0;
+                    else
+                        current.pkt.pkt += (UART1_DR_R << len*8);
+                    break;
+            }
+        }
     }
     
     if (UART1_MIS_R & UART_INT_TX)
@@ -190,7 +230,12 @@ void UART1_IntHandler(void)
         
         /* XMIT done - clear interrupt */
         UART1_ICR_R |= UART_INT_TX;
-        
+        if (FQ.cnt > 0)
+        {
+            
+        }
+        else
+            UART1_state = IDLE;
     }
 }
 void InterruptMasterEnable(void)

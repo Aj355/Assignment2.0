@@ -30,15 +30,20 @@
 #define CHNG_SPDR_ACK   0xC2        /* Ack of Speed/Direction change msg  */
 #define CHNG_SWTC_MSG   0xE0        /* Change switch state message        */
 #define CHNG_SWTC_ACK   0xE2        /* Ack of change switch state message */
+#define ALL             0xFF        /* all switches or all trains as trgt */
 
 #define STX             0x02        /* ASCII start-of-xmit control byte   */
 #define ETX             0x03        /* ASCII end-of-xmit   control byte   */
 #define DLE             0x10        /* ASCII Data Link esc control byte   */
 
+#define WINDOW_SIZE     2           /* Maximum packets xmitted before ack */
+#define SWITCH_NUM      6           /* Number of switches within trainset */
+#define TRAIN_NUM       2           /* Number of trains moving within set */
 
-enum PktType {DATA, ACK, NACK};
-enum Direction {CW,CCW};
-enum Switch {STRAIGHT,DIVERTED};
+
+enum PktType {DATA, ACK, NACK};     /* Packet type */
+enum Direction {CW,CCW};            /* Locomotive direction */
+enum Switch {STRAIGHT,DIVERTED};    /* Switch direction */
 
 
 struct message
@@ -83,10 +88,17 @@ struct control
 
 struct packet
 {
-    struct control ctr;
-    unsigned char  len;
-    struct message msg;
+    union {
+        struct{
+            struct control ctr;
+            unsigned char  len;
+            struct message msg;
+        };
+        unsigned long pkt;
+    };
 };
+
+
 
 struct frame
 {
@@ -102,8 +114,26 @@ struct frame
 
 };
 
+/* List of UART display commands */
+struct frame_queue
+{
+    struct frame queue[WINDOW_SIZE];            /* UART queue of requests */
+    int head;                                   /* Head of circular queue */
+    int tail;                                   /* Tail of circular queue */
+    volatile int cnt;                           /* Number of rqs in queue */
+};
+
 /* External variables*/
 extern unsigned NR;
 extern unsigned NS;
 extern struct packet temp_pkt;
+extern struct frame_queue FQ;
+
+
+void reset_hall_queue(void);
+void send_sw(unsigned char switch_num, enum Switch dir);
+void send_md(unsigned char train_num, unsigned mag, enum Direction dir);
+void hall_sensor_ack(unsigned char sensor_num);
+
+
 #endif /* TRAINSET_H_ */

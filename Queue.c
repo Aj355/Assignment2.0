@@ -17,11 +17,10 @@
 #include "UART.h"
 #include "Kcommands.h"
 #include "kernel.h"
+#include "Trainsetprotocol.h"
 
-
-struct UART_queue UQ;   /*contains list of string pointers to be printed*/
-
-
+struct UART_queue UQ;   /* contains list of string pointers to be printed */
+struct frame_queue FQ;  /* contains list of frames to be sent */
 /*******************************************************************************
 * Purpose:
 *             This process inserts a PCB into its corresponding priority
@@ -146,6 +145,59 @@ int dequeue_UART(struct UART_entry *req)
         req->proc = UQ.queue[UQ.tail].proc;
         UQ.tail = (UQ.tail + 1) % MAX_UART_REQ;        // Increment tail to entry
         UQ.cnt--;                                   // Decrement queue counter
+    }
+    else
+        state = FALSE;
+    InterruptMasterEnable();                     // Enable all interrupts
+    return state;
+}
+
+/* -------------------------------------------------------------------------- *
+ * Purpose:       Insert an entry into the UART queue
+ *
+ * Arguments:
+ *                req:  uart entry to be enqueued
+ * Returns:
+ *                TRUE  if enqueuing is successful
+ *                FALSE if enqueuing is not successful
+ * -------------------------------------------------------------------------- */
+int enqueue_frame(struct frame * req)
+{
+    int state;
+    InterruptMasterDisable();               // Disable all interrupt
+    if (FQ.cnt == WINDOW_SIZE)              // IF queue is full
+        state = FALSE;
+    else
+    {
+        state = TRUE;
+        FQ.queue[FQ.head].frame = req->frame;
+        // Increment head to next entry
+        FQ.head = (FQ.head + 1) % WINDOW_SIZE;
+        // Increment Queue entry counter
+        FQ.cnt++;
+    }
+    InterruptMasterEnable();                // Enable all interrupts
+    return state;
+}
+
+/* -------------------------------------------------------------------------- *
+ * Purpose:       remove an element from the UART queue
+ * Arguments:
+ *                req: UART entry to be dequeued
+ * Returns:
+ *                TRUE  if dequeuing is successful
+ *                FALSE if dequeuing is not successful
+ * -------------------------------------------------------------------------- */
+int dequeue_frame(struct frame * req)
+{
+    int state;
+    InterruptMasterDisable();                    // Disable all interrupt
+    if (FQ.cnt > 0)                              // IF the queue is not empty
+    {
+        state = TRUE;
+        req->frame = FQ.queue[FQ.tail].frame;
+        FQ.tail = (FQ.tail + 1) % WINDOW_SIZE;   // Increment tail to entry
+        FQ.cnt--;                                // Decrement queue counter
     }
     else
         state = FALSE;

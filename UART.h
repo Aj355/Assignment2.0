@@ -32,66 +32,70 @@
 #ifndef UART_H_
 #define UART_H_
 
-// UART0 & PORTA Registers
+/* UART0/UART1 & PORTA/PORTB Registers */
+
 // GPIOA Alternate Function Select Register
 #define GPIO_PORTA_AFSEL_R  (*((volatile unsigned long *)0x40058420))
-// GPIOA Digital Enable Register
-#define GPIO_PORTA_DEN_R    (*((volatile unsigned long *)0x4005851C))
-// GPIOA Port Control Register
-#define GPIO_PORTA_PCTL_R   (*((volatile unsigned long *)0x4005852C))
-// UART0 Data Register
-#define UART0_DR_R          (*((volatile unsigned long *)0x4000C000))
-// UART0 Flag Register
-//#define UART0_FR_R          (*((volatile unsigned long *)0x4000C018))
-// UART0 Integer Baud-Rate Divisor Register
-#define UART0_IBRD_R        (*((volatile unsigned long *)0x4000C024))
-// UART0 Fractional Baud-Rate Divisor Register
-#define UART0_FBRD_R        (*((volatile unsigned long *)0x4000C028))
-// UART0 Line Control Register
-#define UART0_LCRH_R        (*((volatile unsigned long *)0x4000C02C))
-// UART0 Control Register
-#define UART0_CTL_R         (*((volatile unsigned long *)0x4000C030))
-// UART0 Interrupt FIFO Level Select Register
-#define UART0_IFLS_R        (*((volatile unsigned long *)0x4000C034))
-// UART0 Interrupt Mask Register
-#define UART0_IM_R          (*((volatile unsigned long *)0x4000C038))
-// UART0 Masked Interrupt Status Register
-#define UART0_MIS_R         (*((volatile unsigned long *)0x4000C040))
-// UART0 Interrupt Clear Register
-#define UART0_ICR_R         (*((volatile unsigned long *)0x4000C044))
-// UART0 Clock Control Register
-#define UART0_CC_R          (*((volatile unsigned long *)0x4000CFC8))
-
-
-// UART1 & PORTB Registers
-// GPIOB Alternate Function Select Register
 #define GPIO_PORTB_AFSEL_R  (*((volatile unsigned long *)0x40059420))
-// GPIOB Digital Enable Register
+
+// GPIO Digital Enable Register
+#define GPIO_PORTA_DEN_R    (*((volatile unsigned long *)0x4005851C))
 #define GPIO_PORTB_DEN_R    (*((volatile unsigned long *)0x4005951C))
-// GPIOB Port Control Register
+
+// GPIO Port Control Register
+#define GPIO_PORTA_PCTL_R   (*((volatile unsigned long *)0x4005852C))
 #define GPIO_PORTB_PCTL_R   (*((volatile unsigned long *)0x4005952C))
-// UART1 Data Register
+
+// UART Data Registers
+#define UART0_DR_R          (*((volatile unsigned long *)0x4000C000))
 #define UART1_DR_R          (*((volatile unsigned long *)0x4000D000))
-// UART0 Flag Register
-//#define UART1_FR_R          (*((volatile unsigned long *)0x4000C018))
-// UART1 Integer Baud-Rate Divisor Register
+
+
+// UART Integer Baud-Rate Divisor Register
+#define UART0_IBRD_R        (*((volatile unsigned long *)0x4000C024))
 #define UART1_IBRD_R        (*((volatile unsigned long *)0x4000D024))
-// UART1 Fractional Baud-Rate Divisor Register
+
+// UART Fractional Baud-Rate Divisor Register
+#define UART0_FBRD_R        (*((volatile unsigned long *)0x4000C028))
 #define UART1_FBRD_R        (*((volatile unsigned long *)0x4000D028))
-// UART1 Line Control Register
+
+// UART Line Control Register
+#define UART0_LCRH_R        (*((volatile unsigned long *)0x4000C02C))
 #define UART1_LCRH_R        (*((volatile unsigned long *)0x4000D02C))
-// UART1 Control Register
+
+// UART Control Register
+#define UART0_CTL_R         (*((volatile unsigned long *)0x4000C030))
 #define UART1_CTL_R         (*((volatile unsigned long *)0x4000D030))
-// UART1 Interrupt FIFO Level Select Register
+
+// UART Interrupt FIFO Level Select Register
+#define UART0_IFLS_R        (*((volatile unsigned long *)0x4000C034))
 #define UART1_IFLS_R        (*((volatile unsigned long *)0x4000D034))
-// UART1 Interrupt Mask Register
+
+// UART Interrupt Mask Register
+#define UART0_IM_R          (*((volatile unsigned long *)0x4000C038))
 #define UART1_IM_R          (*((volatile unsigned long *)0x4000D038))
-// UART1 Masked Interrupt Status Register
+
+// UART Masked Interrupt Status Register
+#define UART0_MIS_R         (*((volatile unsigned long *)0x4000C040))
 #define UART1_MIS_R         (*((volatile unsigned long *)0x4000D040))
-// UART1 Interrupt Clear Register
+
+// UART Interrupt Clear Register
+#define UART0_ICR_R         (*((volatile unsigned long *)0x4000C044))
 #define UART1_ICR_R         (*((volatile unsigned long *)0x4000D044))
-// UART1 Clock Control Register
+
+// UART Clock Control Register
+#define UART0_CC_R          (*((volatile unsigned long *)0x4000CFC8))
 #define UART1_CC_R          (*((volatile unsigned long *)0x4000DFC8))
+
+// Clock Gating Registers
+#define SYSCTL_RCGCGPIO_R      (*((volatile unsigned long *)0x400FE608))
+#define SYSCTL_RCGCUART_R      (*((volatile unsigned long *)0x400FE618))
+
+#define SYSCTL_RCGCGPIO_UART0      0x00000001  // UART0 Clock Gating Control
+#define SYSCTL_RCGCUART_GPIOA      0x00000001  // PortA Clock Gating Control
+#define SYSCTL_RCGCGPIO_UART1      0x00000002  // UART1 Clock Gating Control
+#define SYSCTL_RCGCUART_GPIOB      0x00000002  // PortB Clock Gating Control
+
 
 // UART0 Rx and Tx interrupt index (decimal)
 #define INT_VEC_UART0           5
@@ -115,22 +119,13 @@
 #define EN_DIG_PA1              0x00000002  // Enable Digital I/O on PA1
 
 
-// Clock Gating Registers
-#define SYSCTL_RCGCGPIO_R      (*((volatile unsigned long *)0x400FE608))
-#define SYSCTL_RCGCUART_R      (*((volatile unsigned long *)0x400FE618))
 
-#define SYSCTL_RCGCGPIO_UART0      0x00000001  // UART0 Clock Gating Control
-#define SYSCTL_RCGCUART_GPIOA      0x00000001  // Port A Clock Gating Control
-
-
-#define SYSCTL_RCGCGPIO_UART1      0x00000002  // UART1 Clock Gating Control
-#define SYSCTL_RCGCUART_GPIOB      0x00000002  // Port B Clock Gating Control
 
 // Clock Configuration Register
 #define SYSCTRL_RCC_R           (*((volatile unsigned long *)0x400FE0B0))
 
 #define CLEAR_USRSYSDIV     0xF83FFFFF  // Clear USRSYSDIV Bits
-#define SET_BYPASS      0x00000800  // Set BYPASS Bit
+#define SET_BYPASS          0x00000800  // Set BYPASS Bit
 
 // Interrupt 0-31 Set Enable Register
 #define NVIC_EN0_R      (*((volatile unsigned long *)0xE000E100))

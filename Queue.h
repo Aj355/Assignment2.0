@@ -20,6 +20,7 @@
 #include "process_support.h"
 #include "Pcommands.h"
 #include "Kcommands.h"
+#include "Trainsetprotocol.h"
 
 /* maximum number of queue entries for both input and output */
 #define MAX_ENTRIES 128
@@ -35,6 +36,8 @@ int enqueue_msg(struct msg_request *);
 int dequeue_msg(struct msg_request *);
 int enqueue_UART(struct UART_entry * req);
 int dequeue_UART(struct UART_entry *req);
+int enqueue_frame(struct frame * req);
+int dequeue_frame(struct frame * req);
 
 
 #endif /* QUEUE_H_ */

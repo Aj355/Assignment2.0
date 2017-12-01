@@ -16,7 +16,7 @@
 #include "SYSTICK.h"
 #include "Queue.h"
 #include "Pcommands.h"
-
+#include "kernel.h"
 #define NVIC_INT_CTRL_R (*((volatile unsigned long *) 0xE000ED04))
 #define TRIGGER_PENDSV	0x10000000
 
