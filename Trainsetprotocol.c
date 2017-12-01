@@ -264,7 +264,7 @@ void DLL(void)
             ns = (ns + 1) % 8;
             packet.ctr.type = DATA;
             packet.len = 3;
-            
+            encapsulate_enqueue(packet);
         }
     }
 }
