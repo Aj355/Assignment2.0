@@ -227,9 +227,10 @@ void hall_sensor_ack(unsigned char sensor_num)
 void DLL(void)
 {
     int source_id;
+    int ack_needed;
+    int nack_needed;
     unsigned long int data;
     struct packet packet;
-    struct message msg;
     pbind(5);
     while (1)
     {
@@ -237,24 +238,32 @@ void DLL(void)
         if (source_id == UART)
         {
             packet.pkt = data;
-            nr = (nr + 1) % 8;
-            switch (packet.ctr.type) {
-                case DATA:
-                    
-                    break;
-                case ACK:
-                    break;
-                case NACK:
-                    break;
-                default:
-                    break;
+            if (packet.ctr.ns == nr)
+            {
+                nr = (nr + 1) % 8;
+                switch (packet.ctr.type)
+                {
+                    case DATA:
+                        // note: you only want to send hall trigger msg
+                        psend(6, &packet.msg, packet.len);
+                        break;
+                    case ACK:
+                        break;
+                    case NACK:
+                        break;
+                    default:
+                        break;
+                }
             }
-            
         }
         else if (source_id == 6)
         {
-            msg.message = data;
-            
+            packet.msg.message = data;
+            packet.ctr.nr = nr;
+            packet.ctr.ns = ns;
+            ns = (ns + 1) % 8;
+            packet.ctr.type = DATA;
+            packet.len = 3;
             
         }
     }

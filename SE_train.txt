@@ -47,9 +47,10 @@ Bind process to mailbox
 WHILE TRUE
 	CALL RECV function
 	IF received from UART
+		NR incremented modulo 8
+				
 		SELECT PacketType
 			CASE DATA
-				NR incremented modulo 8
 				CALL psend function to train process
 			CASE ACK
 			CASE NACK
