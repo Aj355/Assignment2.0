@@ -91,7 +91,7 @@ ENDWHILE
 Send stop train message to DLL
 
 ---------------------------------------------------------------------------
-Structured English: pgetid
+Structured English: Window Manager
 ---------------------------------------------------------------------------
 
 CALL pkcall subroutine with GETID code message
