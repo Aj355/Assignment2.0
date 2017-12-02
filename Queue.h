@@ -32,12 +32,13 @@
 
 
 /* function prototypes */
-int enqueue_msg(struct msg_request *);
-int dequeue_msg(struct msg_request *);
+int enqueue_msg(struct msg_request * req);
+int dequeue_msg(struct msg_request * req);
 int enqueue_UART(struct UART_entry * req);
-int dequeue_UART(struct UART_entry *req);
-int enqueue_frame(struct frame * req);
-int dequeue_frame(struct frame * req);
-
+int dequeue_UART(struct UART_entry * req);
+int enqueue_frame (struct frame  * req);
+int dequeue_frame (struct frame  * req);
+int enqueue_packet(struct packet * req);
+int dequeue_packet(struct packet * req);
 
 #endif /* QUEUE_H_ */

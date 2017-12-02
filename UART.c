@@ -163,8 +163,8 @@ void UART0_IntHandler(void)
     }
 }
 
-struct frame current;
-struct frame current_frame_send;
+struct frame recv;
+struct frame send;
 int escaped;
 int escaped2;
 int counter;
@@ -173,6 +173,7 @@ int len;
 
 void UART1_IntHandler(void)
 {
+    struct msg_request tmp;
     /*
      * Simplified UART ISR - handles receive and xmit interrupts
      * Application signalled when data received
@@ -183,14 +184,14 @@ void UART1_IntHandler(void)
         /* RECV done - clear interrupt and make char available to application */
         UART1_ICR_R |= UART_INT_RX;
         
-        if (!active )
+        if ( !active )
         {
             switch (UART1_DR_R) {
                 case STX:
                     active = 1;
                     len = 0;
-                    current.Chksum= 0;
-                    current.pkt.pkt = 0;
+                    recv.Chksum= 0;
+                    recv.pkt.pkt = 0;
                     break;
                 default:
                     break;
@@ -205,22 +206,29 @@ void UART1_IntHandler(void)
                         if (len > MAX_LEN)
                             active = 0;
                         else
-                            current.pkt.pkt += (UART1_DR_R << len*8);
+                            recv.pkt.pkt += (UART1_DR_R << len*8);
                     }
                     escaped = 1;
                     break;
                 case ETX:
-                    if (current.Chksum == 0xff)
-                        psend(5,&current.pkt,5);
+                    if (recv.Chksum == 0xff)
+                    {
+                        tmp.dst_id = 5; /* Destination */
+                        tmp.sz = 5;               /* Size of msg */
+                        tmp.src_id = UART;     /* Source is systick (unique ID) */
+                        save_registers();         /* incase send wakes up higher priority proc*/
+                        ksend(&tmp);              /* send systick notification of 1/10 second */
+                        restore_registers();      /* restore registers for same reason of sv  */
+                    }
                     active = 0;
                     break;
                 default:
-                    current.Chksum +=UART1_DR_R;
+                    recv.Chksum +=UART1_DR_R;
                     len++;
                     if (len > MAX_LEN)
                         active = 0;
                     else
-                        current.pkt.pkt += (UART1_DR_R << len*8);
+                        recv.pkt.pkt += (UART1_DR_R << len*8);
                     break;
             }
         }
@@ -232,13 +240,45 @@ void UART1_IntHandler(void)
         /* XMIT done - clear interrupt */
 
         UART1_ICR_R |= UART_INT_TX;
-        /* IF Queue is not empty  */
-        if (FQ.cnt > 0)
+        /*  if  current frame is not done sending*/
+        if (counter < (FRM_BYTE - 1))
         {
-            
+            if (send.frames[counter] == STX ||
+                    send.frames[counter] == ETX ||
+                    send.frames[counter] == DLE )
+            {
+                if (escaped)
+                {
+                    escaped = 0;
+                    UART1_DR_R = send.frames[counter++];
+                }
+                else
+                {
+                    escaped = 1;
+                    UART1_DR_R = DLE;
+                }
+            }
+            else
+            {
+                UART1_DR_R = send.frames[counter++];  // Load character into data reg.
+            }
+        }
+        else if (counter == (FRM_BYTE -1))
+        {
+            UART1_DR_R = send.frames[counter++];
         }
         else
-            UART1_state = IDLE;
+        {
+            counter = 0;
+            if (FQ.cnt > 0)
+            {
+                dequeue_frame(&send);
+                UART1_DR_R = STX;
+                counter++;
+            }
+            else
+                UART1_state = IDLE;
+        }
     }
 }
 void InterruptMasterEnable(void)

@@ -56,7 +56,7 @@ enum Switch {STRAIGHT,DIVERTED};        /* Switch direction */
 struct message
 {
     union {
-        struct{
+        struct {
             unsigned char code;         /* Message code (described below) */
             unsigned char arg1;         /* First argument (optional) */
             unsigned char arg2;         /* Second argument (optional) */
@@ -103,6 +103,7 @@ struct packet
             struct message msg;         /* message field */
         };
         unsigned long pkt;              /* packet viewed as a single unit */
+        char packets[5];                /* packet viewed as a series of bytes */
     };
 };
 
@@ -119,17 +120,29 @@ struct frame
         unsigned long frame;            /* frame viewed as a single unit */
         char frames[8];                 /* frame viewed as a series of bytes */
     };
-
+    int counter;
+    int escaped;
 };
 
-/* List of UART display commands */
+
+/* List of frames to be send by the physical layer */
 struct frame_queue
 {
-    struct frame queue[WINDOW_SIZE];    /* UART queue of requests */
+    struct frame queue[12];             /* frame queue */
     int head;                           /* Head of circular queue */
     int tail;                           /* Tail of circular queue */
     volatile int cnt;                   /* Number of rqs in queue */
 };
+
+/* List of frames to be send by the physical layer */
+struct packet_queue
+{
+    struct packet queue[12];             /* frame queue */
+    int head;                           /* Head of circular queue */
+    int tail;                           /* Tail of circular queue */
+    volatile int cnt;                   /* Number of rqs in queue */
+};
+
 
 /* External variables*/
 extern unsigned NR;
@@ -144,6 +157,6 @@ void reset_hall_queue(void);
 void send_sw(unsigned char switch_num, enum Switch dir);
 void send_md(unsigned char train_num, unsigned mag, enum Direction dir);
 void hall_sensor_ack(unsigned char sensor_num);
-
+void send_frame (struct frame );
 
 #endif /* TRAINSET_H_ */
