@@ -94,9 +94,25 @@ Send stop train message to DLL
 Structured English: Window Manager
 ---------------------------------------------------------------------------
 
-CALL pkcall subroutine with GETID code message
-provide the id number to the calling process 
-EXIT 
+Initialize all window sizes and cursor positions of each window
+initialize the first window to be the active window
+DO WHILE there are messages in the mailbox
+	IF the received message is a window bind request
+		THEN IF the requested window is not already bound
+			THEN set the requesting process to be the owner
+		ENDIF
+	ELSE IF the received message is window unbind request
+		THEN IF the requesting process owns the window to be unbound
+			THEN unbind the window by removing its owner
+			clear the window
+		ENDIF
+	ELSE IF the received message is a display request
+		THEN IF the requesting process owns a window
+			THEN print the message on that window
+		ENDIF
+	ELSE IF the received message is from UART (input character)
+		THEN 
+		
 
 ---------------------------------------------------------------------------
 Structured English: kgetid
