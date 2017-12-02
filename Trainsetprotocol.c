@@ -15,8 +15,6 @@
 #include <stdlib.h>
 #include "Queue.h"
 #include "UART.h"
-#include "Kcommands.h"
-#include "kernel.h"
 #include "Trainsetprotocol.h"
 #include "processes.h"
 #include "Pcommands.h"

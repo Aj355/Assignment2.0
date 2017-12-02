@@ -52,6 +52,7 @@ enum Direction {CW,CCW};                /* Locomotive direction */
 enum Switch {STRAIGHT,DIVERTED};        /* Switch direction */
 
 
+
 /* Message structure */
 struct message
 {
@@ -65,6 +66,7 @@ struct message
     };
 
 };
+//#pragma pack(push,1)
 
 /* magnitude/direction structure */
 struct mag_dir
@@ -80,11 +82,12 @@ struct mag_dir
 
 };
 
+
 /* */
-struct control
+struct __attribute__((packed)) control
 {
-    union {
-        struct{
+    union __attribute__((packed)){
+        struct __attribute__((packed)){
             unsigned nr : 3;            /* Response number */
             unsigned ns : 3;            /* sequence number */
             enum PktType type : 2;      /* Packet type */
@@ -93,19 +96,31 @@ struct control
     };
 };
 
+struct __attribute__((packed)) lol {
+    struct control ctr;         /* Control field */
+    struct control ctdr;         /* Control field */
+    struct control cstr;         /* Control field */
+    struct control ctsr;         /* Control field */
+
+};
+//#pragma pack(pop)
+
 /* */
 struct packet
 {
     union {
         struct{
             struct control ctr;         /* Control field */
-            unsigned char  len;         /* length  field */
-            struct message msg;         /* message field */
+            unsigned char  len;         /* Length  field */
+            struct message msg;         /* Message field */
         };
         unsigned long pkt;              /* packet viewed as a single unit */
         char packets[5];                /* packet viewed as a series of bytes */
     };
 };
+
+
+
 
 /* */
 struct frame
@@ -158,5 +173,5 @@ void send_sw(unsigned char switch_num, enum Switch dir);
 void send_md(unsigned char train_num, unsigned mag, enum Direction dir);
 void hall_sensor_ack(unsigned char sensor_num);
 void send_frame (struct frame );
-
+void DLL (void);
 #endif /* TRAINSET_H_ */
