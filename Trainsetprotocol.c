@@ -63,9 +63,11 @@ unsigned ns;
 void express_manager(void)
 {
     pbind(6);
+    int i=1;
     /* Send message to DLL with all switches straight   */
-    send_sw(ALL, STR);
-    
+    //send_sw(4, DIV);
+    int source_id;
+    struct message data;
     /* Send message to DLL with hall sensor queue reset */
     reset_hall_queue();
 
@@ -86,11 +88,17 @@ void express_manager(void)
     /* Get next switch state */
      
     /* WHILE destination not reached */
-    while(1);
+    while(1){
     /* IF switch state needs to change */
      
+        precv(&source_id,&data,sizeof(long int));
+        hall_sensor_ack(data.p[1]);
+        data.p[0]='\n';
+        data.p[1]+='0';
+        data.p[2]='\0';
+        pdisplay_str(1,i++,data.p);
     /* SEND change SWITCH message to DLL */
-    
+    }
     /* SEND next direction and speed to specified train */
     
     /* wait to receive message back from DLL with new train location */
@@ -117,20 +125,26 @@ void express_manager(void)
 void encapsulate(struct packet packet)
 {
     struct frame  temp_frm;
+    int i=0,j=1;
     temp_frm.start_xmit = STX;
-    temp_frm.pkt.msg.code = packet.msg.code;
-    temp_frm.pkt.msg.arg1 = packet.msg.arg1;
-    temp_frm.pkt.msg.arg2 = packet.msg.arg2;
-    temp_frm.pkt.len = packet.len;
     temp_frm.pkt.ctr.cntrl= packet.ctr.cntrl;
     temp_frm.Chksum  = packet.ctr.cntrl;
-    temp_frm.Chksum += packet.len;
-    temp_frm.Chksum += packet.msg.code;
-    temp_frm.Chksum += packet.msg.arg1;
-    temp_frm.Chksum += packet.msg.arg2;
+    if (packet.len)
+    {
+        temp_frm.pkt.len = packet.len;
+        temp_frm.Chksum += packet.len;
+        i++;
+        j--;
+    }
+    for ( ; i <= packet.len ; i++)
+    {
+        temp_frm.frames[i + 2] = packet.packets[i+1];
+        temp_frm.Chksum += packet.packets[i+1];
+    }
     temp_frm.Chksum = ~temp_frm.Chksum;
-    temp_frm.end_xmit = ETX;
-    offset = 0;
+    temp_frm.frames[i+2-j] = temp_frm.Chksum;
+    temp_frm.frames[i+3-j] = ETX;
+    offset = i+3-j;
     send_frame(temp_frm);
 }
 
@@ -152,7 +166,7 @@ void ack(struct packet packet)
     temp_frm.frames[2] = packet.ctr.cntrl;
     temp_frm.frames[2] = ~temp_frm.frames[2];
     temp_frm.frames[3] = ETX;
-    offset = 4;
+    offset = 3;
     send_frame(temp_frm);
 }
 
@@ -250,32 +264,38 @@ void DLL(void)
     pbind(5);
     while (1)
     {
-        precv(&source_id,&data,sizeof(long int));
+        precv(&source_id,&data,sizeof(long long));
         if (source_id == UART)
         {
             packet.pkt = data;
             if (packet.ctr.ns == nr)
             {
-                nr = (nr + 1) % 8;
                 switch (packet.ctr.type)
                 {
                     case DATA:
                         // note: you only want to send hall trigger msg
-                        psend(6, &packet.msg, packet.len);
-                        packet.msg.code = 0;
-                        packet.msg.arg1 = 0;
-                        packet.msg.arg2 = 0;
+                        psend(6, &packet.msg, (packet.len+1));
+                        nr = (nr + 1) % 8;
                         packet.ctr.nr = nr;
                         packet.ctr.ns = 0;
                         packet.ctr.type = ACK;
                         packet.len = 0;
-                        ack(packet);
+                        packet.msg.code = 0;
+                        packet.msg.arg1 = 0;
+                        packet.msg.arg2 = 0;
+                        //window.pkt = packet.pkt;
+                        encapsulate(packet);
                         break;
                     case ACK:
                         if (packet.ctr.nr <= ns)
                         {
                             h++;
                             window.pkt=0;
+                            if (dequeue_packet(&packet))
+                            {
+                                window.pkt = packet.pkt;
+                                encapsulate(packet);
+                            }
                         }
                         else
                         {
@@ -299,10 +319,14 @@ void DLL(void)
             packet.ctr.ns = ns;
             ns = (ns + 1) % 8;
             packet.ctr.type = DATA;
-            packet.len = 3;
-            while(window.pkt!=0);
-            window.pkt = packet.pkt;
-            encapsulate(packet);
+            packet.len = 2;
+            if (window.pkt == 0)
+            {
+                window.pkt = packet.pkt;
+                encapsulate(packet);
+            }
+            else
+                enqueue_packet(&packet);
         }
     }
 }

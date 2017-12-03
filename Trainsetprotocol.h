@@ -92,7 +92,7 @@ struct message
             unsigned char arg2;         /* Second argument (optional) */
 
         };
-
+        char p[4];
     };
 };
 
@@ -163,8 +163,6 @@ struct frame
         unsigned long long frame;            /* frame viewed as a single unit */
         char frames[8];                 /* frame viewed as a series of bytes */
     };
-    //int counter;
-    //int escaped;
 };
 
 
