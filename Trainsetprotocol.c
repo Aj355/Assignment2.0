@@ -47,7 +47,7 @@ void express_manager(void)
     
     /* Send message to DLL with hall sensor queue reset */
     reset_hall_queue();
-    
+
     /* Ask display to enter train sections and speed */
     pdisplay_str(1,5,"Enter starting sections and speeds:\n");
     /* RECV message from display */
@@ -91,14 +91,18 @@ void encapsulate(struct packet packet)
 {
     struct frame  temp_frm;
     temp_frm.start_xmit = STX;
-    temp_frm.pkt.pkt = packet.pkt;
+    temp_frm.pkt.msg.code = packet.msg.code;
+    temp_frm.pkt.msg.arg1 = packet.msg.arg1;
+    temp_frm.pkt.msg.arg2 = packet.msg.arg2;
+    temp_frm.pkt.len = packet.len;
+    temp_frm.pkt.ctr.cntrl= packet.ctr.cntrl;
     temp_frm.Chksum  = packet.ctr.cntrl;
     temp_frm.Chksum += packet.len;
     temp_frm.Chksum += packet.msg.code;
     temp_frm.Chksum += packet.msg.arg1;
     temp_frm.Chksum += packet.msg.arg2;
+    temp_frm.Chksum = ~temp_frm.Chksum;
     temp_frm.end_xmit = ETX;
-    
     send_frame(temp_frm);
 }
 
@@ -158,7 +162,7 @@ void reset_hall_queue(void)
     msg.code = HALL_REST_MSG;
     msg.arg1 = 0;
     msg.arg2 = 0;
-    psend(5,&msg,sizeof(struct message));
+    psend(5,&msg.message,sizeof(struct message));
 }
 
 /* -------------------------------------------------------------------------- *
@@ -191,8 +195,10 @@ struct packet window;
 void DLL(void)
 {
     int source_id;
-    unsigned long int data;
+    unsigned long long data =0;
+    struct message t;
     struct packet packet;
+    packet.pkt = 0;
     pbind(5);
     while (1)
     {
@@ -208,7 +214,9 @@ void DLL(void)
                     case DATA:
                         // note: you only want to send hall trigger msg
                         psend(6, &packet.msg, packet.len);
-                        packet.msg.message = 0;
+                        packet.msg.code = 0;
+                        packet.msg.arg1 = 0;
+                        packet.msg.arg2 = 0;
                         packet.ctr.nr = nr;
                         packet.ctr.ns = 0;
                         packet.ctr.type = ACK;
@@ -234,7 +242,10 @@ void DLL(void)
         }
         else if (source_id == 6)
         {
-            packet.msg.message = data;
+            t.message = data;
+            packet.msg.code = t.code;
+            packet.msg.arg1 = t.arg1;
+            packet.msg.arg2 = t.arg2;
             packet.ctr.nr = nr;
             packet.ctr.ns = ns;
             ns = (ns + 1) % 8;
@@ -255,6 +266,7 @@ void send_frame (struct frame temp)
     else
     {
         UART1_state = BUSY;          // Signal UART is busy
+        send.frame = temp.frame;
         UART1_DR_R = temp.frames[counter++];  // Load character into data reg.
     }
 }

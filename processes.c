@@ -16,15 +16,16 @@
 void test (void)
 {
     int i,u,y,t,r,e,w,q;
-    i = sizeof(struct message);
-    u = sizeof(struct mag_dir);
+    i = sizeof(struct m);
+    u = sizeof(struct message);
     y = sizeof(struct control);
     t = sizeof(struct packet);
     e = sizeof(struct frame);
-    w = sizeof(long long);
-    q = sizeof(struct lol);
+    w = sizeof(struct pk);
+    //q = sizeof(struct frame);
     pbind(6);
-    reset_hall_queue();
+    send_md(1,6,CW);
+
     while(1);
 }
 void proc1 (void)

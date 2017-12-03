@@ -191,7 +191,7 @@ void UART1_IntHandler(void)
                     active = 1;
                     len = 0;
                     recv.Chksum= 0;
-                    recv.pkt.pkt = 0;
+                    //recv.pkt.pkt = 0;
                     break;
                 default:
                     break;
@@ -205,8 +205,8 @@ void UART1_IntHandler(void)
                     {
                         if (len > MAX_LEN)
                             active = 0;
-                        else
-                            recv.pkt.pkt += (UART1_DR_R << len*8);
+                       // else
+                            //recv.pkt.pkt += (UART1_DR_R << len*8);
                     }
                     escaped = 1;
                     break;
@@ -228,7 +228,7 @@ void UART1_IntHandler(void)
                     if (len > MAX_LEN)
                         active = 0;
                     else
-                        recv.pkt.pkt += (UART1_DR_R << len*8);
+                       //recv.pkt.pkt += (UART1_DR_R << len*8);
                     break;
             }
         }

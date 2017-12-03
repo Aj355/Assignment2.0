@@ -54,25 +54,36 @@ enum Switch {STRAIGHT,DIVERTED};        /* Switch direction */
 
 
 /* Message structure */
+struct __attribute__((packed)) m
+{
+    unsigned char code;         /* Message code (described below) */
+    unsigned char arg1;         /* First argument (optional) */
+    unsigned char arg2;         /* Second argument (optional) */
+
+};
+
 struct message
 {
-    union {
-        struct {
+    union
+    {
+        unsigned long message;          /* message viewed as a single unit */
+        struct __attribute__((packed))
+        {
             unsigned char code;         /* Message code (described below) */
             unsigned char arg1;         /* First argument (optional) */
             unsigned char arg2;         /* Second argument (optional) */
-        };
-        unsigned long message;          /* message viewed as a single unit */
-    };
 
+        };
+
+    };
 };
-//#pragma pack(push,1)
+
 
 /* magnitude/direction structure */
 struct mag_dir
 {
     union {
-        struct{
+        struct __attribute__((packed)){
             unsigned magnitude : 3;     /* 0 – stop through 7 – maximum */
             unsigned ignored : 4;       /* Zero */
             unsigned direction : 1;     /* 1 for CCW and 0 for CW */
@@ -84,9 +95,9 @@ struct mag_dir
 
 
 /* */
-struct __attribute__((packed)) control
+struct control
 {
-    union __attribute__((packed)){
+    union {
         struct __attribute__((packed)){
             unsigned nr : 3;            /* Response number */
             unsigned ns : 3;            /* sequence number */
@@ -96,29 +107,28 @@ struct __attribute__((packed)) control
     };
 };
 
-struct __attribute__((packed)) lol {
-    struct control ctr;         /* Control field */
-    struct control ctdr;         /* Control field */
-    struct control cstr;         /* Control field */
-    struct control ctsr;         /* Control field */
 
-};
-//#pragma pack(pop)
 
 /* */
+struct __attribute__((packed)) pk
+{
+    struct control ctr;         /* Control field */
+    unsigned char  len;         /* Length  field */
+    struct m msg;               /* Message field */
+};
 struct packet
 {
     union {
-        struct{
+        struct __attribute__((packed))
+        {
             struct control ctr;         /* Control field */
             unsigned char  len;         /* Length  field */
-            struct message msg;         /* Message field */
+            struct m msg;               /* Message field */
         };
-        unsigned long pkt;              /* packet viewed as a single unit */
+        unsigned long long pkt;         /* packet viewed as a single unit */
         char packets[5];                /* packet viewed as a series of bytes */
     };
 };
-
 
 
 
@@ -126,17 +136,17 @@ struct packet
 struct frame
 {
     union {
-        struct{
+        struct __attribute__((packed)){
             unsigned char start_xmit;   /* start of transmission*/
-            struct packet pkt;          /* pscket field */
+            struct pk pkt;              /* packet field */
             unsigned char Chksum;       /* checksum field */
             unsigned char end_xmit;     /* end of transmission */
         };
-        unsigned long frame;            /* frame viewed as a single unit */
+        unsigned long long frame;            /* frame viewed as a single unit */
         char frames[8];                 /* frame viewed as a series of bytes */
     };
-    int counter;
-    int escaped;
+    //int counter;
+    //int escaped;
 };
 
 
