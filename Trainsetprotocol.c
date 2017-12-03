@@ -21,10 +21,31 @@
 #include "processes.h"
 #include "Pcommands.h"
 
+struct action routing_tbl[1][1] =
+{
+          /*1*/         /*2*/         /*3*/         /*4*/         /*5*/
+ /*1*/{{0, UNCH, AT_DST}, {6, STR, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0},
+          /*6*/         /*7*/         /*8*/         /*9*/         /*10*/
+       {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0},
+          /*11*/         /*12*/         /*13*/      /*14*/        /*15*/
+       {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0},
+          /*16*/         /*17*/         /*18*/         /*19*/     /*20*/
+       {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0},
+          /*21*/         /*22*/         /*23*/         /*24*/
+       {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
+
+
+
+
+
+
+};
+
+
 
 struct packet temp_pkt;
 enum Switch switch_state[SWITCH_NUM];
-int train_loc[TRAIN_NUM];
+struct train trains[TRAIN_NUM];
 unsigned nr;
 unsigned ns;
 
@@ -44,16 +65,22 @@ void express_manager(void)
 {
     pbind(6);
     /* Send message to DLL with all switches straight   */
-    send_sw(ALL, STRAIGHT);
+    send_sw(ALL, STR);
     
     /* Send message to DLL with hall sensor queue reset */
     reset_hall_queue();
     
     /* Ask display to enter train sections and speed */
-    pdisplay_str(1,5,"Enter starting sections and speeds:\n");
+    //pdisplay_str(1,5,"Enter starting sections and speeds:\n");
     /* RECV message from display */
     
     /* Load trains locations and speeds */
+    trains[EXPRESS].head = 7;
+    trains[EXPRESS].tail = 8;
+    trains[EXPRESS].speed = 4;
+    trains[EXPRESS].dir = CW;
+    send_md(EXPRESS, trains[EXPRESS].speed, trains[EXPRESS].dir);
+
      
     /* Get next direction */
      
@@ -157,7 +184,7 @@ void send_md(unsigned char train_num, unsigned mag, enum Direction dir)
     md.ignored   = 0;
     md.magnitude = mag;
     msg.code = CHNG_SPDR_MSG;
-    msg.arg1 = train_num;
+    msg.arg1 = train_num+1;
     msg.arg2 = md.mag_dir;
     psend(5,&msg,sizeof(struct message));
 }

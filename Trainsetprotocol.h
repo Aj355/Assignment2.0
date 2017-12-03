@@ -48,9 +48,27 @@
 
 
 enum PktType {DATA, ACK, NACK};         /* Packet type */
-enum Direction {CW,CCW};                /* Locomotive direction */
-enum Switch {STRAIGHT,DIVERTED};        /* Switch direction */
+enum Direction {CW,CCW, AT_DST};                /* Locomotive direction */
+enum Switch {STR,DIV, UNCH};        /* Switch direction */
+enum TRAIN_NAME {EXPRESS, LOCAL};       /* names of the trains */
 
+/* structure used in the table that determines the action to be taken */
+struct action
+{
+    unsigned sw_num:    12;     /* number of the switch */
+    unsigned sw_state:  2;      /* (straight | diverted | unchange) */
+    unsigned dir:       2;      /* (CW | CCW | At_dst) */
+    unsigned pad:       16;     /* padding */
+};
+
+/* train structure */
+struct train
+{
+    unsigned head;          /* head position of the train */
+    unsigned tail;          /* tail position of the train */
+    unsigned speed;         /* speed of the train         */
+    enum Direction dir;     /* CW | CCW                   */
+};
 
 /* Message structure */
 struct message
@@ -71,7 +89,7 @@ struct mag_dir
 {
     union {
         struct{
-            unsigned magnitude : 3;     /* 0 – stop through 7 – maximum */
+            unsigned magnitude : 3;     /* 0 ï¿½ stop through 7 ï¿½ maximum */
             unsigned ignored : 4;       /* Zero */
             unsigned direction : 1;     /* 1 for CCW and 0 for CW */
         };
