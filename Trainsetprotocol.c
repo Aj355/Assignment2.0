@@ -15,8 +15,6 @@
 #include <stdlib.h>
 #include "Queue.h"
 #include "UART.h"
-#include "Kcommands.h"
-#include "kernel.h"
 #include "Trainsetprotocol.h"
 #include "processes.h"
 #include "Pcommands.h"
@@ -50,6 +48,7 @@ unsigned nr;
 unsigned ns;
 
 
+
 /*******************************************************************************
  * Purpose:
  *             This process inserts a PCB into its corresponding priority
@@ -69,7 +68,7 @@ void express_manager(void)
     
     /* Send message to DLL with hall sensor queue reset */
     reset_hall_queue();
-    
+
     /* Ask display to enter train sections and speed */
     //pdisplay_str(1,5,"Enter starting sections and speeds:\n");
     /* RECV message from display */
@@ -104,41 +103,6 @@ void express_manager(void)
     
 }
 
-/*******************************************************************************
-* Purpose:
-*             This process inserts a PCB into its corresponding priority
-*             WTR queue and adjusts the current_priority global variable
-*             if needed.
-* Arguments:
-*             in_pcb:   process control block to be inserted
-* Return :
-*             SUCCESS   if successful enqueuing of the PCB occurs
-*             FAIL      if the WTR queue is full
-*******************************************************************************/
-int construct_packet(struct message *msg, enum PktType type)
-{
-    switch (type)
-    {
-    case DATA:
-        temp_pkt.ctr.nr = nr;
-        temp_pkt.ctr.ns = ns;
-        ns = (ns + 1) % 8;
-        temp_pkt.ctr.type = type;
-        temp_pkt.len = sizeof(*msg);
-        //temp_pkt.msg = msg;
-        break;
-
-    case ACK: /* FALL-THROUGH */
-    case NACK:
-        temp_pkt.ctr.nr = nr;
-        temp_pkt.ctr.type = type;
-        break;
-
-    default:
-        return FALSE;
-    }
-    return SUCCESS;
-}
 
 /*******************************************************************************
 * Purpose:
@@ -154,14 +118,18 @@ void encapsulate(struct packet packet)
 {
     struct frame  temp_frm;
     temp_frm.start_xmit = STX;
-    temp_frm.pkt.pkt = packet.pkt;
+    temp_frm.pkt.msg.code = packet.msg.code;
+    temp_frm.pkt.msg.arg1 = packet.msg.arg1;
+    temp_frm.pkt.msg.arg2 = packet.msg.arg2;
+    temp_frm.pkt.len = packet.len;
+    temp_frm.pkt.ctr.cntrl= packet.ctr.cntrl;
     temp_frm.Chksum  = packet.ctr.cntrl;
     temp_frm.Chksum += packet.len;
     temp_frm.Chksum += packet.msg.code;
     temp_frm.Chksum += packet.msg.arg1;
     temp_frm.Chksum += packet.msg.arg2;
+    temp_frm.Chksum = ~temp_frm.Chksum;
     temp_frm.end_xmit = ETX;
-    
     send_frame(temp_frm);
 }
 
@@ -221,7 +189,7 @@ void reset_hall_queue(void)
     msg.code = HALL_REST_MSG;
     msg.arg1 = 0;
     msg.arg2 = 0;
-    psend(5,&msg,sizeof(struct message));
+    psend(5,&msg.message,sizeof(struct message));
 }
 
 /* -------------------------------------------------------------------------- *
@@ -241,7 +209,7 @@ void hall_sensor_ack(unsigned char sensor_num)
     psend(5,&msg,sizeof(struct message));
 }
 
-
+struct packet window;
 /* -------------------------------------------------------------------------- *
  * Purpose:       Insert an entry into the UART queue
  *
@@ -254,10 +222,10 @@ void hall_sensor_ack(unsigned char sensor_num)
 void DLL(void)
 {
     int source_id;
-    int ack_needed;
-    int nack_needed;
-    unsigned long int data;
+    unsigned long long data =0;
+    struct message t;
     struct packet packet;
+    packet.pkt = 0;
     pbind(5);
     while (1)
     {
@@ -273,8 +241,24 @@ void DLL(void)
                     case DATA:
                         // note: you only want to send hall trigger msg
                         psend(6, &packet.msg, packet.len);
+                        packet.msg.code = 0;
+                        packet.msg.arg1 = 0;
+                        packet.msg.arg2 = 0;
+                        packet.ctr.nr = nr;
+                        packet.ctr.ns = 0;
+                        packet.ctr.type = ACK;
+                        packet.len = 0;
+                        encapsulate(packet);
                         break;
                     case ACK:
+                        if (packet.ctr.nr == ns)
+                        {
+                            window.pkt=0;
+                        }
+                        else
+                        {
+                            encapsulate(window);
+                        }
                         break;
                     case NACK:
                         break;
@@ -285,12 +269,16 @@ void DLL(void)
         }
         else if (source_id == 6)
         {
-            packet.msg.message = data;
+            t.message = data;
+            packet.msg.code = t.code;
+            packet.msg.arg1 = t.arg1;
+            packet.msg.arg2 = t.arg2;
             packet.ctr.nr = nr;
             packet.ctr.ns = ns;
             ns = (ns + 1) % 8;
             packet.ctr.type = DATA;
             packet.len = 3;
+            window.pkt = packet.pkt;
             encapsulate(packet);
         }
     }
@@ -305,9 +293,7 @@ void send_frame (struct frame temp)
     else
     {
         UART1_state = BUSY;          // Signal UART is busy
-
-        UART1_DR_R = STX;        // Load character into data reg.
-        counter++;
-
+        send.frame = temp.frame;
+        UART1_DR_R = temp.frames[counter++];  // Load character into data reg.
     }
 }
