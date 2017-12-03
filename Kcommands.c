@@ -118,7 +118,7 @@ int ksend(struct msg_request *req)
     struct mailbox *dst_mail = &mailboxes[req->dst_id];
     int max_sz = req->sz;       /*maximum size to be copied*/
     /*IF sender does not own a mailbox OR destination mailbox not found*/
-    if (req ->src_id != SYSTICK &&
+    if (req ->src_id == 0 &&
 		(running[current_priority]->mailbox_num == UNBOUND_Q ||
 			dst_mail->process == NULL))
         /*THEN EXIT with error code*/
@@ -133,7 +133,7 @@ int ksend(struct msg_request *req)
         /*so that the receiver knows the number of bytes copied*/
         *(dst_mail ->buffer_size) = max_sz;
         /*THEN give source id to receiver*/
-        *(dst_mail->src_id) = (req->src_id == SYSTICK)? SYSTICK:running[current_priority]->mailbox_num;
+        *(dst_mail->src_id) = (req->src_id == 0)? running[current_priority]->mailbox_num : req->src_id;
         /*copy message into receiver buffer until it's full or message is complete*/
         for (i=0; i<max_sz; i++)
             dst_mail->buffer_addr[i] = req->msg[i];
