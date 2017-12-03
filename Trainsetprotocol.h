@@ -194,6 +194,7 @@ extern int counter;
 extern struct current_frame_send;
 extern struct packet temp_pkt;
 extern struct frame_queue FQ;
+extern int offset;
 
 
 void reset_hall_queue(void);
@@ -202,4 +203,5 @@ void send_md(unsigned char train_num, unsigned mag, enum Direction dir);
 void hall_sensor_ack(unsigned char sensor_num);
 void send_frame (struct frame );
 void DLL (void);
+void express_manager (void);
 #endif /* TRAINSET_H_ */

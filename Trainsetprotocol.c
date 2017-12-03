@@ -40,7 +40,7 @@ struct action routing_tbl[1][1] =
 };
 
 
-
+int h;
 struct packet temp_pkt;
 enum Switch switch_state[SWITCH_NUM];
 struct train trains[TRAIN_NUM];
@@ -76,9 +76,9 @@ void express_manager(void)
     /* Load trains locations and speeds */
     trains[EXPRESS].head = 7;
     trains[EXPRESS].tail = 8;
-    trains[EXPRESS].speed = 4;
+    trains[EXPRESS].speed = 7;
     trains[EXPRESS].dir = CW;
-    send_md(EXPRESS, trains[EXPRESS].speed, trains[EXPRESS].dir);
+    //send_md(EXPRESS, trains[EXPRESS].speed, trains[EXPRESS].dir);
 
      
     /* Get next direction */
@@ -130,10 +130,31 @@ void encapsulate(struct packet packet)
     temp_frm.Chksum += packet.msg.arg2;
     temp_frm.Chksum = ~temp_frm.Chksum;
     temp_frm.end_xmit = ETX;
+    offset = 0;
     send_frame(temp_frm);
 }
 
-
+/*******************************************************************************
+* Purpose:
+*             This process removes a PCB from its corresponding priority
+*             WTR queue and adjusts the current_priority global variable
+*             if needed. This function does not free the PCB.
+* Arguments:
+*             NONE (only dequeues the running processes pcb)
+* Return :
+*             NONE
+*******************************************************************************/
+void ack(struct packet packet)
+{
+    struct frame  temp_frm;
+    temp_frm.start_xmit = STX;
+    temp_frm.pkt.ctr.cntrl= packet.ctr.cntrl;
+    temp_frm.frames[2] = packet.ctr.cntrl;
+    temp_frm.frames[2] = ~temp_frm.frames[2];
+    temp_frm.frames[3] = ETX;
+    offset = 4;
+    send_frame(temp_frm);
+}
 
 
 /* -------------------------------------------------------------------------- *
@@ -248,11 +269,12 @@ void DLL(void)
                         packet.ctr.ns = 0;
                         packet.ctr.type = ACK;
                         packet.len = 0;
-                        encapsulate(packet);
+                        ack(packet);
                         break;
                     case ACK:
-                        if (packet.ctr.nr == ns)
+                        if (packet.ctr.nr <= ns)
                         {
+                            h++;
                             window.pkt=0;
                         }
                         else
@@ -278,6 +300,7 @@ void DLL(void)
             ns = (ns + 1) % 8;
             packet.ctr.type = DATA;
             packet.len = 3;
+            while(window.pkt!=0);
             window.pkt = packet.pkt;
             encapsulate(packet);
         }
