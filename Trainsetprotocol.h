@@ -45,6 +45,7 @@
 #define MSG_BYTE        3           /* Number of bytes within one message */
 #define PKT_BYTE        5           /* Number of bytes within one packet  */
 #define FRM_BYTE        8           /* Number of bytes within one frame   */
+#define HALL_SEN_NUM    24          /* Number of hall sensors in system   */
 
 
 enum PktType {DATA, ACK, NACK};         /* Packet type */
