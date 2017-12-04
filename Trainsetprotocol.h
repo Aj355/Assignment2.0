@@ -84,9 +84,9 @@ struct mag_dir
 
 
 /* */
-struct __attribute__((packed)) control
+struct control
 {
-    union __attribute__((packed)){
+    union {
         struct __attribute__((packed)){
             unsigned nr : 3;            /* Response number */
             unsigned ns : 3;            /* sequence number */
@@ -96,7 +96,7 @@ struct __attribute__((packed)) control
     };
 };
 
-struct __attribute__((packed)) lol {
+struct lol {
     struct control ctr;         /* Control field */
     struct control ctdr;         /* Control field */
     struct control cstr;         /* Control field */
