@@ -364,7 +364,7 @@ void express_manager(void)
     int source_id;
     struct message data;
     /* Send message to DLL with hall sensor queue reset */
-    reset_hall_queue();
+    //reset_hall_queue();
 
     /* Ask display to enter train sections and speed */
     //pdisplay_str(1,5,"Enter starting sections and speeds:\n");
@@ -376,7 +376,7 @@ void express_manager(void)
     trains[EXPRESS].tail = 8;
     trains[EXPRESS].speed = 7;
     trains[EXPRESS].dir = CW;
-    //send_md(EXPRESS, trains[EXPRESS].speed, trains[EXPRESS].dir);
+    send_md(EXPRESS, trains[EXPRESS].speed, trains[EXPRESS].dir);
 
      
     /* Get next direction */
@@ -431,6 +431,7 @@ void encapsulate(struct packet packet)
         temp_frm.Chksum += packet.len;
         i++;
         j--;
+        packet.len++;
     }
     for ( ; i <= packet.len ; i++)
     {
@@ -534,7 +535,7 @@ void reset_hall_queue(void)
 void hall_sensor_ack(unsigned char sensor_num)
 {
     struct message msg;
-    msg.code = HALL_TRGR_ACK;
+    msg.code = 0xAA;
     msg.arg1 = sensor_num;
     msg.arg2 = 0;
     psend(5,&msg,sizeof(struct message));
@@ -580,18 +581,14 @@ void DLL(void)
                         packet.msg.arg1 = 0;
                         packet.msg.arg2 = 0;
                         //window.pkt = packet.pkt;
-                        encapsulate(packet);
+                        //encapsulate(packet);
                         break;
                     case ACK:
                         if (packet.ctr.nr <= ns)
                         {
                             h++;
                             window.pkt=0;
-                            if (dequeue_packet(&packet))
-                            {
-                                window.pkt = packet.pkt;
-                                encapsulate(packet);
-                            }
+
                         }
                         else
                         {
