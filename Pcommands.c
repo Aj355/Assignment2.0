@@ -202,6 +202,26 @@ unsigned long get_time(void)
 
 /*******************************************************************************
 * Purpose:
+*             This function prints a character using the UART module. It
+*             prepares a string of of the character to be sent and a
+*             null character after it then calls the pdisplay_str
+*             function.
+* Arguments:
+*             char:     character to be printed
+*             col:      column number for the cursor
+*             row:      row number for the cursor
+* Return :
+*             SUCCESS   the pdisplay_str function is successful
+*             FAIL      if the request is not successful
+*******************************************************************************/
+int pdisplay_char (unsigned col, unsigned row, char out_c)
+{
+    char str[] = {out_c, NUL};
+    return pdisplay_str(col, row, str);
+}
+
+/*******************************************************************************
+* Purpose:
 *             This function prepares a UART request by filling up the escape
 *             sequence corresponding to the row and column number provided
 *             by the calling process then calling SVC which will handle

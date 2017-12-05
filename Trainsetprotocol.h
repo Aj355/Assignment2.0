@@ -46,7 +46,8 @@
 #define PKT_BYTE        5           /* Number of bytes within one packet  */
 #define FRM_BYTE        8           /* Number of bytes within one frame   */
 #define HALL_SEN_NUM    24          /* Number of hall sensors in system   */
-#define SPEC_SENSOR_NUM 6
+#define SPEC_SENSOR_NUM 6           /* Number of special case sensors     */
+#define MAX_INPUT       16          /* allowed input for commands         */
 
 enum PktType {DATA, ACK, NACK};         /* Packet type */
 enum Direction {CW,CCW, AT_DST};                /* Locomotive direction */
@@ -204,4 +205,5 @@ void hall_sensor_ack(unsigned char sensor_num);
 void send_frame (struct frame );
 void DLL (void);
 void express_manager (void);
+void virtual_train (void);
 #endif /* TRAINSET_H_ */

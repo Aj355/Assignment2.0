@@ -120,14 +120,23 @@ void UART0_IntHandler(void)
  * Simplified UART ISR - handles receive and xmit interrupts
  * Application signalled when data received
  */
+    struct msg_request tmp;
+    char in_char;
 
     if (UART0_MIS_R & UART_INT_RX)
     {
         /* RECV done - clear interrupt and make char available to application */
         UART0_ICR_R |= UART_INT_RX;
+
         // fill the entry with the incoming information
-        //enqueue the entry in the input queue for the control module
-        //enqueue(INPUT, x);
+        in_char = UART0_DR_R;
+        tmp.dst_id = VERTUAL_TRN; /* Destination */
+        tmp.sz = sizeof(char);    /* Size of msg */
+        tmp.src_id = UART;        /* Source is UART (unique ID) */
+        tmp.msg = &in_char;       /* input character */
+        save_registers();         /* incase send wakes up higher priority proc*/
+        ksend(&tmp);              /* send input character */
+        restore_registers();      /* restore registers for same reason of sv  */
     }
 
     if (UART0_MIS_R & UART_INT_TX)

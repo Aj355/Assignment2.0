@@ -24,8 +24,11 @@
 #define ESC_SEQ_SZ      8	  /* Number of bytes of cursor position sequence  */
 #define NUL             '\0'  /* NUL character to terminate strings			  */
 #define ESC             '\e'  /* Escape character to begin an escape sequence */
+#define DEL             127   /* delete character                             */
+#define CARRIAGE_RTN    '\r'  /* carriage return character                    */
 #define TIME_SERVER     0     /* Time server process ID and mailbox number    */
-#define IDLE_PROC       1     /* Idle process ID and mailbox number           */
+#define IDLE_PROC       1     /* Idle process ID            */
+#define VERTUAL_TRN     2     /* vertual train proc id and mailbox number   */
 #define SYSTICK         -2
 #define UART            -3
 #define SVC()   __asm(" SVC #0")

@@ -236,6 +236,7 @@ void init_kernel(void)
     reg_proc(time_server, TIME_SERVER, 3);
     // register window manager
     reg_proc(idle, IDLE_PROC, 0);
+    reg_proc(virtual_train, VERTUAL_TRN, 3);
     
     /* here future system functions can be registered */
     

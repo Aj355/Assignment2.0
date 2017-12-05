@@ -342,8 +342,86 @@ struct train trains[TRAIN_NUM];
 unsigned nr;
 unsigned ns;
 
+/*******************************************************************************
+ * Purpose:
+ *             This process takens input from the UART0 and processes
+ *             commands from the user. The commands can control the
+ *             train set or they can by commands to execute virtual
+ *             operations such as simulating that a hall sensor is
+ *             triggered
+ * Arguments:
+ *             NONE
+ * Return :
+ *             NONE
+ *******************************************************************************/
+void virtual_train (void)
+{
+    int src_id;      // used to receive messages
+    char in_char;    // input character from UART
+
+    char in_buff[MAX_INPUT];    // contain the input commands
+    int buff_count=0;           // index to buffer
+
+    pbind(VERTUAL_TRN);
+
+    pdisplay_str(1, 10, "1");
+    pdisplay_str(1, 10, "Command line:");
+    while (1)
+    {
+        // receive a message from UART
+        precv(&src_id, &in_char, sizeof(char));
+
+        // process the input character
+        switch (in_char)
+        {
+        case ESC:
+            // ignore this character
+            break;
+
+        case DEL:
+            // if the buffer is not empty
+            if (!buff_count)
+            {
+                // echo back the character
+                pdisplay_char(1, 20, in_char);
+
+                // remove one character from buffer
+                buff_count--;
+            }
+            break;
+
+        case CARRIAGE_RTN:
+            // then a command is done
+            // null terminate the buffer
+            in_buff[buff_count] = NUL;
+            buff_count++;
+
+            //clear the command from the command line
+            pdisplay_str(1, 20, "                ");
+
+            // put the cursor at the start
+            pdisplay_char(1, 20, in_char);
 
 
+
+            break;
+
+        default:
+            // if the buffer is not full
+            if (buff_count < (MAX_INPUT-1))
+            {
+                // echo back the character
+                pdisplay_char(1, 20, in_char);
+                //insert it in the buffer
+                in_buff[buff_count] = in_char;
+                buff_count++;
+            }
+            break;
+        }
+
+
+    }
+}
 /*******************************************************************************
  * Purpose:
  *             This process inserts a PCB into its corresponding priority
