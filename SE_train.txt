@@ -98,32 +98,76 @@ Structured English: Window Manager
 ---------------------------------------------------------------------------
 
 Initialize all window sizes and cursor positions of each window
-initialize the first window to be the active window
 DO WHILE there are messages in the mailbox
 	IF the received message is a window bind request
 		THEN IF the requested window is not already bound
 			THEN set the requesting process to be the owner
+			make this window the active window
 		ENDIF
 	ELSE IF the received message is window unbind request
 		THEN IF the requesting process owns the window to be unbound
 			THEN unbind the window by removing its owner
 			clear the window
+			IF there is another bound window
+				THEN make it the new active window
+			ELSE
+				set that there are no active windows
+			ENDIF
 		ENDIF
 	ELSE IF the received message is a display request
 		THEN IF the requesting process owns a window
 			THEN print the message on that window
 		ENDIF
 	ELSE IF the received message is from UART (input character)
-		THEN 
-		
+		THEN IF there is an active window 
+			THEN IF the incoming character a tab
+				THEN make the next bound window the active window
+			ELSE
+				echo back the charater to the active window
+				send the character to the owner of the active window
+			ENDIF
+		ENDIF
+	ENDIF
+ENDDO
 
 ---------------------------------------------------------------------------
-Structured English: kgetid
+Structured English: printing algorithm
 ---------------------------------------------------------------------------
 
-provide the id number of the running process to the calling routine
-EXIT
-
+IF the character to be printed is an escape
+	THEN ignore the character
+ELSE IF it is a delete character
+	THEN IF the cursor position is not at the start of the line
+		THEN decrement the column position of the cursor
+		send the character to be sent to the UART module
+	ENDIF
+ELSE IF it an end of line character
+	THEN store spaces in the buffer until the maximum column size
+	null terminate the window buffer of that line
+	IF the cursor row position is at the end of the window
+		THEN put the cursor at the initial row and column positions
+		start printing from (vertual position + 2) mod vertical size as the row index to the window buffer
+		DO UNTIL (vertical size -1) lines are printed
+			print the current line from the buffer
+			go to the next line mod vertical size
+		ENDDO
+		clear the last line in the window
+		set the cursor position to the start of the last line in the window
+		vertual position = (vertual position + 1) mod vertical size
+	ELSE
+		increment the row position of the cursor and the vertual position
+		set the column position of the cursor to the initial value
+		print an end of line character
+	ENDIF 
+ELSE
+	IF the cursor position has reached the last column
+		THEN execute the printing algorithm to print end of line character
+	ENDIF
+	store the character in the window buffer (index = column position - initial column position)
+	increment the column position of the cursor
+	send the character to be sent to the UART module
+ENDIF
+	
 ---------------------------------------------------------------------------
 Structured English: pnice
 ---------------------------------------------------------------------------

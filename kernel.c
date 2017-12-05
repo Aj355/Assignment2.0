@@ -233,8 +233,9 @@ void init_kernel(void)
     NVIC_SYS_PRI3_R |= PENDSV_LOWEST_PRIORITY;
     
     /* Register system processes (name,ID,Priority) */
-    reg_proc(time_server, 0, 3);
-    reg_proc(idle, 1, 0);
+    reg_proc(time_server, TIME_SERVER, 3);
+    // register window manager
+    reg_proc(idle, IDLE_PROC, 0);
     
     /* here future system functions can be registered */
     
