@@ -127,15 +127,6 @@ struct control
     };
 };
 
-<<<<<<< HEAD
-struct lol {
-    struct control ctr;         /* Control field */
-    struct control ctdr;         /* Control field */
-    struct control cstr;         /* Control field */
-    struct control ctsr;         /* Control field */
-=======
->>>>>>> fd697331c036097a975a17d3c7ce632061d1e829
-
 
 /* */
 struct __attribute__((packed)) pk
