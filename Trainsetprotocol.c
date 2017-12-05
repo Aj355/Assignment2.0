@@ -334,7 +334,7 @@ struct action routing_tbl[HALL_SEN_NUM][HALL_SEN_NUM] =
        {0, UNCH, CW}, {0, UNCH, CW}, {0, UNCH, CW}, {0, UNCH, AT_DST}}
 };
 
-
+int special_sensors[SPEC_SENSOR_NUM] = {1, 3, 6, 9, 11, 14};
 int h;
 struct packet temp_pkt;
 enum Switch switch_state[SWITCH_NUM];
@@ -357,6 +357,12 @@ unsigned ns;
  *******************************************************************************/
 void express_manager(void)
 {
+    int dir, sw_num, sw_state;  // to hold info from routing table
+    int dest;                   // destination location
+    int sensor;                 // triggered hall sensor
+    int src_id;                 // for receiving messages
+    int tmp;
+
     pbind(6);
     /* Send message to DLL with all switches straight   */
     send_sw(ALL, STR);
@@ -367,38 +373,88 @@ void express_manager(void)
     /* Ask display to enter train sections and speed */
     //pdisplay_str(1,5,"Enter starting sections and speeds:\n");
     /* RECV message from display */
-    
     /* Load trains locations and speeds */
-
+    /*
     trains[EXPRESS].head = 7;
     trains[EXPRESS].tail = 8;
     trains[EXPRESS].speed = 7;
     trains[EXPRESS].dir = CW;
-    //send_md(EXPRESS, trains[EXPRESS].speed, trains[EXPRESS].dir);
+    send_md(EXPRESS, trains[EXPRESS].speed, trains[EXPRESS].dir);
+    */
+    
+     // initialize head position, speed, and destination
+    trains[EXPRESS].head = 1;
+    trains[EXPRESS].speed = 7;
+    dest = 13;
+    
+    //get direction and switch info from routing table
+    trains[EXPRESS].dir = routing_tbl[trains[EXPRESS].head][dest].dir;
+    sw_num = routing_tbl[trains[EXPRESS].head][dest].sw_num;
+    sw_state = routing_tbl[trains[EXPRESS].head][dest].sw_state;
+    
+    // send direction and switch commands
+    send_md(EXPRESS, trains[EXPRESS].speed, trains[EXPRESS].dir);
+    send_sw(sw_num, sw_state);
+    
+    while (1)
+    {
+        // get a message from the mailbox
+        precv(&src_id, &sensor, sizeof(int));
 
-     
-    /* Get next direction */
-     
-    /* Get next switch state */
-     
-    /* WHILE destination not reached */
-    while(1);
-    /* IF switch state needs to change */
-     
-    /* SEND change SWITCH message to DLL */
-    
-    /* SEND next direction and speed to specified train */
-    
-    /* wait to receive message back from DLL with new train location */
-    
-    /* Get next direction */
-    
-    /* Get next switch state */
-    
-    /* Send stop train message to DLL */
-    
+        // if the received hall sensor is the same as the head pos
+        if (sensor == trains[EXPRESS].head || sensor == trains[EXPRESS].prev_h)
+            trains[EXPRESS].tail = sensor;
+        else // if it is a new sensor
+        {
+            // update the head position
+            trains[EXPRESS].prev_h = trains[EXPRESS].head;
+            trains[EXPRESS].head = sensor;
+
+            // get next direction and switch from routing table
+            dir = routing_tbl[trains[EXPRESS].head][dest].dir;
+            sw_num = routing_tbl[trains[EXPRESS].head][dest].sw_num;
+            sw_state = routing_tbl[trains[EXPRESS].head][dest].sw_state;
+
+            // if the train is at the destination
+            if (dir == AT_DST)
+            {
+                // stop the train
+            }
+            // else if the new direction = new direction
+            else if (dir == trains[EXPRESS].dir)
+                send_sw(sw_num, sw_state);
+            // else if new direction does not equal old direction
+            // and it is not one of the special sensors
+            else if (!special_sensor(sensor))
+            {
+                // send switch and direction command
+                send_sw(sw_num, sw_state);
+                send_md(EXPRESS, trains[EXPRESS].speed, dir);
+
+                // Switch the positions of the head and tail (since train is reversing)
+                tmp = trains[EXPRESS].head;
+                trains[EXPRESS].head = trains[EXPRESS].tail;
+                trains[EXPRESS].tail = tmp;
+                trains[EXPRESS].prev_h = 0;
+                //update the direction of the train
+                trains[EXPRESS].dir = dir;
+            }
+        }
+    }
 }
 
+int special_sensor (int sensor)
+{
+    int i;
+
+    for (i=0; i<SPEC_SENSOR_NUM; i++)
+    {
+        if (sensor == special_sensors[i])
+            return TRUE;
+    }
+    
+    return FALSE;
+}
 
 /*******************************************************************************
 * Purpose:

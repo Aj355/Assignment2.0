@@ -46,7 +46,7 @@
 #define PKT_BYTE        5           /* Number of bytes within one packet  */
 #define FRM_BYTE        8           /* Number of bytes within one frame   */
 #define HALL_SEN_NUM    24          /* Number of hall sensors in system   */
-
+#define SPEC_SENSOR_NUM 6
 
 enum PktType {DATA, ACK, NACK};         /* Packet type */
 enum Direction {CW,CCW, AT_DST};                /* Locomotive direction */
@@ -66,6 +66,7 @@ struct action
 struct train
 {
     unsigned head;          /* head position of the train */
+    unsigned prev_h;        /* previous head position     */
     unsigned tail;          /* tail position of the train */
     unsigned speed;         /* speed of the train         */
     enum Direction dir;     /* CW | CCW                   */
