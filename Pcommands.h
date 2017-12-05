@@ -25,6 +25,7 @@
 #define NUL             '\0'  /* NUL character to terminate strings			  */
 #define ESC             '\e'  /* Escape character to begin an escape sequence */
 #define TIME_SERVER     0     /* Time server process ID and mailbox number    */
+#define IDLE_PROC       1     /* Idle process ID and mailbox number           */
 #define SYSTICK         -2
 #define UART            -3
 #define SVC()   __asm(" SVC #0")

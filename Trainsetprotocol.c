@@ -384,7 +384,7 @@ void express_manager(void)
     send_md(EXPRESS, trains[EXPRESS].speed, trains[EXPRESS].dir);
     */
     
-     // initialize head position, speed, and destination
+    // initialize head position, speed, and destination
     trains[EXPRESS].head = 1;
     trains[EXPRESS].speed = 7;
     dest = 13;
@@ -427,7 +427,7 @@ void express_manager(void)
                 send_sw(sw_num, sw_state);
             // else if new direction does not equal old direction
             // and it is not one of the special sensors
-            else if (!special_sensor(sensor))
+            else if (!special_sensor(sensor) || sw_state == STR)
             {
                 // send switch and direction command
                 send_sw(sw_num, sw_state);
