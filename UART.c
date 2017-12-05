@@ -190,8 +190,9 @@ void UART1_IntHandler(void)
         {
             switch (UART1_DR_R) {
                 case STX:
+                    recv.frame = 0;
                     active = 1;
-                    len = 0;
+                    len = 1;
                     counter2 = 0;
                     recv.Chksum= 0;
                     recv.frames[counter2++] = UART1_DR_R;
@@ -203,6 +204,18 @@ void UART1_IntHandler(void)
         else
         {
             switch (UART1_DR_R) {
+                case STX:
+                    if (escaped)
+                    {
+                        recv.Chksum +=UART1_DR_R;
+                        len++;
+                        if (len > MAX_LEN)
+                            active = 0;
+                        else
+                            recv.frames[counter2++] = UART1_DR_R;
+                        escaped = 0;
+                    }
+                    break;
                 case DLE:
                     if (escaped)
                     {
@@ -212,22 +225,37 @@ void UART1_IntHandler(void)
                             active = 0;
                         else
                             recv.frames[counter2++] = UART1_DR_R;
+                        escaped = 0;
                     }
                     escaped = 1;
                     break;
                 case ETX:
-                    if (recv.Chksum == 0xff)
+                    if (escaped)
                     {
-                        tmp.dst_id = 5; /* Destination */
-                        tmp.sz = len - 1;               /* Size of msg */
-                        tmp.src_id = UART;     /* Source is systick (unique ID) */
-                        recv.frames[--len] = 0;
-                        tmp.msg = &recv.frames[1];
-                        save_registers();         /* incase send wakes up higher priority proc*/
-                        ksend(&tmp);              /* send systick notification of 1/10 second */
-                        restore_registers();      /* restore registers for same reason of sv  */
+                        recv.Chksum +=UART1_DR_R;
+                        len++;
+                        if (len > MAX_LEN)
+                            active = 0;
+                        else
+                            recv.frames[counter2++] = UART1_DR_R;
+                        escaped = 0;
                     }
-                    active = 0;
+                    else
+                    {
+                        if (recv.Chksum == 0xff)
+                        {
+                            tmp.dst_id = 5; /* Destination */
+                            tmp.sz = len ;               /* Size of msg */
+                            tmp.src_id = UART;     /* Source is systick (unique ID) */
+                            tmp.msg = &recv.frames[1];
+                            save_registers();         /* incase send wakes up higher priority proc*/
+                            ksend(&tmp);              /* send systick notification of 1/10 second */
+                            restore_registers();      /* restore registers for same reason of sv  */
+                        }
+                        active = 0;
+                        recv.Chksum = 0;
+                        counter2 = 0;
+                    }
                     break;
                 default:
                     recv.Chksum +=UART1_DR_R;
@@ -236,7 +264,6 @@ void UART1_IntHandler(void)
                         active = 0;
                     else
                         recv.frames[counter2++] = UART1_DR_R;
-                    break;
             }
         }
     }
@@ -248,20 +275,20 @@ void UART1_IntHandler(void)
 
         UART1_ICR_R |= UART_INT_TX;
         /*  if  current frame is not done sending*/
-        if (counter < ((FRM_BYTE - 1)-offset))
+        if (counter < offset)
         {
             if (send.frames[counter] == STX ||
                     send.frames[counter] == ETX ||
                     send.frames[counter] == DLE )
             {
-                if (escaped)
+                if (escaped2)
                 {
-                    escaped = 0;
+                    escaped2 = 0;
                     UART1_DR_R = send.frames[counter++];
                 }
                 else
                 {
-                    escaped = 1;
+                    escaped2 = 1;
                     UART1_DR_R = DLE;
                 }
             }
@@ -270,7 +297,7 @@ void UART1_IntHandler(void)
                 UART1_DR_R = send.frames[counter++];  // Load character into data reg.
             }
         }
-        else if (counter == ((FRM_BYTE -1)-offset))
+        else if (counter == offset)
         {
             UART1_DR_R = send.frames[counter++];
         }
