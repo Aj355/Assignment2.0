@@ -139,6 +139,9 @@
 extern volatile int UART_state;             /* BUSY|IDLE */
 extern volatile int UART1_state;             /* BUSY|IDLE */
 extern struct UART_entry current_msg;       /* message currently being printed */
+
+extern struct frame recv;
+extern struct frame send;
 /* function prototypes */
 void UART0_Init(void);
 void InterruptEnable(unsigned long InterruptIndex);

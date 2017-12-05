@@ -15,16 +15,9 @@
 
 void test (void)
 {
-    int i,u,y,t,r,e,w,q;
-    i = sizeof(struct message);
-    u = sizeof(struct mag_dir);
-    y = sizeof(struct control);
-    t = sizeof(struct packet);
-    e = sizeof(struct frame);
-    w = sizeof(long long);
-    q = sizeof(struct lol);
     pbind(6);
-    reset_hall_queue();
+    send_md(1,6,CW);
+
     while(1);
 }
 void proc1 (void)
@@ -48,6 +41,6 @@ void proc2 (void)
 
 struct process_reg processes[] =
 {
- {DLL,3},{test,3}
+ {DLL,3},{express_manager,3}
  //{proc1, 3}, {proc1, 3}, {proc1, 3}
 };
