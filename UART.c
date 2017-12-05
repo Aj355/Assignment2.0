@@ -77,17 +77,17 @@ void UART1_Init(void)
     wait = 0;   // wait required before accessing the UART config regs
     
     // Setup the BAUD rate
-    // IBRD = int(16,000,000 / (16 * 115,200)) = 8.680555555555556
-    UART1_IBRD_R = 8;
-    // FBRD = int(.680555555555556 * 64 + 0.5) = 44.05555555555556
-    UART1_FBRD_R = 44;
+    // IBRD = int(16,000,000 / (16 * 9600)) = 104 + 1/6
+    UART1_IBRD_R = 104;
+    // FBRD = int(1/6 * 64 + 0.5) = 11 + 1/6
+    UART1_FBRD_R = 11;
     
     // WLEN: 8, no parity, one stop bit, without FIFOs)
     UART1_LCRH_R = (UART_LCRH_WLEN_8);
     // Enable Receive and Transmit on PA1-0
     GPIO_PORTB_AFSEL_R = 0x3;
     // Enable UART RX/TX pins on PA1-0
-    GPIO_PORTB_PCTL_R = (0x01) | ((0x01) << 6);
+    GPIO_PORTB_PCTL_R = (0x01) | ((0x01) << 4);
     // Enable Digital I/O on PA1-0
     GPIO_PORTB_DEN_R = EN_DIG_PA0 | EN_DIG_PA1;
     
@@ -163,16 +163,19 @@ void UART0_IntHandler(void)
     }
 }
 
-struct frame current;
-struct frame current_frame_send;
+struct frame recv;
+struct frame send;
 int escaped;
 int escaped2;
 int counter;
+int counter2;
 int active;
 int len;
+int offset;   /* offset is 0 for data, or 4 for acks/nacks*/
 
 void UART1_IntHandler(void)
 {
+    struct msg_request tmp;
     /*
      * Simplified UART ISR - handles receive and xmit interrupts
      * Application signalled when data received
@@ -183,14 +186,16 @@ void UART1_IntHandler(void)
         /* RECV done - clear interrupt and make char available to application */
         UART1_ICR_R |= UART_INT_RX;
         
-        if (!active )
+        if ( !active )
         {
             switch (UART1_DR_R) {
                 case STX:
+                    recv.frame = 0;
                     active = 1;
-                    len = 0;
-                    current.Chksum= 0;
-                    current.pkt.pkt = 0;
+                    len = 1;
+                    counter2 = 0;
+                    recv.Chksum= 0;
+                    recv.frames[counter2++] = UART1_DR_R;
                     break;
                 default:
                     break;
@@ -199,29 +204,66 @@ void UART1_IntHandler(void)
         else
         {
             switch (UART1_DR_R) {
-                case DLE:
+                case STX:
                     if (escaped)
                     {
+                        recv.Chksum +=UART1_DR_R;
+                        len++;
                         if (len > MAX_LEN)
                             active = 0;
                         else
-                            current.pkt.pkt += (UART1_DR_R << len*8);
+                            recv.frames[counter2++] = UART1_DR_R;
+                        escaped = 0;
+                    }
+                    break;
+                case DLE:
+                    if (escaped)
+                    {
+                        recv.Chksum +=UART1_DR_R;
+                        len++;
+                        if (len > MAX_LEN)
+                            active = 0;
+                        else
+                            recv.frames[counter2++] = UART1_DR_R;
+                        escaped = 0;
                     }
                     escaped = 1;
                     break;
                 case ETX:
-                    if (current.Chksum == 0xff)
-                        psend(5,&current.pkt,5);
-                    active = 0;
+                    if (escaped)
+                    {
+                        recv.Chksum +=UART1_DR_R;
+                        len++;
+                        if (len > MAX_LEN)
+                            active = 0;
+                        else
+                            recv.frames[counter2++] = UART1_DR_R;
+                        escaped = 0;
+                    }
+                    else
+                    {
+                        if (recv.Chksum == 0xff)
+                        {
+                            tmp.dst_id = 5; /* Destination */
+                            tmp.sz = len ;               /* Size of msg */
+                            tmp.src_id = UART;     /* Source is systick (unique ID) */
+                            tmp.msg = &recv.frames[1];
+                            save_registers();         /* incase send wakes up higher priority proc*/
+                            ksend(&tmp);              /* send systick notification of 1/10 second */
+                            restore_registers();      /* restore registers for same reason of sv  */
+                        }
+                        active = 0;
+                        recv.Chksum = 0;
+                        counter2 = 0;
+                    }
                     break;
                 default:
-                    current.Chksum +=UART1_DR_R;
+                    recv.Chksum +=UART1_DR_R;
                     len++;
                     if (len > MAX_LEN)
                         active = 0;
                     else
-                        current.pkt.pkt += (UART1_DR_R << len*8);
-                    break;
+                        recv.frames[counter2++] = UART1_DR_R;
             }
         }
     }
@@ -232,13 +274,45 @@ void UART1_IntHandler(void)
         /* XMIT done - clear interrupt */
 
         UART1_ICR_R |= UART_INT_TX;
-        /* IF Queue is not empty  */
-        if (FQ.cnt > 0)
+        /*  if  current frame is not done sending*/
+        if (counter < offset)
         {
-            
+            if (send.frames[counter] == STX ||
+                    send.frames[counter] == ETX ||
+                    send.frames[counter] == DLE )
+            {
+                if (escaped2)
+                {
+                    escaped2 = 0;
+                    UART1_DR_R = send.frames[counter++];
+                }
+                else
+                {
+                    escaped2 = 1;
+                    UART1_DR_R = DLE;
+                }
+            }
+            else
+            {
+                UART1_DR_R = send.frames[counter++];  // Load character into data reg.
+            }
+        }
+        else if (counter == offset)
+        {
+            UART1_DR_R = send.frames[counter++];
         }
         else
-            UART1_state = IDLE;
+        {
+            counter = 0;
+            if (FQ.cnt > 0)
+            {
+                dequeue_frame(&send);
+                UART1_DR_R = STX;
+                counter++;
+            }
+            else
+                UART1_state = IDLE;
+        }
     }
 }
 void InterruptMasterEnable(void)

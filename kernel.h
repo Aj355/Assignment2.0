@@ -16,7 +16,7 @@
 #ifndef KERNEL_H_
 #define KERNEL_H_
 
-#define SUCCESS            1
+#define SUCCESS         1
 #define FAIL           -1
 #define PRIORITY_NUM    4   /* idle, low, medium and high priorities. */
 #define STACKSIZE       1024

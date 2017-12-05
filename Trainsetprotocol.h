@@ -45,33 +45,66 @@
 #define MSG_BYTE        3           /* Number of bytes within one message */
 #define PKT_BYTE        5           /* Number of bytes within one packet  */
 #define FRM_BYTE        8           /* Number of bytes within one frame   */
-
+#define HALL_SEN_NUM    24          /* Number of hall sensors in system   */
+#define SPEC_SENSOR_NUM 6
 
 enum PktType {DATA, ACK, NACK};         /* Packet type */
-enum Direction {CW,CCW};                /* Locomotive direction */
-enum Switch {STRAIGHT,DIVERTED};        /* Switch direction */
+enum Direction {CW,CCW, AT_DST};                /* Locomotive direction */
+enum Switch {STR,DIV, UNCH};        /* Switch direction */
+enum TRAIN_NAME {EXPRESS, LOCAL};       /* names of the trains */
+
+/* structure used in the table that determines the action to be taken */
+struct action
+{
+    unsigned sw_num:    12;     /* number of the switch */
+    unsigned sw_state:  2;      /* (straight | diverted | unchange) */
+    unsigned dir:       2;      /* (CW | CCW | At_dst) */
+    unsigned pad:       16;     /* padding */
+};
+
+/* train structure */
+struct train
+{
+    unsigned head;          /* head position of the train */
+    unsigned prev_h;        /* previous head position     */
+    unsigned tail;          /* tail position of the train */
+    unsigned speed;         /* speed of the train         */
+    enum Direction dir;     /* CW | CCW                   */
+};
 
 
 /* Message structure */
+struct __attribute__((packed)) m
+{
+    unsigned char code;         /* Message code (described below) */
+    unsigned char arg1;         /* First argument (optional) */
+    unsigned char arg2;         /* Second argument (optional) */
+
+};
+
 struct message
 {
-    union {
-        struct{
+    union
+    {
+        unsigned long message;          /* message viewed as a single unit */
+        struct __attribute__((packed))
+        {
             unsigned char code;         /* Message code (described below) */
             unsigned char arg1;         /* First argument (optional) */
             unsigned char arg2;         /* Second argument (optional) */
-        };
-        unsigned long message;          /* message viewed as a single unit */
-    };
 
+        };
+        char p[4];
+    };
 };
+
 
 /* magnitude/direction structure */
 struct mag_dir
 {
     union {
-        struct{
-            unsigned magnitude : 3;     /* 0 – stop through 7 – maximum */
+        struct __attribute__((packed)){
+            unsigned magnitude : 3;     /* 0 ï¿½ stop through 7 ï¿½ maximum */
             unsigned ignored : 4;       /* Zero */
             unsigned direction : 1;     /* 1 for CCW and 0 for CW */
         };
@@ -80,11 +113,12 @@ struct mag_dir
 
 };
 
+
 /* */
 struct control
 {
     union {
-        struct{
+        struct __attribute__((packed)){
             unsigned nr : 3;            /* Response number */
             unsigned ns : 3;            /* sequence number */
             enum PktType type : 2;      /* Packet type */
@@ -93,43 +127,65 @@ struct control
     };
 };
 
+
+
 /* */
+struct __attribute__((packed)) pk
+{
+    struct control ctr;         /* Control field */
+    unsigned char  len;         /* Length  field */
+    struct m msg;               /* Message field */
+};
 struct packet
 {
     union {
-        struct{
+        struct __attribute__((packed))
+        {
             struct control ctr;         /* Control field */
-            unsigned char  len;         /* length  field */
-            struct message msg;         /* message field */
+            unsigned char  len;         /* Length  field */
+            struct m msg;               /* Message field */
         };
-        unsigned long pkt;              /* packet viewed as a single unit */
+        unsigned long long pkt;         /* packet viewed as a single unit */
+        char packets[5];                /* packet viewed as a series of bytes */
     };
 };
+
+
 
 /* */
 struct frame
 {
     union {
-        struct{
+        struct __attribute__((packed)){
             unsigned char start_xmit;   /* start of transmission*/
-            struct packet pkt;          /* pscket field */
+            struct pk pkt;              /* packet field */
             unsigned char Chksum;       /* checksum field */
             unsigned char end_xmit;     /* end of transmission */
         };
-        unsigned long frame;            /* frame viewed as a single unit */
+        unsigned long long frame;            /* frame viewed as a single unit */
         char frames[8];                 /* frame viewed as a series of bytes */
     };
-
 };
 
-/* List of UART display commands */
+
+/* List of frames to be send by the physical layer */
 struct frame_queue
 {
-    struct frame queue[WINDOW_SIZE];    /* UART queue of requests */
+    struct frame queue[12];             /* frame queue */
     int head;                           /* Head of circular queue */
     int tail;                           /* Tail of circular queue */
     volatile int cnt;                   /* Number of rqs in queue */
 };
+
+/* List of frames to be send by the physical layer */
+struct packet_queue
+{
+    struct packet queue[12];             /* frame queue */
+    int head;                           /* Head of circular queue */
+    int tail;                           /* Tail of circular queue */
+    volatile int cnt;                   /* Number of rqs in queue */
+};
+
 
 /* External variables*/
 extern unsigned NR;
@@ -138,12 +194,14 @@ extern int counter;
 extern struct current_frame_send;
 extern struct packet temp_pkt;
 extern struct frame_queue FQ;
+extern int offset;
 
 
 void reset_hall_queue(void);
 void send_sw(unsigned char switch_num, enum Switch dir);
 void send_md(unsigned char train_num, unsigned mag, enum Direction dir);
 void hall_sensor_ack(unsigned char sensor_num);
-
-
+void send_frame (struct frame );
+void DLL (void);
+void express_manager (void);
 #endif /* TRAINSET_H_ */

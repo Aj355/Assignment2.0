@@ -5,17 +5,21 @@
 
 #include <stdio.h>
 #include "processes.h"
-
+#include "trainsetprotocol.h"
 /* Register your processes here please in the following way:
  * {process name, priority} where priority ranges from 1,
  * lowest, to 3, highest. Any other number will result in
  * registration failure */
 
-struct process_reg processes[] =
-{
- {proc1, 3}, {proc1, 3}, {proc1, 3}
-};
 
+
+void test (void)
+{
+    pbind(6);
+    send_md(1,6,CW);
+
+    while(1);
+}
 void proc1 (void)
 {
     pbind(pgetid());
@@ -35,3 +39,8 @@ void proc2 (void)
 
 }
 
+struct process_reg processes[] =
+{
+ {DLL,3},{express_manager,3}
+ //{proc1, 3}, {proc1, 3}, {proc1, 3}
+};

@@ -4,7 +4,7 @@
 #ifndef SYSTEM_REQUESTS_H_
 #define SYSTEM_REQUESTS_H_
 
-#define NUM_OF_PROCESSES    3   /*number of processes registered*/
+#define NUM_OF_PROCESSES    2   /*number of processes registered*/
 
 /* Use this structure to register processes */
 struct process_reg
