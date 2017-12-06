@@ -48,11 +48,22 @@
 #define HALL_SEN_NUM    24          /* Number of hall sensors in system   */
 #define SPEC_SENSOR_NUM 6           /* Number of special case sensors     */
 #define MAX_INPUT       16          /* allowed input for commands         */
+#define MAP_HEIGHT      13          /* height of the map in lines         */
+#define MAP_WIDTH       70          /* width of the map in columns        */
+#define MAX_NAME_SZ     2
 
 enum PktType {DATA, ACK, NACK};         /* Packet type */
 enum Direction {CW,CCW, AT_DST};                /* Locomotive direction */
-enum Switch {STR,DIV, UNCH};        /* Switch direction */
+enum Switch {STR, DIV, UNCH};        /* Switch direction */
 enum TRAIN_NAME {EXPRESS, LOCAL};       /* names of the trains */
+
+/* location structure used in map */
+struct location
+{
+    char name[MAX_NAME_SZ];
+    unsigned x_pos;
+    unsigned y_pos;
+};
 
 /* structure used in the table that determines the action to be taken */
 struct action

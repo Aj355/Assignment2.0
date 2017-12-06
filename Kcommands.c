@@ -137,7 +137,7 @@ int ksend(struct msg_request *req)
         /*copy message into receiver buffer until it's full or message is complete*/
         for (i=0; i<max_sz; i++)
             dst_mail->buffer_addr[i] = req->msg[i];
-        dst_mail->buffer_addr[--i] = '\0';
+        //dst_mail->buffer_addr[--i] = '\0';
 
         /*Unblock receiver by inserting its PCB into WTR queue*/
         running[current_priority]->sp = get_PSP();
@@ -235,7 +235,7 @@ void kdisplay(char *dsp)
         current_msg.dsp_msg = new_entry.dsp_msg;
         current_msg.proc    = new_entry.proc;
         UART0_DR_R = *dsp;
-        new_entry.dsp_msg++;
+        current_msg.dsp_msg++;
     }
 
     //block the process

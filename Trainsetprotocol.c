@@ -334,6 +334,37 @@ struct action routing_tbl[HALL_SEN_NUM][HALL_SEN_NUM] =
        {0, UNCH, CW}, {0, UNCH, CW}, {0, UNCH, CW}, {0, UNCH, AT_DST}}
 };
 
+
+
+char map [MAP_HEIGHT][MAP_WIDTH]=
+{{"                  --20-------------------------19--                 "},
+ {"                /                                   \\              "},
+ {"    ----14-----/------13------12---/---11------10----\\---09-----   "},
+ {"  /                               /                              \\ "},
+ {" /               --24-------23---/                                \\"},
+ {"15                                                                08"},
+ {"|                                                                  |"},
+ {"16                                                                07"},
+ {" \\                                  /--21--------22--             /"},
+ {"  \\                                /                             / "},
+ {"    ----01-----\\-----02------03---/---04------05-----/---06-----   "},
+ {"                \\                                   /              "},
+ {"                  --17-------------------------18--                 "}
+ };
+
+struct location sensors[HALL_SEN_NUM] =
+{{"01", 9, 10}, {"02", 22, 10}, {"03", 30, 10}, {"04", 39, 10}, {"05", 47, 10},
+ {"06", 58, 10}, {"07", 67, 7}, {"08", 67, 5}, {"09", 58, 2}, {"10", 48, 2},
+ {"11", 40, 2}, {"12", 31, 2}, {"13", 23, 2}, {"14", 9, 2}, {"15", 1, 5},
+ {"16", 1, 7}, {"17", 21, 12}, {"18", 48, 12}, {"19", 48, 0}, {"20", 21, 0},
+ {"21", 40, 8}, {"22", 50, 8}, {"23", 29, 4}, {"24", 20, 4}
+};
+
+struct location switches[SWITCH_NUM] =
+{{"-/", 16, 2}, {"-/", 36, 2}, {"-\\", 54, 2},
+ {"-/", 54, 10}, {"-/", 35, 10}, {"-\\", 16, 10}
+};
+
 int special_sensors[SPEC_SENSOR_NUM] = {1, 3, 6, 9, 11, 14};
 int h;
 struct packet temp_pkt;
@@ -341,6 +372,72 @@ enum Switch switch_state[SWITCH_NUM];
 struct train trains[TRAIN_NUM];
 unsigned nr;
 unsigned ns;
+
+
+/*******************************************************************************
+ * Purpose:
+ *             This function process an input character and stores it in
+ *             a buffer. it is used by the virtual train process.
+ * Arguments:
+ *             in_buff:     input buffer to store incoming character
+ *             in_char:     the incoming character
+ *             buff_count:  index to the buffer
+ * Return :
+ *             TRUE         if a command is entered
+ *             FALSE        if a command is still not entered
+ *******************************************************************************/
+int process_char (char *in_buff, int *buff_count, int in_char)
+{
+    int cmd = FALSE;
+    // process the input character
+    switch (in_char)
+    {
+    case ESC:
+        // ignore this character
+        break;
+
+    case DEL:
+        // if the buffer is not empty
+        if ((*buff_count))
+        {
+            // echo back the character
+            pdisplay_char((*buff_count), 20, in_char);
+
+            // remove one character from buffer
+            (*buff_count)--;
+        }
+        break;
+
+    case CARRIAGE_RTN:
+        // then a command is done
+        // null terminate the buffer
+        in_buff[(*buff_count)] = NUL;
+        (*buff_count)=0;
+
+        //clear the command from the command line
+        pdisplay_str(1, 20, "                ");
+
+        // put the cursor at the start
+        pdisplay_char(1, 20, in_char);
+
+        cmd = TRUE;
+        break;
+
+    default:
+        // if the buffer is not full
+        if ((*buff_count) < (MAX_INPUT-1))
+        {
+            //insert it in the buffer
+            in_buff[(*buff_count)] = in_char;
+            (*buff_count)++;
+            // echo back the character
+            pdisplay_char((*buff_count), 20, in_char);
+        }
+        break;
+    }
+
+    return cmd;
+}
 
 /*******************************************************************************
  * Purpose:
@@ -358,65 +455,39 @@ void virtual_train (void)
 {
     int src_id;      // used to receive messages
     char in_char;    // input character from UART
+    char sensor;
+
 
     char in_buff[MAX_INPUT];    // contain the input commands
     int buff_count=0;           // index to buffer
 
     pbind(VERTUAL_TRN);
 
-    pdisplay_str(1, 10, "1");
-    pdisplay_str(1, 10, "Command line:");
+    pdisplay_str(1, 19, "Command line input:\n\r");
+    pdisplay_str(1, 22, "Command line output:");
     while (1)
     {
         // receive a message from UART
         precv(&src_id, &in_char, sizeof(char));
 
-        // process the input character
-        switch (in_char)
+        // process the character
+        if(process_char(in_buff, &buff_count, in_char))
         {
-        case ESC:
-            // ignore this character
-            break;
-
-        case DEL:
-            // if the buffer is not empty
-            if (!buff_count)
+            // if it is a hall sensor trigger command
+            if (in_buff[0] == 'h' && isdigit(in_buff[1]))
             {
-                // echo back the character
-                pdisplay_char(1, 20, in_char);
+                sensor = (in_buff[1]-'0');
+                if (isdigit(in_buff[2]))
+                    sensor = 10*sensor + in_buff[2]-'0';
 
-                // remove one character from buffer
-                buff_count--;
+                pdisplay_str(1, 23, "                         ");
+                pdisplay_str(1, 23, "Hall Sensor ");
+                pdisplay_char(13, 23, (sensor/10)+'0');
+                pdisplay_char(14, 23, (sensor%10)+'0');
+                pdisplay_str(16, 23, "triggered");
+                in_buff[1] -= '0';
+                psend(6, &sensor, sizeof(char));
             }
-            break;
-
-        case CARRIAGE_RTN:
-            // then a command is done
-            // null terminate the buffer
-            in_buff[buff_count] = NUL;
-            buff_count++;
-
-            //clear the command from the command line
-            pdisplay_str(1, 20, "                ");
-
-            // put the cursor at the start
-            pdisplay_char(1, 20, in_char);
-
-
-
-            break;
-
-        default:
-            // if the buffer is not full
-            if (buff_count < (MAX_INPUT-1))
-            {
-                // echo back the character
-                pdisplay_char(1, 20, in_char);
-                //insert it in the buffer
-                in_buff[buff_count] = in_char;
-                buff_count++;
-            }
-            break;
         }
 
 
@@ -437,16 +508,18 @@ void express_manager(void)
 {
     int dir, sw_num, sw_state;  // to hold info from routing table
     int dest;                   // destination location
-    int sensor;                 // triggered hall sensor
+    char sensor;                 // triggered hall sensor
     int src_id;                 // for receiving messages
     int tmp;
+    int i;
+    int x_pos;
+    int y_pos;
 
     pbind(6);
-    int i=1;
+
     /* Send message to DLL with all switches straight   */
     //send_sw(4, DIV);
-    int source_id;
-    struct message data;
+
     /* Send message to DLL with hall sensor queue reset */
     //reset_hall_queue();
 
@@ -461,39 +534,58 @@ void express_manager(void)
     trains[EXPRESS].dir = CW;
     send_md(EXPRESS, trains[EXPRESS].speed, trains[EXPRESS].dir);
     */
+    pdisplay_str(1, 1, "Direction:");
     
-    // initialize head position, speed, and destination
-    trains[EXPRESS].head = 1;
-    trains[EXPRESS].speed = 7;
-    dest = 13;
+    for (i=0; i<MAP_HEIGHT; i++)
+    {
+        pdisplay_str(1, 3+i, map[i]);
+    }
 
+    // initialize head position, speed, and destination
+    trains[EXPRESS].head = 7;
+    trains[EXPRESS].speed = 7;
+    dest = 22;
+
+    x_pos = sensors[trains[EXPRESS].head-1].x_pos;
+    y_pos = sensors[trains[EXPRESS].head-1].y_pos;
+    pdisplay_str(x_pos, y_pos+3, "EE");
     //get direction and switch info from routing table
-    trains[EXPRESS].dir = routing_tbl[trains[EXPRESS].head][dest].dir;
-    sw_num = routing_tbl[trains[EXPRESS].head][dest].sw_num;
-    sw_state = routing_tbl[trains[EXPRESS].head][dest].sw_state;
+    trains[EXPRESS].dir = routing_tbl[trains[EXPRESS].head-1][dest-1].dir;
+    sw_num = routing_tbl[trains[EXPRESS].head-1][dest-1].sw_num;
+    sw_state = routing_tbl[trains[EXPRESS].head-1][dest-1].sw_state;
     
     // send direction and switch commands
     send_md(EXPRESS, trains[EXPRESS].speed, trains[EXPRESS].dir);
+    pdisplay_char(11, 1, trains[EXPRESS].dir + '0');
+
     send_sw(sw_num, sw_state);
+    pdisplay_str(switches[sw_num-1].x_pos, switches[sw_num-1].x_pos, switches[sw_num-1].name[sw_state])
     
     while (1)
     {
         // get a message from the mailbox
-        precv(&src_id, &sensor, sizeof(int));
+        precv(&src_id, &sensor, sizeof(char));
 
         // if the received hall sensor is the same as the head pos
         if (sensor == trains[EXPRESS].head || sensor == trains[EXPRESS].prev_h)
             trains[EXPRESS].tail = sensor;
         else // if it is a new sensor
         {
+            pdisplay_str(x_pos, y_pos+3, sensors[trains[EXPRESS].head-1].name);
+            x_pos = sensors[sensor-1].x_pos;
+            y_pos = sensors[sensor-1].y_pos;
+            pdisplay_str(x_pos, y_pos+3, "EE");
+
             // update the head position
             trains[EXPRESS].prev_h = trains[EXPRESS].head;
             trains[EXPRESS].head = sensor;
 
             // get next direction and switch from routing table
-            dir = routing_tbl[trains[EXPRESS].head][dest].dir;
-            sw_num = routing_tbl[trains[EXPRESS].head][dest].sw_num;
-            sw_state = routing_tbl[trains[EXPRESS].head][dest].sw_state;
+            dir = routing_tbl[trains[EXPRESS].head-1][dest-1].dir;
+            sw_num = routing_tbl[trains[EXPRESS].head-1][dest-1].sw_num;
+            sw_state = routing_tbl[trains[EXPRESS].head-1][dest-1].sw_state;
+
+
 
             // if the train is at the destination
             if (dir == AT_DST)
@@ -511,6 +603,11 @@ void express_manager(void)
                 send_sw(sw_num, sw_state);
                 send_md(EXPRESS, trains[EXPRESS].speed, dir);
 
+                pdisplay_str(x_pos, y_pos+3, sensors[trains[EXPRESS].head-1].name);
+                x_pos = sensors[trains[EXPRESS].tail-1].x_pos;
+                y_pos = sensors[trains[EXPRESS].tail-1].y_pos;
+                pdisplay_str(x_pos, y_pos+3, "EE");
+
                 // Switch the positions of the head and tail (since train is reversing)
                 tmp = trains[EXPRESS].head;
                 trains[EXPRESS].head = trains[EXPRESS].tail;
@@ -518,6 +615,7 @@ void express_manager(void)
                 trains[EXPRESS].prev_h = 0;
                 //update the direction of the train
                 trains[EXPRESS].dir = dir;
+                pdisplay_char(11, 1, trains[EXPRESS].dir + '0');
             }
         }
     }
