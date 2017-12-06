@@ -57,13 +57,21 @@
 #define DLL             5
 #define APP             6
 #define TIME_SERVER     0           /* Time server PID and mailbox number */
-
-
-
+#define MAP_HEIGHT      13          /* height of the map in lines         */
+#define MAP_WIDTH       70          /* width of the map in columns        */
+#define MAX_NAME_SZ     2
 enum PktType {DATA, ACK, NACK};         /* Packet type */
 enum Direction {CW,CCW, AT_DST};                /* Locomotive direction */
-enum Switch {STR,DIV, UNCH};        /* Switch direction */
+enum Switch {STR, DIV, UNCH};        /* Switch direction */
 enum TRAIN_NAME {EXPRESS, LOCAL};       /* names of the trains */
+
+/* location structure used in map */
+struct location
+{
+    char name[MAX_NAME_SZ];
+    unsigned x_pos;
+    unsigned y_pos;
+};
 
 /* structure used in the table that determines the action to be taken */
 struct action

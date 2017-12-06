@@ -200,6 +200,7 @@ unsigned long get_time(void)
     return time.counter;
 }
 
+
 /*******************************************************************************
 * Purpose:
 *             This function prints a character using the UART module. It
