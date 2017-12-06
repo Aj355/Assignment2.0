@@ -347,7 +347,10 @@ void SVCHandler(struct stack_frame *argptr)
             case DISPLAY:
                 kdisplay(kcaptr->pkmsg);
                 break;
-                
+
+            case PHYSICAL:
+                xmit_frame(kcaptr ->pkmsg);
+                break;
                 /* Undefined command */
             default:
                 kcaptr->rtnvalue = FAIL;
@@ -380,7 +383,6 @@ void PendSV(void)
     restore_registers();						/* Load registers R4..R11     */
     InterruptMasterEnable();
 }
-
 
 
 

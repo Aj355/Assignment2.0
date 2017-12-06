@@ -25,7 +25,7 @@
 #include "UART.h"
 #include "SYSTICK.h"
 #include "Kprocesses.h"
-
+#include "Trainsetprotocol.h"
  
 struct mailbox mailboxes[MAX_MSG_QUEUE]; /* List of message queues */
 
@@ -273,3 +273,54 @@ void knice(int* pr)
 }
 
 
+
+
+/*******************************************************************************
+* Purpose:
+*             This function changes the processes priority by removing the
+*             PCB and placing it in the desired priority WTR queue.
+* Arguments:
+*             pr:       desired priority supplied by process
+* Return :
+*             NONE
+*******************************************************************************/
+void send_frame (struct frame * frame)
+{
+    if ( UART1_state == BUSY )
+        enqueue_frame(frame);
+        /* IF UART is idle - not transmitting any characters */
+    else
+    {
+        UART1_state = BUSY;          // Signal UART is busy
+        send.low   = frame->low;
+        send.high  = frame->high;
+        UART1_DR_R = frame->bytes[counter++];  // Load character into data reg.
+    }
+}
+
+#define SHOULD_ESC(x)  x == DLE || x == STX || x == ETX
+
+void xmit_frame (struct transmit *packet )
+{
+    struct frame frame;
+    int checksum = 0;
+    int i=0,j=0;
+    if (packet->length > PKT_BYTE)
+        return;
+    frame.bytes[i++] = STX;
+    for ( ; i <= packet->length ; i++)
+    {
+        if (SHOULD_ESC(frame.bytes[i]))
+        {
+            frame.bytes[i] = DLE;
+            i++;
+        }
+        frame.bytes[i] = packet->xmit[j++];
+        checksum += frame.bytes[i];
+    }
+    frame.bytes[i++] = ~checksum;
+    frame.bytes[i] = ETX;
+    frame.length = i;
+    send_frame(&frame);
+
+}

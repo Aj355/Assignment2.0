@@ -34,7 +34,7 @@
 #define SVC()   __asm(" SVC #0")
 
 /* Kernel command codes */
-enum CODE_TYPE {TERMINATE, GETID, NICE, BIND, SEND, RECV, DISPLAY};
+enum CODE_TYPE {TERMINATE, GETID, NICE, BIND, SEND, RECV, DISPLAY, PHYSICAL};
 
 /* Time server requests */
 enum TIME_SERVER_REQ {_TIME, _SLEEP};
@@ -70,6 +70,9 @@ struct time_req
 	enum TIME_SERVER_REQ code;  /* TIME | SLEEP */
     unsigned long counter;		/* duration of sleep in systicks */
 };
+
+
+int pkcall(int code, void *pkmsg);
 
 
 #endif /* PCOMMANDS_H_ */

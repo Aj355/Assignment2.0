@@ -536,65 +536,6 @@ int special_sensor (int sensor)
     return FALSE;
 }
 
-/*******************************************************************************
-* Purpose:
-*             This process removes a PCB from its corresponding priority
-*             WTR queue and adjusts the current_priority global variable
-*             if needed. This function does not free the PCB.
-* Arguments:
-*             NONE (only dequeues the running processes pcb)
-* Return :
-*             NONE
-*******************************************************************************/
-void encapsulate(struct packet packet)
-{
-    struct frame  temp_frm;
-    int i=0,j=1;
-    temp_frm.start_xmit = STX;
-    temp_frm.pkt.ctr.cntrl= packet.ctr.cntrl;
-    temp_frm.Chksum  = packet.ctr.cntrl;
-    if (packet.len)
-    {
-        temp_frm.pkt.len = packet.len;
-        temp_frm.Chksum += packet.len;
-        i++;
-        j--;
-        packet.len++;
-    }
-    for ( ; i <= packet.len ; i++)
-    {
-        temp_frm.frames[i + 2] = packet.packets[i+1];
-        temp_frm.Chksum += packet.packets[i+1];
-    }
-    temp_frm.Chksum = ~temp_frm.Chksum;
-    temp_frm.frames[i+2-j] = temp_frm.Chksum;
-    temp_frm.frames[i+3-j] = ETX;
-    offset = i+3-j;
-    send_frame(temp_frm);
-}
-
-/*******************************************************************************
-* Purpose:
-*             This process removes a PCB from its corresponding priority
-*             WTR queue and adjusts the current_priority global variable
-*             if needed. This function does not free the PCB.
-* Arguments:
-*             NONE (only dequeues the running processes pcb)
-* Return :
-*             NONE
-*******************************************************************************/
-void ack(struct packet packet)
-{
-    struct frame  temp_frm;
-    temp_frm.start_xmit = STX;
-    temp_frm.pkt.ctr.cntrl= packet.ctr.cntrl;
-    temp_frm.frames[2] = packet.ctr.cntrl;
-    temp_frm.frames[2] = ~temp_frm.frames[2];
-    temp_frm.frames[3] = ETX;
-    offset = 3;
-    send_frame(temp_frm);
-}
-
 
 /* -------------------------------------------------------------------------- *
  * Purpose:       send speed and direction
@@ -606,15 +547,16 @@ void ack(struct packet packet)
  * -------------------------------------------------------------------------- */
 void send_md(unsigned char train_num, unsigned mag, enum Direction dir)
 {
-    struct message msg;
+    struct transmit msg;
     struct mag_dir md;
     md.direction = dir;
     md.ignored   = 0;
     md.magnitude = mag;
-    msg.code = CHNG_SPDR_MSG;
-    msg.arg1 = train_num+1;
-    msg.arg2 = md.mag_dir;
-    psend(5,&msg,sizeof(struct message));
+    msg.xmit[CODE] = CHNG_SPDR_MSG;
+    msg.xmit[ARG1] = train_num+1;
+    msg.xmit[ARG2] = md.mag_dir;
+    msg.length = 3;
+    psend(DLL,&msg,msg.length);
 }
 
 /* -------------------------------------------------------------------------- *
@@ -627,11 +569,12 @@ void send_md(unsigned char train_num, unsigned mag, enum Direction dir)
  * -------------------------------------------------------------------------- */
 void send_sw(unsigned char switch_num, enum Switch dir)
 {
-    struct message msg;
-    msg.code = CHNG_SWTC_MSG;
-    msg.arg1 = switch_num;
-    msg.arg2 = (unsigned char) dir;
-    psend(5,&msg,sizeof(struct message));
+    struct transmit msg;
+    msg.xmit[CODE] = CHNG_SWTC_MSG;
+    msg.xmit[ARG1] = switch_num;
+    msg.xmit[ARG2] = (unsigned char) dir;
+    msg.length = 3;
+    psend(DLL,&msg,msg.length);
 }
 
 
@@ -645,11 +588,10 @@ void send_sw(unsigned char switch_num, enum Switch dir)
  * -------------------------------------------------------------------------- */
 void reset_hall_queue(void)
 {
-    struct message msg;
-    msg.code = HALL_REST_MSG;
-    msg.arg1 = 0;
-    msg.arg2 = 0;
-    psend(5,&msg.message,sizeof(struct message));
+    struct transmit msg;
+    msg.xmit[CODE] = HALL_REST_MSG;
+    msg.length = 1;
+    psend(DLL,&msg,msg.length);
 }
 
 /* -------------------------------------------------------------------------- *
@@ -662,14 +604,39 @@ void reset_hall_queue(void)
  * -------------------------------------------------------------------------- */
 void hall_sensor_ack(unsigned char sensor_num)
 {
-    struct message msg;
-    msg.code = 0xAA;
-    msg.arg1 = sensor_num;
-    msg.arg2 = 0;
-    psend(5,&msg,sizeof(struct message));
+    struct transmit msg;
+    msg.xmit[CODE] = HALL_REST_ACK;
+    msg.xmit[ARG1] = sensor_num;
+    msg.length = 2;
+    psend(DLL,&msg,msg.length);
 }
 
-struct packet window;
+
+void xmit_packet (char *msg, struct control ctr, unsigned char len)
+{
+    struct transmit packet;
+    int i=0;
+
+    if (len > PKT_BYTE)
+        return;
+
+    packet.xmit[i++] = ctr.cntrl;
+    if (packet.xmit[i] != 0)
+    {
+        packet.xmit[i++] = len;
+        for ( i = 0 ; i < len ; i++)
+            packet.xmit[i + 2] = msg[i];
+    }
+    packet.length = i;
+    pkcall(PHYSICAL,&packet);
+}
+
+void xmit_window(void)
+{
+
+}
+
+struct transmit window;
 /* -------------------------------------------------------------------------- *
  * Purpose:       Insert an entry into the UART queue
  *
@@ -679,89 +646,70 @@ struct packet window;
  *                TRUE  if enqueuing is successful
  *                FALSE if enqueuing is not successful
  * -------------------------------------------------------------------------- */
-void DLL(void)
+void DataLink(void)
 {
     int source_id;
-    unsigned long long data =0;
-    struct message t;
-    struct packet packet;
-    packet.pkt = 0;
-    pbind(5);
+    struct transmit data;
+    struct control ctr;
+    int timeout = 0;
+    pbind(DLL);
     while (1)
     {
-        precv(&source_id,&data,sizeof(long long));
+        precv(&source_id,&data,12);
         if (source_id == UART)
         {
-            packet.pkt = data;
-            if (packet.ctr.ns == nr)
+            ctr.cntrl = data.xmit[CTRL];
+            switch (ctr.type)
             {
-                switch (packet.ctr.type)
+            case DATA:
+                if (ctr.nr == ns && ctr.ns == nr)
                 {
-                    case DATA:
-                        // note: you only want to send hall trigger msg
-                        psend(6, &packet.msg, (packet.len+1));
-                        nr = (nr + 1) % 8;
-                        packet.ctr.nr = nr;
-                        packet.ctr.ns = 0;
-                        packet.ctr.type = ACK;
-                        packet.len = 0;
-                        packet.msg.code = 0;
-                        packet.msg.arg1 = 0;
-                        packet.msg.arg2 = 0;
-                        //window.pkt = packet.pkt;
-                        //encapsulate(packet);
-                        break;
-                    case ACK:
-                        if (packet.ctr.nr <= ns)
-                        {
-                            h++;
-                            window.pkt=0;
-
-                        }
-                        else
-                        {
-                            encapsulate(window);
-                        }
-                        break;
-                    case NACK:
-                        break;
-                    default:
-                        break;
+                    nr = (nr + 1) % 8;
+                    psend(6, data.xmit+PKT_MSG, data.xmit[LEN]);
+                    ctr.nr = nr;
+                    ctr.ns = 0;
+                    ctr.type = ACK;
+                    xmit_packet(NULL,ctr,0);
                 }
+                else
+                {
+                    ctr.nr = nr;
+                    ctr.ns = 0;
+                    ctr.type = NACK;
+                    xmit_packet(NULL,ctr,0);
+                }
+                break;
+
+            case ACK:
+                if (ctr.nr == ns)
+                    timeout = 0;
+                else
+                {
+                    ctr.nr = nr;
+                    ctr.ns = 0;
+                    ctr.type = NACK;
+                    xmit_packet(NULL,ctr,0);
+                }
+                break;
+
+            case NACK:
+                xmit_window();
+                break;
+            default:
+                break;
             }
         }
-        else if (source_id == 6)
+        else if (source_id == APP)
         {
-            t.message = data;
-            packet.msg.code = t.code;
-            packet.msg.arg1 = t.arg1;
-            packet.msg.arg2 = t.arg2;
-            packet.ctr.nr = nr;
-            packet.ctr.ns = ns;
+            ctr.nr = nr;
+            ctr.ns = ns;
             ns = (ns + 1) % 8;
-            packet.ctr.type = DATA;
-            packet.len = 2;
-            if (window.pkt == 0)
-            {
-                window.pkt = packet.pkt;
-                encapsulate(packet);
-            }
-            else
-                enqueue_packet(&packet);
+            ctr.type = DATA;
+            xmit_packet(data.xmit,ctr,data.length);
         }
-    }
-}
-
-
-void send_frame (struct frame temp)
-{
-    if ( UART1_state == BUSY )
-        enqueue_frame(&temp);
-        /* IF UART is idle - not transmitting any characters */
-    else
-    {
-        UART1_state = BUSY;          // Signal UART is busy
-        send.frame = temp.frame;
-        UART1_DR_R = temp.frames[counter++];  // Load character into data reg.
+        else if (source_id == TIME_SERVER && timeout)
+        {
+            xmit_window();
+        }
     }
 }

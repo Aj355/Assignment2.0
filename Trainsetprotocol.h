@@ -23,7 +23,7 @@
 
 /* Trainset message codes */
 #define HALL_TRGR_MSG   0xA0        /* Train triggering hall sensor event */
-#define HALL_TRGR_ACK   0xA2        /* Ack of Hall sensor trigger event   */
+#define HALL_TRGR_ACK   0xAA        /* Ack of Hall sensor trigger event   */
 #define HALL_REST_MSG   0xA8        /* reset Queue of Hall trigger event  */
 #define HALL_REST_ACK   0xAA        /* Ack of Hall sensor queue resetting */
 #define CHNG_SPDR_MSG   0xC0        /* Change train speed and direction   */
@@ -48,6 +48,17 @@
 #define HALL_SEN_NUM    24          /* Number of hall sensors in system   */
 #define SPEC_SENSOR_NUM 6           /* Number of special case sensors     */
 #define MAX_INPUT       16          /* allowed input for commands         */
+#define CODE            0
+#define ARG1            1
+#define ARG2            2
+#define CTRL            0
+#define LEN             1
+#define PKT_MSG         2
+#define DLL             5
+#define APP             6
+#define TIME_SERVER     0           /* Time server PID and mailbox number */
+
+
 
 enum PktType {DATA, ACK, NACK};         /* Packet type */
 enum Direction {CW,CCW, AT_DST};                /* Locomotive direction */
@@ -105,7 +116,7 @@ struct mag_dir
 {
     union {
         struct __attribute__((packed)){
-            unsigned magnitude : 3;     /* 0 � stop through 7 � maximum */
+            unsigned magnitude : 3;     /* 0 for stop through 7 for maximum */
             unsigned ignored : 4;       /* Zero */
             unsigned direction : 1;     /* 1 for CCW and 0 for CW */
         };
@@ -152,26 +163,43 @@ struct packet
 
 
 
-/* */
-struct frame
+struct transmit
 {
     union {
-        struct __attribute__((packed)){
-            unsigned char start_xmit;   /* start of transmission*/
-            struct pk pkt;              /* packet field */
-            unsigned char Chksum;       /* checksum field */
-            unsigned char end_xmit;     /* end of transmission */
-        };
-        unsigned long long frame;            /* frame viewed as a single unit */
-        char frames[8];                 /* frame viewed as a series of bytes */
+
+        char xmit[12];
+        long long whole;
+    };
+    char length;
+
+};
+struct message_ol
+{
+        unsigned char code;         /* Message code (described below) */
+        unsigned char arg1;         /* First argument (optional) */
+        unsigned char arg2;         /* Second argument (optional) */
+};
+struct packet_ol
+{
+    union
+    {
+        char bytes[8];
+        long long whole;
     };
 };
 
-
-union frame_ol
+struct frame
 {
-    char bytes[16];
-    
+    union
+    {
+        char bytes[16];
+        struct
+        {
+            long long low;
+            long long high;
+        };
+    };
+    int length;
 };
 
 /* List of frames to be send by the physical layer */
@@ -207,8 +235,8 @@ void reset_hall_queue(void);
 void send_sw(unsigned char switch_num, enum Switch dir);
 void send_md(unsigned char train_num, unsigned mag, enum Direction dir);
 void hall_sensor_ack(unsigned char sensor_num);
-void send_frame (struct frame );
-void DLL (void);
+void send_frame (struct frame *);
+void DataLink (void);
 void express_manager (void);
 void virtual_train (void);
 #endif /* TRAINSET_H_ */

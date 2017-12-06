@@ -41,6 +41,6 @@ void proc2 (void)
 
 struct process_reg processes[] =
 {
- {DLL,3},{express_manager,3}
+ {DataLink,3},{express_manager,3}
  //{proc1, 3}, {proc1, 3}, {proc1, 3}
 };

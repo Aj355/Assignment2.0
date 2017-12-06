@@ -224,7 +224,9 @@ int enqueue_frame(struct frame * req)
     else
     {
         state = TRUE;
-        FQ.queue[FQ.head].frame = req->frame;
+        FQ.queue[FQ.head].low    = req->low;
+        FQ.queue[FQ.head].high   = req->high;
+        FQ.queue[FQ.head].length = req->length;
         // Increment head to next entry
         FQ.head = (FQ.head + 1) % WINDOW_SIZE;
         // Increment Queue entry counter
@@ -249,7 +251,9 @@ int dequeue_frame(struct frame * req)
     if (FQ.cnt > 0)                              // IF the queue is not empty
     {
         state = TRUE;
-        req->frame = FQ.queue[FQ.tail].frame;
+        req->low = FQ.queue[FQ.tail].low;
+        req->high = FQ.queue[FQ.tail].high;
+        req->length = FQ.queue[FQ.tail].length;
         FQ.tail = (FQ.tail + 1) % WINDOW_SIZE;   // Increment tail to entry
         FQ.cnt--;                                // Decrement queue counter
     }

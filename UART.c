@@ -172,15 +172,14 @@ void UART0_IntHandler(void)
     }
 }
 
-struct frame recv;
-struct frame send;
+struct transmit recv;
 int escaped;
-int escaped2;
+int length;
+int chksum;
+
+struct frame send;
 int counter;
-int counter2;
-int active;
-int len;
-int offset;   /* offset is 0 for data, or 4 for acks/nacks*/
+
 
 void UART1_IntHandler(void)
 {
@@ -195,85 +194,50 @@ void UART1_IntHandler(void)
         /* RECV done - clear interrupt and make char available to application */
         UART1_ICR_R |= UART_INT_RX;
         
-        if ( !active )
+        if ( !length && UART1_DR_R == STX)
         {
-            switch (UART1_DR_R) {
-                case STX:
-                    recv.frame = 0;
-                    active = 1;
-                    len = 1;
-                    counter2 = 0;
-                    recv.Chksum= 0;
-                    recv.frames[counter2++] = UART1_DR_R;
-                    break;
-                default:
-                    break;
-            }
+            chksum = 0;
+            length++;
         }
-        else
+        else if (length)
         {
-            switch (UART1_DR_R) {
+            if (escaped)
+            {
+                recv.xmit[length++-1] = UART1_DR_R;
+                chksum +=UART1_DR_R;
+                escaped = 0;
+            }
+            else
+            {
+                switch (UART1_DR_R)
+                {
                 case STX:
-                    if (escaped)
-                    {
-                        recv.Chksum +=UART1_DR_R;
-                        len++;
-                        if (len > MAX_LEN)
-                            active = 0;
-                        else
-                            recv.frames[counter2++] = UART1_DR_R;
-                        escaped = 0;
-                    }
+                    length = 0;
                     break;
                 case DLE:
-                    if (escaped)
-                    {
-                        recv.Chksum +=UART1_DR_R;
-                        len++;
-                        if (len > MAX_LEN)
-                            active = 0;
-                        else
-                            recv.frames[counter2++] = UART1_DR_R;
-                        escaped = 0;
-                    }
                     escaped = 1;
                     break;
                 case ETX:
-                    if (escaped)
+                    if (chksum == 0xff)
                     {
-                        recv.Chksum +=UART1_DR_R;
-                        len++;
-                        if (len > MAX_LEN)
-                            active = 0;
-                        else
-                            recv.frames[counter2++] = UART1_DR_R;
-                        escaped = 0;
+                        tmp.dst_id = DLL; /* Destination */
+                        tmp.sz = length -1;               /* Size of msg */
+                        recv.length = length - 1;
+                        tmp.src_id = UART;     /* Source is systick (unique ID) */
+                        tmp.msg = &recv.xmit[1];
+                        save_registers();         /* incase send wakes up higher priority proc*/
+                        ksend(&tmp);              /* send systick notification of 1/10 second */
+                        restore_registers();      /* restore registers for same reason of sv  */
                     }
-                    else
-                    {
-                        if (recv.Chksum == 0xff)
-                        {
-                            tmp.dst_id = 5; /* Destination */
-                            tmp.sz = len ;               /* Size of msg */
-                            tmp.src_id = UART;     /* Source is systick (unique ID) */
-                            tmp.msg = &recv.frames[1];
-                            save_registers();         /* incase send wakes up higher priority proc*/
-                            ksend(&tmp);              /* send systick notification of 1/10 second */
-                            restore_registers();      /* restore registers for same reason of sv  */
-                        }
-                        active = 0;
-                        recv.Chksum = 0;
-                        counter2 = 0;
-                    }
+                    length = 0;
                     break;
                 default:
-                    recv.Chksum +=UART1_DR_R;
-                    len++;
-                    if (len > MAX_LEN)
-                        active = 0;
-                    else
-                        recv.frames[counter2++] = UART1_DR_R;
+                    recv.xmit[length++-1] = UART1_DR_R;
+                    chksum +=UART1_DR_R;
+                }
             }
+            if (length > 7)
+                length = 0;
         }
     }
     
@@ -284,40 +248,16 @@ void UART1_IntHandler(void)
 
         UART1_ICR_R |= UART_INT_TX;
         /*  if  current frame is not done sending*/
-        if (counter < offset)
-        {
-            if (send.frames[counter] == STX ||
-                    send.frames[counter] == ETX ||
-                    send.frames[counter] == DLE )
-            {
-                if (escaped2)
-                {
-                    escaped2 = 0;
-                    UART1_DR_R = send.frames[counter++];
-                }
-                else
-                {
-                    escaped2 = 1;
-                    UART1_DR_R = DLE;
-                }
-            }
-            else
-            {
-                UART1_DR_R = send.frames[counter++];  // Load character into data reg.
-            }
-        }
-        else if (counter == offset)
-        {
-            UART1_DR_R = send.frames[counter++];
-        }
+        if (counter <= send.length)
+            UART1_DR_R = send.bytes[counter++];  // Load character into data reg.
+
         else
         {
             counter = 0;
             if (FQ.cnt > 0)
             {
                 dequeue_frame(&send);
-                UART1_DR_R = STX;
-                counter++;
+                UART1_DR_R = send.bytes[counter++];  // Load character into data reg.
             }
             else
                 UART1_state = IDLE;

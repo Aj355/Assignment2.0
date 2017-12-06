@@ -49,8 +49,7 @@ Structured English: Data link layer (DDL) process algorithm
 Bind process to mailbox 
 WHILE TRUE
 	RECV msg from mailbox
-	IF received from UART
-				
+	IF received from UART	
 		SELECT PacketType
 			CASE DATA
 				IF recv nr == machine ns AND recv ns == machine nr
