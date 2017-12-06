@@ -179,6 +179,12 @@ struct frame
 };
 
 
+union frame_ol
+{
+    char bytes[16];
+    
+};
+
 /* List of frames to be send by the physical layer */
 struct frame_queue
 {
