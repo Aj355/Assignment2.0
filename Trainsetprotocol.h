@@ -64,11 +64,13 @@
 #define MAP_POS         3           /* starting row position of map       */
 #define CHAR_INDEX      '0'         /* add to number to transform to char */
 
-#define INIT_POS        24          /* initial position of the train      */
-#define INIT_SPEED      7          /* initial speed of the train is max  */
-#define INIT_DEST       22          /* initial destination of the train   */
+#define EXP_INIT_POS        17          /* initial position of the train      */
+#define EXP_INIT_SPEED      7          /* initial speed of the train is max  */
+#define EXP_INIT_DEST       24          /* initial destination of the train   */
 #define REVERSE_SPD     15          /* speed at which the train is reversing*/
 #define REVERSE_TIME    3           /* time it takes to reverse the train */
+
+
 
 enum PktType {DATA, ACK, NACK};         /* Packet type */
 enum Direction {CW,CCW, AT_DST};                /* Locomotive direction */
@@ -259,4 +261,5 @@ void DataLink (void);
 void express_manager (void);
 void virtual_train (void);
 int special_sensor (int sensor);
+void change_switch (int num, int state);
 #endif /* TRAINSET_H_ */

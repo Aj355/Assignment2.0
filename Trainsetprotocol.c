@@ -459,6 +459,7 @@ void virtual_train (void)
     char in_char;    // input character from UART
     struct transmit msg; // to send messages
     char sensor;
+    char s_num;
 
 
     char in_buff[MAX_INPUT];    // contain the input commands
@@ -491,11 +492,11 @@ void virtual_train (void)
                     pdisplay_str(16, 23, "triggered");
                     msg.xmit[0] = HALL_CMD;
                     msg.xmit[1] = sensor;
-                    psend(6, &msg, sizeof(char));
+                    psend(6, &msg, sizeof(struct transmit));
                 }
             }
             // if it is a destination command
-            if (in_buff[0] == "d" && isdigit(in_buff[1]))
+            else if (in_buff[0] == 'd' && isdigit(in_buff[1]))
             {
                 sensor = (in_buff[1]-'0');
                 if (isdigit(in_buff[2]))
@@ -509,8 +510,18 @@ void virtual_train (void)
                     pdisplay_str(16, 23, "is chosen");
                     msg.xmit[0] = DEST_CMD;
                     msg.xmit[1] = sensor;
-                    psend(6, &sensor, sizeof(char));
+                    psend(6, &msg, sizeof(struct transmit));
                 }
+            }
+            else if (in_buff[0] == 's' && isdigit(in_buff[1]) && in_buff[1] < '7'
+                    && isdigit(in_buff[2]) && in_buff[2] < '2')
+            {
+                pdisplay_str(1, 23, "                         ");
+                pdisplay_str(1, 23, "Switch ");
+                pdisplay_char(8, 23, in_buff[1]);
+                pdisplay_str(10, 23, "is set to");
+                pdisplay_char(20, 23, in_buff[2]);
+                change_switch(in_buff[1] - '0', in_buff[2] - '0');
             }
         }
 
@@ -582,9 +593,10 @@ void express_manager(void)
     }
 
     /* initialize head position, speed, and destination */
-    trains[EXPRESS].head = INIT_POS;
-    trains[EXPRESS].speed = INIT_SPEED;
-    dest = INIT_DEST;
+    trains[EXPRESS].head = EXP_INIT_POS;
+    trains[EXPRESS].speed = EXP_INIT_SPEED;
+    dest = EXP_INIT_DEST;
+
 
     /* put the initial place of the train on the map */
     update_trn_pos(EXPRESS, trains[EXPRESS].head, &x_pos[EXPRESS], &y_pos[EXPRESS]);
@@ -608,6 +620,9 @@ void express_manager(void)
         /* if the received message is from the virtual machine */
         if (src_id == VERTUAL_TRN && msg.xmit[0] == DEST_CMD)
         {
+            /* change the direction */
+            dest = msg.xmit[1];
+
             /* get direction and switch info from routing table */
             get_action (EXPRESS, dest, &dir, &sw_num, &sw_state);
 
@@ -855,7 +870,7 @@ void DataLink(void)
                 }
                 else
                 {
-                    ctr.nr = nr;
+                    ctr.nr = (nr-1)%8;
                     ctr.ns = 0;
                     ctr.type = NACK;
                     xmit_packet(NULL,ctr,0);
@@ -896,7 +911,7 @@ void DataLink(void)
                 break;
             }
         }
-        else if (source_id == APP)
+        else if (source_id == APP || source_d == VERTUAL_TRN)
         {
             ctr.nr = nr;
             ctr.ns = ns;
