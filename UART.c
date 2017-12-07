@@ -236,7 +236,7 @@ void UART1_IntHandler(void)
                     chksum +=UART1_DR_R;
                 }
             }
-            if (length > 9)
+            if (length > 16)
                 length = 0;
         }
     }

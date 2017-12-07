@@ -457,6 +457,7 @@ void virtual_train (void)
 {
     int src_id;      // used to receive messages
     char in_char;    // input character from UART
+    struct transmit msg; // to send messages
     char sensor;
 
 
@@ -481,14 +482,35 @@ void virtual_train (void)
                 sensor = (in_buff[1]-'0');
                 if (isdigit(in_buff[2]))
                     sensor = 10*sensor + in_buff[2]-'0';
-
-                pdisplay_str(1, 23, "                         ");
-                pdisplay_str(1, 23, "Hall Sensor ");
-                pdisplay_char(13, 23, (sensor/10)+'0');
-                pdisplay_char(14, 23, (sensor%10)+'0');
-                pdisplay_str(16, 23, "triggered");
-                in_buff[1] -= '0';
-                psend(6, &sensor, sizeof(char));
+                if (sensor <= 24)
+                {
+                    pdisplay_str(1, 23, "                         ");
+                    pdisplay_str(1, 23, "Hall Sensor ");
+                    pdisplay_char(13, 23, (sensor/10)+'0');
+                    pdisplay_char(14, 23, (sensor%10)+'0');
+                    pdisplay_str(16, 23, "triggered");
+                    msg.xmit[0] = HALL_CMD;
+                    msg.xmit[1] = sensor;
+                    psend(6, &msg, sizeof(char));
+                }
+            }
+            // if it is a destination command
+            if (in_buff[0] == "d" && isdigit(in_buff[1]))
+            {
+                sensor = (in_buff[1]-'0');
+                if (isdigit(in_buff[2]))
+                    sensor = 10*sensor + in_buff[2]-'0';
+                if (sensor <= 24)
+                {
+                    pdisplay_str(1, 23, "                         ");
+                    pdisplay_str(1, 23, "Destination ");
+                    pdisplay_char(13, 23, (sensor/10)+'0');
+                    pdisplay_char(14, 23, (sensor%10)+'0');
+                    pdisplay_str(16, 23, "is chosen");
+                    msg.xmit[0] = DEST_CMD;
+                    msg.xmit[1] = sensor;
+                    psend(6, &sensor, sizeof(char));
+                }
             }
         }
 
@@ -500,8 +522,8 @@ void virtual_train (void)
 void update_trn_pos (int train, int sensor, int *x_pos, int *y_pos)
 {
     pdisplay_str(*x_pos, *y_pos+MAP_POS, sensors[trains[EXPRESS].head-1].name);
-    *x_pos = sensors[sensor].x_pos;
-    *y_pos = sensors[sensor].y_pos;
+    *x_pos = sensors[sensor-1].x_pos;
+    *y_pos = sensors[sensor-1].y_pos;
     pdisplay_str(*x_pos, *y_pos+MAP_POS, train_symbols[train]);
 }
 
@@ -516,9 +538,12 @@ void get_action (int train, int dest, int *dir, int *sw_num, int *sw_state)
 /* this function changes the state of switch and updates map */
 void change_switch (int num, int state)
 {
+    if (state == UNCH)
+        return;
+
     send_sw(num, state);
     send_sw(num, state);
-    pdisplay_char(switches[num].x_pos, switches[num].y_pos, switches[num].name[state]);
+    pdisplay_char(switches[num-1].x_pos, switches[num-1].y_pos+MAP_POS, switches[num-1].name[state]);
 }
 
 
@@ -546,7 +571,7 @@ void express_manager(void)
 
     /* bind to a mailbox */
     pbind(APP);
-    
+
     /* reset all hall sensors */
     reset_hall_queue();
 
@@ -579,6 +604,24 @@ void express_manager(void)
     {
         /* get a message from the mailbox and send ack*/
         precv(&src_id, &msg, sizeof(struct transmit));
+
+        /* if the received message is from the virtual machine */
+        if (src_id == VERTUAL_TRN && msg.xmit[0] == DEST_CMD)
+        {
+            /* get direction and switch info from routing table */
+            get_action (EXPRESS, dest, &dir, &sw_num, &sw_state);
+
+            /* update the current direction of the train */
+            trains[EXPRESS].dir = dir;
+
+            /* send direction and switch commands */
+            send_md(EXPRESS, trains[EXPRESS].speed, trains[EXPRESS].dir);
+            change_switch(sw_num, sw_state);
+
+            continue;
+        }
+
+        /* if it is from the train set */
         sensor = msg.xmit[1];
         hall_sensor_ack(sensor);
 
@@ -602,11 +645,13 @@ void express_manager(void)
             {
                 // stop the train
                 // reverse the direction of the train
-                send_md(EXPRESS, trains[EXPRESS].speed, !trains[EXPRESS].dir);
+                send_md(EXPRESS, REVERSE_SPD, !trains[EXPRESS].dir);
                 // wait for some time in order to force the train to stop fast
-                sleep(3);
+                sleep(REVERSE_TIME);
                 // send a message to the train to stop
                 send_md(EXPRESS, 0, 0);
+                //update train direction
+                trains[EXPRESS].dir = dir;
             }
             // else if the new direction = new direction
             else if (dir == trains[EXPRESS].dir)
@@ -842,7 +887,10 @@ void DataLink(void)
                 break;
 
             case NACK:
-                //xmit_window();
+                ctr.nr = nr;
+                ctr.ns = (ns -1) % 8;
+                ctr.type = DATA;
+                xmit_packet(window.xmit,ctr,window.length);
                 break;
             default:
                 break;
@@ -864,7 +912,7 @@ void DataLink(void)
         }
         else if (source_id == TIME_SERVER && timeout)
         {
-           // xmit_window();
+            //xmit_window();
         }
     }
 }

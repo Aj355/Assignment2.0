@@ -59,19 +59,22 @@
 #define TIME_SERVER     0           /* Time server PID and mailbox number */
 #define MAP_HEIGHT      13          /* height of the map in lines         */
 #define MAP_WIDTH       70          /* width of the map in columns        */
-#define MAX_NAME_SZ     2
+#define MAX_NAME_SZ     3
 #define FIRST_LINE      1           /* number of first line in terminal   */
 #define MAP_POS         3           /* starting row position of map       */
 #define CHAR_INDEX      '0'         /* add to number to transform to char */
 
 #define INIT_POS        24          /* initial position of the train      */
-#define INIT_SPEED      15          /* initial speed of the train is max  */
+#define INIT_SPEED      7          /* initial speed of the train is max  */
 #define INIT_DEST       22          /* initial destination of the train   */
+#define REVERSE_SPD     15          /* speed at which the train is reversing*/
+#define REVERSE_TIME    3           /* time it takes to reverse the train */
 
 enum PktType {DATA, ACK, NACK};         /* Packet type */
 enum Direction {CW,CCW, AT_DST};                /* Locomotive direction */
 enum Switch {DIV, STR, UNCH};        /* Switch direction */
-enum TRAIN_NAME {EXPRESS, LOCAL};       /* names of the trains */
+enum TRAIN_NAME {LOCAL, EXPRESS};       /* names of the trains */
+enum COMMANDS_ {DEST_CMD, HALL_CMD};
 
 /* location structure used in map */
 struct location

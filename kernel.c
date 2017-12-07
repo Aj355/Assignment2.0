@@ -388,7 +388,7 @@ void PendSV(void)
 extern struct frame_queue FQ;  /* contains list of frames to be sent */
 extern unsigned ns;
 extern unsigned nr;
-
+extern int chksum;
 /*******************************************************************************
  * Purpose:
  *             Main function of the program.
