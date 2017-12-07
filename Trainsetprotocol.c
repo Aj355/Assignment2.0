@@ -515,6 +515,7 @@ void virtual_train (void)
                     psend(6, &msg, sizeof(struct transmit));
                 }
             }
+            // else if it is switch command
             else if (in_buff[0] == 's' && isdigit(in_buff[1]) && in_buff[1] < '7'
                     && isdigit(in_buff[2]) && in_buff[2] < '2')
             {
@@ -569,7 +570,7 @@ void change_switch (int num, int state)
  *             SUCCESS   if successful enqueuing of the PCB occurs
  *             FAIL      if the WTR queue is full
  *******************************************************************************/
-void express_manager(void)
+void train_manager(void)
 {
     int dir, sw_num, sw_state;  // to hold info from routing table
     int dest;                   // destination location

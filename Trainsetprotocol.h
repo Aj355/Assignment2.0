@@ -209,7 +209,7 @@ void send_md(unsigned char train_num, unsigned mag, enum Direction dir);
 void hall_sensor_ack(unsigned char sensor_num);
 void send_frame (struct frame *);
 void DataLink (void);
-void express_manager (void);
+void train_manager (void);
 void virtual_train (void);
 int special_sensor (int sensor);
 void change_switch (int num, int state);
