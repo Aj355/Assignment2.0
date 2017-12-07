@@ -6,11 +6,11 @@ Purpose: This test is
 Date: 6 Dec 2017
 
 Setup: 
-
+The 
 
 
 Steps:
-	1 -
+	1 - 
 	2 - Load train simulator code into AVR
 	3 - Setup UART on both AVR and TIVA
 	4 - Configure PuTTY terminal for both AVR TIVA
@@ -18,10 +18,7 @@ Steps:
 	6 - Run code on CCS
 
 Expected output:
-The first three lines in the UART terminal are going to look like:
-I am process # 1
-I am process # 2
-I am process # 3
+
 
 Result:
 Success
