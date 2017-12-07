@@ -19,6 +19,9 @@
 #include "processes.h"
 #include "Pcommands.h"
 
+/* The routing table to decided what action to take given current position
+ * and destination.
+ */
 struct action routing_tbl[HALL_SEN_NUM][HALL_SEN_NUM] =
 {
               /*1*/            /*2*/         /*3*/         /*4*/
@@ -335,7 +338,7 @@ struct action routing_tbl[HALL_SEN_NUM][HALL_SEN_NUM] =
 };
 
 
-
+/* The map displayed to the user */
 char map [MAP_HEIGHT][MAP_WIDTH]=
 {{"                  --20-------------------------19--                 "},
  {"                /                                   \\              "},
@@ -352,6 +355,7 @@ char map [MAP_HEIGHT][MAP_WIDTH]=
  {"                  --17-------------------------18--                 "}
  };
 
+/* indexes to the positions of the sensors on the map for display purposes */
 struct location sensors[HALL_SEN_NUM] =
 {{"01", 9, 10}, {"02", 22, 10}, {"03", 30, 10}, {"04", 39, 10}, {"05", 47, 10},
  {"06", 58, 10}, {"07", 67, 7}, {"08", 67, 5}, {"09", 58, 2}, {"10", 48, 2},
@@ -360,21 +364,21 @@ struct location sensors[HALL_SEN_NUM] =
  {"21", 40, 8}, {"22", 50, 8}, {"23", 29, 4}, {"24", 20, 4}
 };
 
+/* indexes to the positions of the switches on the map for display purposes */
 struct location switches[SWITCH_NUM] =
 {{"/-", 16, 2}, {"/-", 36, 2}, {"\\-", 54, 2},
  {"/-", 54, 10}, {"/-", 35, 10}, {"\\-", 16, 10}
 };
 
+/* the symbol of the train that appears on the map */
 char train_symbols [TRAIN_NUM][MAX_NAME_SZ] = {"EE", "LL"};
 
+/* sensors that undergo special treatment if triggered */
 int special_sensors[SPEC_SENSOR_NUM] = {1, 3, 6, 9, 11, 14};
-int h;
-struct packet temp_pkt;
-enum Switch switch_state[SWITCH_NUM];
-struct train trains[TRAIN_NUM];
-unsigned nr;
-unsigned ns;
 
+struct train trains[TRAIN_NUM];     /* trains and their info */
+unsigned nr;                        /* nr counter */
+unsigned ns;                        /* ns counter */
 
 /*******************************************************************************
  * Purpose:
@@ -403,7 +407,7 @@ int process_char (char *in_buff, int *buff_count, int in_char)
         if ((*buff_count))
         {
             // echo back the character
-            pdisplay_char((*buff_count), 20, in_char);
+            pdisplay_char((*buff_count), CMD_LINE_IN, in_char);
 
             // remove one character from buffer
             (*buff_count)--;
@@ -417,10 +421,10 @@ int process_char (char *in_buff, int *buff_count, int in_char)
         (*buff_count)=0;
 
         //clear the command from the command line
-        pdisplay_str(1, 20, "                ");
+        pdisplay_str(FIRST_LINE, CMD_LINE_IN, "                ");
 
         // put the cursor at the start
-        pdisplay_char(1, 20, in_char);
+        pdisplay_char(FIRST_LINE, CMD_LINE_IN, in_char);
 
         cmd = TRUE;
         break;
@@ -433,7 +437,7 @@ int process_char (char *in_buff, int *buff_count, int in_char)
             in_buff[(*buff_count)] = in_char;
             (*buff_count)++;
             // echo back the character
-            pdisplay_char((*buff_count), 20, in_char);
+            pdisplay_char((*buff_count), CMD_LINE_IN, in_char);
         }
         break;
     }
@@ -443,7 +447,7 @@ int process_char (char *in_buff, int *buff_count, int in_char)
 
 /*******************************************************************************
  * Purpose:
- *             This process takens input from the UART0 and processes
+ *             This process takes input from the UART0 and processes
  *             commands from the user. The commands can control the
  *             train set or they can by commands to execute virtual
  *             operations such as simulating that a hall sensor is
@@ -459,16 +463,14 @@ void virtual_train (void)
     char in_char;    // input character from UART
     struct transmit msg; // to send messages
     char sensor;
-    char s_num;
-
 
     char in_buff[MAX_INPUT];    // contain the input commands
     int buff_count=0;           // index to buffer
 
     pbind(VERTUAL_TRN);
 
-    pdisplay_str(1, 19, "Command line input:\n\r");
-    pdisplay_str(1, 22, "Command line output:");
+    pdisplay_str(FIRST_LINE, CMD_LINE_IN-1, "Command line input:\n\r");
+    pdisplay_str(FIRST_LINE, CMD_LINE_OUT-1, "Command line output:");
     while (1)
     {
         // receive a message from UART
@@ -483,16 +485,16 @@ void virtual_train (void)
                 sensor = (in_buff[1]-'0');
                 if (isdigit(in_buff[2]))
                     sensor = 10*sensor + in_buff[2]-'0';
-                if (sensor <= 24)
+                if (sensor <= HALL_SEN_NUM)
                 {
-                    pdisplay_str(1, 23, "                         ");
-                    pdisplay_str(1, 23, "Hall Sensor ");
-                    pdisplay_char(13, 23, (sensor/10)+'0');
-                    pdisplay_char(14, 23, (sensor%10)+'0');
-                    pdisplay_str(16, 23, "triggered");
+                    pdisplay_str(1, CMD_LINE_OUT, "                         ");
+                    pdisplay_str(1, CMD_LINE_OUT, "Hall Sensor ");
+                    pdisplay_char(13, CMD_LINE_OUT, (sensor/10)+'0');
+                    pdisplay_char(14, CMD_LINE_OUT, (sensor%10)+'0');
+                    pdisplay_str(16, CMD_LINE_OUT, "triggered");
                     msg.xmit[0] = HALL_CMD;
                     msg.xmit[1] = sensor;
-                    psend(6, &msg, sizeof(struct transmit));
+                    psend(APP, &msg, sizeof(struct transmit));
                 }
             }
             // if it is a destination command
@@ -501,13 +503,13 @@ void virtual_train (void)
                 sensor = (in_buff[1]-'0');
                 if (isdigit(in_buff[2]))
                     sensor = 10*sensor + in_buff[2]-'0';
-                if (sensor <= 24)
+                if (sensor <= HALL_SEN_NUM)
                 {
-                    pdisplay_str(1, 23, "                         ");
-                    pdisplay_str(1, 23, "Destination ");
-                    pdisplay_char(13, 23, (sensor/10)+'0');
-                    pdisplay_char(14, 23, (sensor%10)+'0');
-                    pdisplay_str(16, 23, "is chosen");
+                    pdisplay_str(1, CMD_LINE_OUT, "                         ");
+                    pdisplay_str(1, CMD_LINE_OUT, "Destination ");
+                    pdisplay_char(13, CMD_LINE_OUT, (sensor/10)+'0');
+                    pdisplay_char(14, CMD_LINE_OUT, (sensor%10)+'0');
+                    pdisplay_str(16, CMD_LINE_OUT, "is chosen");
                     msg.xmit[0] = DEST_CMD;
                     msg.xmit[1] = sensor;
                     psend(6, &msg, sizeof(struct transmit));
@@ -516,16 +518,14 @@ void virtual_train (void)
             else if (in_buff[0] == 's' && isdigit(in_buff[1]) && in_buff[1] < '7'
                     && isdigit(in_buff[2]) && in_buff[2] < '2')
             {
-                pdisplay_str(1, 23, "                         ");
-                pdisplay_str(1, 23, "Switch ");
-                pdisplay_char(8, 23, in_buff[1]);
-                pdisplay_str(10, 23, "is set to");
-                pdisplay_char(20, 23, in_buff[2]);
+                pdisplay_str(1, CMD_LINE_OUT, "                         ");
+                pdisplay_str(1, CMD_LINE_OUT, "Switch ");
+                pdisplay_char(8, CMD_LINE_OUT, in_buff[1]);
+                pdisplay_str(10, CMD_LINE_OUT, "is set to");
+                pdisplay_char(20, CMD_LINE_OUT, in_buff[2]);
                 change_switch(in_buff[1] - '0', in_buff[2] - '0');
             }
         }
-
-
     }
 }
 
@@ -551,10 +551,10 @@ void change_switch (int num, int state)
 {
     if (state == UNCH)
         return;
-
     send_sw(num, state);
     send_sw(num, state);
-    pdisplay_char(switches[num-1].x_pos, switches[num-1].y_pos+MAP_POS, switches[num-1].name[state]);
+    pdisplay_char(switches[num-1].x_pos,
+                  switches[num-1].y_pos+MAP_POS, switches[num-1].name[state]);
 }
 
 
@@ -596,7 +596,6 @@ void express_manager(void)
     trains[EXPRESS].head = EXP_INIT_POS;
     trains[EXPRESS].speed = EXP_INIT_SPEED;
     dest = EXP_INIT_DEST;
-
 
     /* put the initial place of the train on the map */
     update_trn_pos(EXPRESS, trains[EXPRESS].head, &x_pos[EXPRESS], &y_pos[EXPRESS]);
@@ -695,6 +694,9 @@ void express_manager(void)
     }
 }
 
+/* This function takes in a sensor number and returns true if
+ * the sensor is one of the special sensors or it returns false
+ */
 int special_sensor (int sensor)
 {
     int i;
