@@ -2,12 +2,12 @@
 Structured English: Send Speed and direction algorithm
 ---------------------------------------------------------------------------
 Create message structure
-Code element in mesage structure = 0xC0
+Code element in message structure = 0xC0
 first argument element in message structure = desired train number
 least three bits of second argument element in message structure = speed
 four following bits of second argument element in message structure = 0
 last bit of second argument element in message structure = direction 
-CALL psend function with message, size, and the DLL process mailbox address
+CALL psend with message, size, and the DLL process mailbox address
 
 ---------------------------------------------------------------------------
 Structured English: Send switch algorithm
@@ -20,7 +20,7 @@ Create message structure
 Code element in mesage structure = 0xE0
 first argument element in message structure = desired switch number
 second argument element in message structure = direction of switch
-CALL psend function with message, size, and the DLL process mailbox address
+CALL psend with message, size, and the DLL process mailbox address
 
 
 ---------------------------------------------------------------------------
@@ -31,17 +31,17 @@ Create message structure
 Code element in mesage structure = 0xA8
 first argument element in message structure = 0
 second argument element in message structure = 0
-CALL psend function with message, size, and the DLL process mailbox address
+CALL psend with message, size, and the DLL process mailbox address
 
 ---------------------------------------------------------------------------
-Structured English: hall sensor acknowledgment
+Structured English: Hall sensor acknowledgment
 ---------------------------------------------------------------------------
 
 Create message structure
 Code element in mesage structure = 0xC0
 first argument element in message structure = hall sensor number
 second argument element in message structure = 0
-CALL psend function with message, size, and the DLL process mailbox address
+CALL psend with message, size, and the DLL process mailbox address
 
 ---------------------------------------------------------------------------
 Structured English: Data link layer (DDL) process algorithm
