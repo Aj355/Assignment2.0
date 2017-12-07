@@ -61,10 +61,12 @@
 #define MAP_WIDTH       70          /* width of the map in columns        */
 #define MAX_NAME_SZ     3
 #define FIRST_LINE      1           /* number of first line in terminal   */
+#define CMD_LINE_IN     20          /* command line input  position       */
+#define CMD_LINE_OUT    23          /* command line output position       */
 #define MAP_POS         3           /* starting row position of map       */
 #define CHAR_INDEX      '0'         /* add to number to transform to char */
 
-#define EXP_INIT_POS        17          /* initial position of the train      */
+#define EXP_INIT_POS        22          /* initial position of the train      */
 #define EXP_INIT_SPEED      7          /* initial speed of the train is max  */
 #define EXP_INIT_DEST       24          /* initial destination of the train   */
 #define REVERSE_SPD     15          /* speed at which the train is reversing*/

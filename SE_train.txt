@@ -126,9 +126,12 @@ DO WHILE there are messages in the mailbox
 			THEN print the message on that window
 		ENDIF
 	ELSE IF the received message is from UART (input character)
-		THEN 
+		THEN IF there is an active window
+			THEN send the character to the owning process
+		ENDIF
+	ENDIF
+ENDDO
 		
-
 ---------------------------------------------------------------------------
 Structured English: Physical layer reception
 ---------------------------------------------------------------------------
