@@ -294,6 +294,7 @@ void send_frame (struct frame * frame)
         UART1_state = BUSY;          // Signal UART is busy
         send.low   = frame->low;
         send.high  = frame->high;
+        send.length = frame->length;
         UART1_DR_R = frame->bytes[counter++];  // Load character into data reg.
     }
 }
@@ -304,23 +305,30 @@ void xmit_frame (struct transmit *packet )
 {
     struct frame frame;
     int checksum = 0;
-    int i=0,j=0;
+    int i=0,j=0,k=0;
+    frame.low = 0;
+    frame.high = 0;
     if (packet->length > PKT_BYTE)
         return;
     frame.bytes[i++] = STX;
-    for ( ; i <= packet->length ; i++)
+    for ( ; i <= (packet->length + k) ; i++)
     {
-        if (SHOULD_ESC(frame.bytes[i]))
+        if (SHOULD_ESC(packet->xmit[j]))
         {
-            frame.bytes[i] = DLE;
-            i++;
+            frame.bytes[i++] = DLE;
+            k++;
         }
         frame.bytes[i] = packet->xmit[j++];
         checksum += frame.bytes[i];
     }
-    frame.bytes[i++] = ~checksum;
+    checksum = (~checksum)&0xff;
+    if (SHOULD_ESC(checksum))
+    {
+        frame.bytes[i++] = DLE;
+    }
+    frame.bytes[i++] = checksum;
     frame.bytes[i] = ETX;
-    frame.length = i;
+    frame.length = i+1;
     send_frame(&frame);
 
 }

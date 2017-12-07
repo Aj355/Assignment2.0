@@ -62,7 +62,7 @@
 #define MAX_NAME_SZ     2
 enum PktType {DATA, ACK, NACK};         /* Packet type */
 enum Direction {CW,CCW, AT_DST};                /* Locomotive direction */
-enum Switch {STR, DIV, UNCH};        /* Switch direction */
+enum Switch {DIV, STR, UNCH};        /* Switch direction */
 enum TRAIN_NAME {EXPRESS, LOCAL};       /* names of the trains */
 
 /* location structure used in map */
@@ -124,8 +124,8 @@ struct mag_dir
 {
     union {
         struct __attribute__((packed)){
-            unsigned magnitude : 3;     /* 0 for stop through 7 for maximum */
-            unsigned ignored : 4;       /* Zero */
+            unsigned magnitude : 4;     /* 0 for stop through 7 for maximum */
+            unsigned ignored : 3;       /* Zero */
             unsigned direction : 1;     /* 1 for CCW and 0 for CW */
         };
         unsigned char mag_dir;          /* argument viewed as one byte */
@@ -175,7 +175,7 @@ struct transmit
 {
     union {
 
-        char xmit[12];
+        char xmit[10];
         long long whole;
     };
     char length;
@@ -213,7 +213,7 @@ struct frame
 /* List of frames to be send by the physical layer */
 struct frame_queue
 {
-    struct frame queue[12];             /* frame queue */
+    struct frame queue[25];             /* frame queue */
     int head;                           /* Head of circular queue */
     int tail;                           /* Tail of circular queue */
     volatile int cnt;                   /* Number of rqs in queue */
@@ -222,7 +222,7 @@ struct frame_queue
 /* List of frames to be send by the physical layer */
 struct packet_queue
 {
-    struct packet queue[12];             /* frame queue */
+    struct transmit queue[25];          /* frame queue */
     int head;                           /* Head of circular queue */
     int tail;                           /* Tail of circular queue */
     volatile int cnt;                   /* Number of rqs in queue */

@@ -193,7 +193,7 @@ void UART1_IntHandler(void)
     {
         /* RECV done - clear interrupt and make char available to application */
         UART1_ICR_R |= UART_INT_RX;
-        
+
         if ( !length && UART1_DR_R == STX)
         {
             chksum = 0;
@@ -203,7 +203,7 @@ void UART1_IntHandler(void)
         {
             if (escaped)
             {
-                recv.xmit[length++-1] = UART1_DR_R;
+                recv.xmit[length++] = UART1_DR_R;
                 chksum +=UART1_DR_R;
                 escaped = 0;
             }
@@ -221,8 +221,8 @@ void UART1_IntHandler(void)
                     if (chksum == 0xff)
                     {
                         tmp.dst_id = DLL; /* Destination */
-                        tmp.sz = length -1;               /* Size of msg */
-                        recv.length = length - 1;
+                        tmp.sz = length -2;               /* Size of msg */
+                        recv.length = length -2;
                         tmp.src_id = UART;     /* Source is systick (unique ID) */
                         tmp.msg = &recv.xmit[1];
                         save_registers();         /* incase send wakes up higher priority proc*/
@@ -232,11 +232,11 @@ void UART1_IntHandler(void)
                     length = 0;
                     break;
                 default:
-                    recv.xmit[length++-1] = UART1_DR_R;
+                    recv.xmit[length++] = UART1_DR_R;
                     chksum +=UART1_DR_R;
                 }
             }
-            if (length > 7)
+            if (length > 9)
                 length = 0;
         }
     }

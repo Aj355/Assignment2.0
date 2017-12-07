@@ -162,18 +162,18 @@ int dequeue_UART(struct UART_entry *req)
  *                TRUE  if enqueuing is successful
  *                FALSE if enqueuing is not successful
  * -------------------------------------------------------------------------- */
-int enqueue_packet(struct packet * req)
+int enqueue_packet(struct transmit * req)
 {
     int state;
     InterruptMasterDisable();               // Disable all interrupt
-    if (PQ.cnt == WINDOW_SIZE)              // IF queue is full
+    if (PQ.cnt == 25)              // IF queue is full
         state = FALSE;
     else
     {
         state = TRUE;
-        PQ.queue[PQ.head].pkt = req->pkt;
+        PQ.queue[PQ.head].whole = req->whole;
         // Increment head to next entry
-        PQ.head = (PQ.head + 1) % WINDOW_SIZE;
+        PQ.head = (PQ.head + 1) % 25;
         // Increment Queue entry counter
         PQ.cnt++;
     }
@@ -189,15 +189,15 @@ int enqueue_packet(struct packet * req)
  *                TRUE  if dequeuing is successful
  *                FALSE if dequeuing is not successful
  * -------------------------------------------------------------------------- */
-int dequeue_packet(struct packet * req)
+int dequeue_packet(struct transmit * req)
 {
     int state;
     InterruptMasterDisable();                    // Disable all interrupt
     if (PQ.cnt > 0)                              // IF the queue is not empty
     {
         state = TRUE;
-        req->pkt = PQ.queue[PQ.tail].pkt;
-        PQ.tail = (PQ.tail + 1) % WINDOW_SIZE;   // Increment tail to entry
+        req->whole = PQ.queue[PQ.tail].whole;
+        PQ.tail = (PQ.tail + 1) % 25;   // Increment tail to entry
         PQ.cnt--;                                // Decrement queue counter
     }
     else
@@ -219,7 +219,7 @@ int enqueue_frame(struct frame * req)
 {
     int state;
     InterruptMasterDisable();               // Disable all interrupt
-    if (FQ.cnt == WINDOW_SIZE)              // IF queue is full
+    if (FQ.cnt == 25)              // IF queue is full
         state = FALSE;
     else
     {
@@ -228,7 +228,7 @@ int enqueue_frame(struct frame * req)
         FQ.queue[FQ.head].high   = req->high;
         FQ.queue[FQ.head].length = req->length;
         // Increment head to next entry
-        FQ.head = (FQ.head + 1) % WINDOW_SIZE;
+        FQ.head = (FQ.head + 1) % 25;
         // Increment Queue entry counter
         FQ.cnt++;
     }
@@ -254,7 +254,7 @@ int dequeue_frame(struct frame * req)
         req->low = FQ.queue[FQ.tail].low;
         req->high = FQ.queue[FQ.tail].high;
         req->length = FQ.queue[FQ.tail].length;
-        FQ.tail = (FQ.tail + 1) % WINDOW_SIZE;   // Increment tail to entry
+        FQ.tail = (FQ.tail + 1) % 25;   // Increment tail to entry
         FQ.cnt--;                                // Decrement queue counter
     }
     else

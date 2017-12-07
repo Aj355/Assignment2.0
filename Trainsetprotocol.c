@@ -139,17 +139,17 @@ struct action routing_tbl[HALL_SEN_NUM][HALL_SEN_NUM] =
       {3, STR, CCW}, {3, STR, CCW}, {3, STR, CCW}, {3, STR, CCW}},
 
           /*1*/            /*2*/         /*3*/         /*4*/
-/*10*/{{0, UNCH, CCW}, {0, UNCH, CCW}, {3, STR, CW}, {3, STR, CW},
+/*10*/{{2, STR, CCW}, {2, STR, CCW}, {3, STR, CW}, {3, STR, CW},
           /*5*/           /*6*/         /*7*/         /*8*/
       {3, STR, CW}, {3, STR, CW}, {3, STR, CW}, {3, STR, CW},
           /*9*/          /*10*/         /*11*/        /*12*/
-      {3, STR, CW}, {0, UNCH, AT_DST}, {0, UNCH, CCW}, {0, UNCH, CCW},
+      {3, STR, CW}, {0, UNCH, AT_DST}, {0, UNCH, CCW}, {2, STR, CCW},
           /*13*/         /*14*/         /*15*/         /*16*/
-      {0, UNCH, CCW}, {0, UNCH, CCW}, {0, UNCH, CCW}, {0, UNCH, CCW},
+      {2, STR, CCW}, {2, STR, CCW}, {2, STR, CCW}, {2, STR, CCW},
           /*17*/         /*18*/         /*19*/         /*20*/
-      {0, UNCH, CCW}, {3, STR, CW}, {3, STR, CW}, {3, STR, CW},
+      {2, STR, CCW}, {3, STR, CW}, {3, STR, CW}, {3, STR, CW},
           /*21*/         /*22*/         /*23*/         /*24*/
-      {0, UNCH, CCW}, {0, UNCH, CCW}, {0, UNCH, CCW}, {0, UNCH, CCW}},
+      {2, STR, CCW}, {2, STR, CCW}, {2, DIV, CCW}, {2, DIV, CCW}},
 
           /*1*/            /*2*/         /*3*/         /*4*/
 /*11*/{{2, STR, CCW}, {2, STR, CCW}, {2, STR, CCW}, {0, UNCH, CW},
@@ -514,14 +514,15 @@ void express_manager(void)
     int i;
     int x_pos;
     int y_pos;
+    struct transmit msg;
 
-    pbind(6);
+    pbind(APP);
 
     /* Send message to DLL with all switches straight   */
     //send_sw(4, DIV);
 
     /* Send message to DLL with hall sensor queue reset */
-    //reset_hall_queue();
+    reset_hall_queue();
 
     /* Ask display to enter train sections and speed */
     //pdisplay_str(1,5,"Enter starting sections and speeds:\n");
@@ -542,9 +543,9 @@ void express_manager(void)
     }
 
     // initialize head position, speed, and destination
-    trains[EXPRESS].head = 7;
+    trains[EXPRESS].head = 22;
     trains[EXPRESS].speed = 7;
-    dest = 22;
+    dest = 24;
 
     x_pos = sensors[trains[EXPRESS].head-1].x_pos;
     y_pos = sensors[trains[EXPRESS].head-1].y_pos;
@@ -553,18 +554,21 @@ void express_manager(void)
     trains[EXPRESS].dir = routing_tbl[trains[EXPRESS].head-1][dest-1].dir;
     sw_num = routing_tbl[trains[EXPRESS].head-1][dest-1].sw_num;
     sw_state = routing_tbl[trains[EXPRESS].head-1][dest-1].sw_state;
-    
+
+
     // send direction and switch commands
     send_md(EXPRESS, trains[EXPRESS].speed, trains[EXPRESS].dir);
     pdisplay_char(11, 1, trains[EXPRESS].dir + '0');
 
     send_sw(sw_num, sw_state);
-    pdisplay_str(switches[sw_num-1].x_pos, switches[sw_num-1].x_pos, switches[sw_num-1].name[sw_state])
     
+
     while (1)
     {
         // get a message from the mailbox
-        precv(&src_id, &sensor, sizeof(char));
+        precv(&src_id, &msg, sizeof(struct transmit));
+        sensor = msg.xmit[1];
+        hall_sensor_ack(sensor);
 
         // if the received hall sensor is the same as the head pos
         if (sensor == trains[EXPRESS].head || sensor == trains[EXPRESS].prev_h)
@@ -591,15 +595,23 @@ void express_manager(void)
             if (dir == AT_DST)
             {
                 // stop the train
+                send_md(EXPRESS,15, !trains[EXPRESS].dir);
+                sleep(3);
+                send_md(EXPRESS, 0, 0);
             }
             // else if the new direction = new direction
             else if (dir == trains[EXPRESS].dir)
+            {
                 send_sw(sw_num, sw_state);
+                send_sw(sw_num, sw_state);
+
+            }
             // else if new direction does not equal old direction
             // and it is not one of the special sensors
-            else if (!special_sensor(sensor) || sw_state == STR)
+            else if (!special_sensor(sensor))
             {
                 // send switch and direction command
+                send_sw(sw_num, sw_state);
                 send_sw(sw_num, sw_state);
                 send_md(EXPRESS, trains[EXPRESS].speed, dir);
 
@@ -610,7 +622,7 @@ void express_manager(void)
 
                 // Switch the positions of the head and tail (since train is reversing)
                 tmp = trains[EXPRESS].head;
-                trains[EXPRESS].head = trains[EXPRESS].tail;
+                //trains[EXPRESS].head = trains[EXPRESS].tail;
                 trains[EXPRESS].tail = tmp;
                 trains[EXPRESS].prev_h = 0;
                 //update the direction of the train
@@ -654,7 +666,7 @@ void send_md(unsigned char train_num, unsigned mag, enum Direction dir)
     msg.xmit[ARG1] = train_num+1;
     msg.xmit[ARG2] = md.mag_dir;
     msg.length = 3;
-    psend(DLL,&msg,msg.length);
+    psend(DLL,&msg,sizeof(struct transmit));
 }
 
 /* -------------------------------------------------------------------------- *
@@ -668,11 +680,18 @@ void send_md(unsigned char train_num, unsigned mag, enum Direction dir)
 void send_sw(unsigned char switch_num, enum Switch dir)
 {
     struct transmit msg;
+    if (dir == UNCH)
+        return;
+
+    if (switch_num == 3 && dir == STR)
+        return;
+
     msg.xmit[CODE] = CHNG_SWTC_MSG;
     msg.xmit[ARG1] = switch_num;
     msg.xmit[ARG2] = (unsigned char) dir;
     msg.length = 3;
-    psend(DLL,&msg,msg.length);
+
+    psend(DLL,&msg,sizeof(struct transmit));
 }
 
 
@@ -689,7 +708,7 @@ void reset_hall_queue(void)
     struct transmit msg;
     msg.xmit[CODE] = HALL_REST_MSG;
     msg.length = 1;
-    psend(DLL,&msg,msg.length);
+    psend(DLL,&msg,sizeof(struct transmit));
 }
 
 /* -------------------------------------------------------------------------- *
@@ -706,7 +725,7 @@ void hall_sensor_ack(unsigned char sensor_num)
     msg.xmit[CODE] = HALL_REST_ACK;
     msg.xmit[ARG1] = sensor_num;
     msg.length = 2;
-    psend(DLL,&msg,msg.length);
+    psend(DLL,&msg,sizeof(struct transmit));
 }
 
 
@@ -717,15 +736,17 @@ void xmit_packet (char *msg, struct control ctr, unsigned char len)
 
     if (len > PKT_BYTE)
         return;
-
+    packet.whole = 0;
     packet.xmit[i++] = ctr.cntrl;
-    if (packet.xmit[i] != 0)
+    if (len != 0)
     {
         packet.xmit[i++] = len;
         for ( i = 0 ; i < len ; i++)
             packet.xmit[i + 2] = msg[i];
+        i +=2;
     }
     packet.length = i;
+
     pkcall(PHYSICAL,&packet);
 }
 
@@ -753,21 +774,37 @@ void DataLink(void)
     pbind(DLL);
     while (1)
     {
-        precv(&source_id,&data,12);
+        precv(&source_id,&data,sizeof(struct transmit));
+
         if (source_id == UART)
         {
             ctr.cntrl = data.xmit[CTRL];
             switch (ctr.type)
             {
             case DATA:
-                if (ctr.nr == ns && ctr.ns == nr)
+                if (ctr.nr <= ns && ctr.ns == nr)
                 {
                     nr = (nr + 1) % 8;
-                    psend(6, data.xmit+PKT_MSG, data.xmit[LEN]);
+                    if (data.xmit[2] == 0xa0)
+                    {
+                    psend(6, data.xmit+PKT_MSG, sizeof(struct transmit));
+                    }
                     ctr.nr = nr;
                     ctr.ns = 0;
                     ctr.type = ACK;
                     xmit_packet(NULL,ctr,0);
+
+                    if (dequeue_packet(&data))
+                    {
+                        ctr.nr = nr;
+                        ctr.ns = ns;
+                        ns = (ns + 1) % 8;
+                        ctr.type = DATA;
+                        xmit_packet(data.xmit,ctr,data.length);
+                    }
+                    else
+                        window.whole = 0;
+
                 }
                 else
                 {
@@ -779,8 +816,20 @@ void DataLink(void)
                 break;
 
             case ACK:
-                if (ctr.nr == ns)
+                if (ctr.nr <= ns)
+                {
                     timeout = 0;
+                    if (dequeue_packet(&data))
+                    {
+                        ctr.nr = nr;
+                        ctr.ns = ns;
+                        ns = (ns + 1) % 8;
+                        ctr.type = DATA;
+                        xmit_packet(data.xmit,ctr,data.length);
+                    }
+                    else
+                        window.whole = 0;
+                }
                 else
                 {
                     ctr.nr = nr;
@@ -791,7 +840,7 @@ void DataLink(void)
                 break;
 
             case NACK:
-                xmit_window();
+                //xmit_window();
                 break;
             default:
                 break;
@@ -801,13 +850,19 @@ void DataLink(void)
         {
             ctr.nr = nr;
             ctr.ns = ns;
-            ns = (ns + 1) % 8;
             ctr.type = DATA;
-            xmit_packet(data.xmit,ctr,data.length);
+            if (!window.whole)
+            {
+                window.whole = data.whole;
+                ns = (ns + 1) % 8;
+                xmit_packet(data.xmit,ctr,data.length);
+            }
+            else
+                enqueue_packet(&data);
         }
         else if (source_id == TIME_SERVER && timeout)
         {
-            xmit_window();
+           // xmit_window();
         }
     }
 }

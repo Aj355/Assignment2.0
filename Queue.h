@@ -38,7 +38,7 @@ int enqueue_UART(struct UART_entry * req);
 int dequeue_UART(struct UART_entry * req);
 int enqueue_frame (struct frame  * req);
 int dequeue_frame (struct frame  * req);
-int enqueue_packet(struct packet * req);
-int dequeue_packet(struct packet * req);
+int enqueue_packet(struct transmit * req);
+int dequeue_packet(struct transmit * req);
 
 #endif /* QUEUE_H_ */

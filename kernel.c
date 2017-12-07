@@ -385,8 +385,9 @@ void PendSV(void)
 }
 
 
-
-
+extern struct frame_queue FQ;  /* contains list of frames to be sent */
+extern unsigned ns;
+extern unsigned nr;
 
 /*******************************************************************************
  * Purpose:
@@ -397,7 +398,7 @@ void PendSV(void)
  *             NONE
  ******************************************************************************/
 void main(void)
-{
+  {
     int i;
     
     init_kernel();
