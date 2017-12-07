@@ -911,7 +911,7 @@ void DataLink(void)
                 break;
             }
         }
-        else if (source_id == APP || source_d == VERTUAL_TRN)
+        else if (source_id == APP || source_id == VERTUAL_TRN)
         {
             ctr.nr = nr;
             ctr.ns = ns;
