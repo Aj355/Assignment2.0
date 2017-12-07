@@ -339,7 +339,7 @@ struct action routing_tbl[HALL_SEN_NUM][HALL_SEN_NUM] =
 char map [MAP_HEIGHT][MAP_WIDTH]=
 {{"                  --20-------------------------19--                 "},
  {"                /                                   \\              "},
- {"    ----14-----/------13------12---/---11------10----\\---09-----   "},
+ {"    ----14------------13------12-------11------10--------09-----   "},
  {"  /                               /                              \\ "},
  {" /               --24-------23---/                                \\"},
  {"15                                                                08"},
@@ -347,7 +347,7 @@ char map [MAP_HEIGHT][MAP_WIDTH]=
  {"16                                                                07"},
  {" \\                                  /--21--------22--             /"},
  {"  \\                                /                             / "},
- {"    ----01-----\\-----02------03---/---04------05-----/---06-----   "},
+ {"    ----01-----------02------03-------04------05---------06-----   "},
  {"                \\                                   /              "},
  {"                  --17-------------------------18--                 "}
  };
@@ -361,9 +361,11 @@ struct location sensors[HALL_SEN_NUM] =
 };
 
 struct location switches[SWITCH_NUM] =
-{{"-/", 16, 2}, {"-/", 36, 2}, {"-\\", 54, 2},
- {"-/", 54, 10}, {"-/", 35, 10}, {"-\\", 16, 10}
+{{"/-", 16, 2}, {"/-", 36, 2}, {"\\-", 54, 2},
+ {"/-", 54, 10}, {"/-", 35, 10}, {"\\-", 16, 10}
 };
+
+char train_symbols [TRAIN_NUM][MAX_NAME_SZ] = {"EE", "LL"};
 
 int special_sensors[SPEC_SENSOR_NUM] = {1, 3, 6, 9, 11, 14};
 int h;
@@ -493,6 +495,33 @@ void virtual_train (void)
 
     }
 }
+
+/* this function updates the position of a train on the map */
+void update_trn_pos (int train, int sensor, int *x_pos, int *y_pos)
+{
+    pdisplay_str(*x_pos, *y_pos+MAP_POS, sensors[trains[EXPRESS].head-1].name);
+    *x_pos = sensors[sensor].x_pos;
+    *y_pos = sensors[sensor].y_pos;
+    pdisplay_str(*x_pos, *y_pos+MAP_POS, train_symbols[train]);
+}
+
+/* this function gets information from the routing table */
+void get_action (int train, int dest, int *dir, int *sw_num, int *sw_state)
+{
+    *dir = routing_tbl[trains[train].head-1][dest-1].dir;
+    *sw_num = routing_tbl[trains[train].head-1][dest-1].sw_num;
+    *sw_state = routing_tbl[trains[train].head-1][dest-1].sw_state;
+}
+
+/* this function changes the state of switch and updates map */
+void change_switch (int num, int state)
+{
+    send_sw(num, state);
+    send_sw(num, state);
+    pdisplay_char(switches[num].x_pos, switches[num].y_pos, switches[num].name[state]);
+}
+
+
 /*******************************************************************************
  * Purpose:
  *             This process inserts a PCB into its corresponding priority
@@ -508,64 +537,47 @@ void express_manager(void)
 {
     int dir, sw_num, sw_state;  // to hold info from routing table
     int dest;                   // destination location
-    char sensor;                 // triggered hall sensor
+    char sensor;                // triggered hall sensor
     int src_id;                 // for receiving messages
-    int tmp;
+    struct transmit msg;        // to receive message
+    int x_pos[TRAIN_NUM];       // x position of train on map
+    int y_pos[TRAIN_NUM];       // y position of train on map
     int i;
-    int x_pos;
-    int y_pos;
-    struct transmit msg;
 
+    /* bind to a mailbox */
     pbind(APP);
-
-    /* Send message to DLL with all switches straight   */
-    //send_sw(4, DIV);
-
-    /* Send message to DLL with hall sensor queue reset */
+    
+    /* reset all hall sensors */
     reset_hall_queue();
 
-    /* Ask display to enter train sections and speed */
-    //pdisplay_str(1,5,"Enter starting sections and speeds:\n");
-    /* RECV message from display */
-    /* Load trains locations and speeds */
-    /*
-    trains[EXPRESS].head = 7;
-    trains[EXPRESS].tail = 8;
-    trains[EXPRESS].speed = 7;
-    trains[EXPRESS].dir = CW;
-    send_md(EXPRESS, trains[EXPRESS].speed, trains[EXPRESS].dir);
-    */
-    pdisplay_str(1, 1, "Direction:");
-    
+    /* print the map on the screen */
     for (i=0; i<MAP_HEIGHT; i++)
     {
-        pdisplay_str(1, 3+i, map[i]);
+        pdisplay_str(FIRST_LINE, MAP_POS+i, map[i]);
     }
 
-    // initialize head position, speed, and destination
-    trains[EXPRESS].head = 22;
-    trains[EXPRESS].speed = 7;
-    dest = 24;
+    /* initialize head position, speed, and destination */
+    trains[EXPRESS].head = INIT_POS;
+    trains[EXPRESS].speed = INIT_SPEED;
+    dest = INIT_DEST;
 
-    x_pos = sensors[trains[EXPRESS].head-1].x_pos;
-    y_pos = sensors[trains[EXPRESS].head-1].y_pos;
-    pdisplay_str(x_pos, y_pos+3, "EE");
-    //get direction and switch info from routing table
-    trains[EXPRESS].dir = routing_tbl[trains[EXPRESS].head-1][dest-1].dir;
-    sw_num = routing_tbl[trains[EXPRESS].head-1][dest-1].sw_num;
-    sw_state = routing_tbl[trains[EXPRESS].head-1][dest-1].sw_state;
+    /* put the initial place of the train on the map */
+    update_trn_pos(EXPRESS, trains[EXPRESS].head, &x_pos[EXPRESS], &y_pos[EXPRESS]);
 
+    /* get direction and switch info from routing table */
+    get_action (EXPRESS, dest, &dir, &sw_num, &sw_state);
 
-    // send direction and switch commands
+    /* update the current direction of the train */
+    trains[EXPRESS].dir = dir;
+
+    /* send direction and switch commands */
     send_md(EXPRESS, trains[EXPRESS].speed, trains[EXPRESS].dir);
-    pdisplay_char(11, 1, trains[EXPRESS].dir + '0');
-
-    send_sw(sw_num, sw_state);
+    change_switch(sw_num, sw_state);
     
-
+    /* start infinite loop */
     while (1)
     {
-        // get a message from the mailbox
+        /* get a message from the mailbox and send ack*/
         precv(&src_id, &msg, sizeof(struct transmit));
         sensor = msg.xmit[1];
         hall_sensor_ack(sensor);
@@ -573,61 +585,51 @@ void express_manager(void)
         // if the received hall sensor is the same as the head pos
         if (sensor == trains[EXPRESS].head || sensor == trains[EXPRESS].prev_h)
             trains[EXPRESS].tail = sensor;
-        else // if it is a new sensor
+        // if it is a new sensor
+        else
         {
-            pdisplay_str(x_pos, y_pos+3, sensors[trains[EXPRESS].head-1].name);
-            x_pos = sensors[sensor-1].x_pos;
-            y_pos = sensors[sensor-1].y_pos;
-            pdisplay_str(x_pos, y_pos+3, "EE");
+            update_trn_pos(EXPRESS, sensor, &x_pos[EXPRESS], &y_pos[EXPRESS]);
 
             // update the head position
             trains[EXPRESS].prev_h = trains[EXPRESS].head;
             trains[EXPRESS].head = sensor;
 
             // get next direction and switch from routing table
-            dir = routing_tbl[trains[EXPRESS].head-1][dest-1].dir;
-            sw_num = routing_tbl[trains[EXPRESS].head-1][dest-1].sw_num;
-            sw_state = routing_tbl[trains[EXPRESS].head-1][dest-1].sw_state;
-
-
+            get_action (EXPRESS, dest, &dir, &sw_num, &sw_state);
 
             // if the train is at the destination
             if (dir == AT_DST)
             {
                 // stop the train
-                send_md(EXPRESS,15, !trains[EXPRESS].dir);
+                // reverse the direction of the train
+                send_md(EXPRESS, trains[EXPRESS].speed, !trains[EXPRESS].dir);
+                // wait for some time in order to force the train to stop fast
                 sleep(3);
+                // send a message to the train to stop
                 send_md(EXPRESS, 0, 0);
             }
             // else if the new direction = new direction
             else if (dir == trains[EXPRESS].dir)
             {
-                send_sw(sw_num, sw_state);
-                send_sw(sw_num, sw_state);
-
+                change_switch(sw_num, sw_state);
             }
             // else if new direction does not equal old direction
             // and it is not one of the special sensors
             else if (!special_sensor(sensor))
             {
                 // send switch and direction command
-                send_sw(sw_num, sw_state);
-                send_sw(sw_num, sw_state);
+                change_switch(sw_num, sw_state);
                 send_md(EXPRESS, trains[EXPRESS].speed, dir);
 
-                pdisplay_str(x_pos, y_pos+3, sensors[trains[EXPRESS].head-1].name);
-                x_pos = sensors[trains[EXPRESS].tail-1].x_pos;
-                y_pos = sensors[trains[EXPRESS].tail-1].y_pos;
-                pdisplay_str(x_pos, y_pos+3, "EE");
+                //update the train position
+                update_trn_pos(EXPRESS, sensor, &x_pos[EXPRESS], &y_pos[EXPRESS]);
 
-                // Switch the positions of the head and tail (since train is reversing)
-                tmp = trains[EXPRESS].head;
-                //trains[EXPRESS].head = trains[EXPRESS].tail;
-                trains[EXPRESS].tail = tmp;
+                // the head and tail have the same position b/c train is reversing
+                trains[EXPRESS].tail = trains[EXPRESS].head;
                 trains[EXPRESS].prev_h = 0;
+
                 //update the direction of the train
                 trains[EXPRESS].dir = dir;
-                pdisplay_char(11, 1, trains[EXPRESS].dir + '0');
             }
         }
     }

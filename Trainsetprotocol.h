@@ -60,6 +60,14 @@
 #define MAP_HEIGHT      13          /* height of the map in lines         */
 #define MAP_WIDTH       70          /* width of the map in columns        */
 #define MAX_NAME_SZ     2
+#define FIRST_LINE      1           /* number of first line in terminal   */
+#define MAP_POS         3           /* starting row position of map       */
+#define CHAR_INDEX      '0'         /* add to number to transform to char */
+
+#define INIT_POS        24          /* initial position of the train      */
+#define INIT_SPEED      15          /* initial speed of the train is max  */
+#define INIT_DEST       22          /* initial destination of the train   */
+
 enum PktType {DATA, ACK, NACK};         /* Packet type */
 enum Direction {CW,CCW, AT_DST};                /* Locomotive direction */
 enum Switch {DIV, STR, UNCH};        /* Switch direction */
@@ -247,4 +255,5 @@ void send_frame (struct frame *);
 void DataLink (void);
 void express_manager (void);
 void virtual_train (void);
+int special_sensor (int sensor);
 #endif /* TRAINSET_H_ */
