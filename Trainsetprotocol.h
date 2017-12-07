@@ -3,14 +3,10 @@
  * Author: Abdullah     Alhadlaq
  * Course: Real time systems
  * ECED 4402
- * Date assigned :   26  Sept  2017
- * Date created  :   12  Oct  2017
- * Editing       :   28  Oct  - Added enqueue/dequeue messages
- *                   01  Nov  - Added enqueue/dequeue UART
- * Submission date : 15  Nov 2017
- * File name : Queue.h
- * Purpose: Implement a static circular queue in order to manage UART and 
- *              messaging system queues.
+ * Date created  :   1  Dec   2017
+ * Submission date : 7  Dec   2017
+ * File name : Trainsetprotocol.h
+ * Purpose: Define data structures and function entry points for train control
  * Acknowledgment: This code is based on the source code provided in class
  * ------------------------------------------------------------------------- */
 
@@ -48,37 +44,43 @@
 #define HALL_SEN_NUM    24          /* Number of hall sensors in system   */
 #define SPEC_SENSOR_NUM 6           /* Number of special case sensors     */
 #define MAX_INPUT       16          /* allowed input for commands         */
-#define CODE            0
-#define ARG1            1
-#define ARG2            2
-#define CTRL            0
-#define LEN             1
-#define PKT_MSG         2
-#define DLL             5
-#define APP             6
+#define MAX_FRAME       16          /* Maximum number of bytes in a frame */
+#define MAX_PKT         8           /* Maximum number of bytes in a pkt   */
+#define MAX_ELEMENTS    25          /* Max elements in FQ or PQ queues    */
+
+#define CODE            0           /* CODE is the first byte in a message*/
+#define ARG1            1           /* ARG1 is the secnd byte in a message*/
+#define ARG2            2           /* ARG2 is the third byte in a message*/
+#define CTRL            0           /* CTRL is the first byte in a packet */
+#define LEN             1           /* LEN is the second byte in a packet */
+#define PKT_MSG         2           /* msgs start after two byte in a pkt */
+
+#define DLL             5           /* Data link layer is bound to mbox 5 */
+#define APP             6           /* Train Manager   is bound to mbox 6 */
 #define TIME_SERVER     0           /* Time server PID and mailbox number */
+
 #define MAP_HEIGHT      13          /* height of the map in lines         */
 #define MAP_WIDTH       70          /* width of the map in columns        */
-#define MAX_NAME_SZ     3
+#define MAX_NAME_SZ     3           /* Size of the max name               */
 #define FIRST_LINE      1           /* number of first line in terminal   */
 #define CMD_LINE_IN     20          /* command line input  position       */
 #define CMD_LINE_OUT    23          /* command line output position       */
 #define MAP_POS         3           /* starting row position of map       */
 #define CHAR_INDEX      '0'         /* add to number to transform to char */
+#define EXP_INIT_POS        22      /* initial position of the train      */
+#define EXP_INIT_SPEED      7       /* initial speed of the train is max  */
+#define EXP_INIT_DEST       24      /* initial destination of the train   */
 
-#define EXP_INIT_POS        22          /* initial position of the train      */
-#define EXP_INIT_SPEED      7          /* initial speed of the train is max  */
-#define EXP_INIT_DEST       24          /* initial destination of the train   */
-#define REVERSE_SPD     15          /* speed at which the train is reversing*/
+#define REVERSE_SPD     15          /* speed at which  train is reversing */
 #define REVERSE_TIME    3           /* time it takes to reverse the train */
 
 
 
-enum PktType {DATA, ACK, NACK};         /* Packet type */
-enum Direction {CW,CCW, AT_DST};                /* Locomotive direction */
+enum PktType {DATA, ACK, NACK};      /* Packet type */
+enum Direction {CW,CCW, AT_DST};     /* Locomotive direction */
 enum Switch {DIV, STR, UNCH};        /* Switch direction */
-enum TRAIN_NAME {LOCAL, EXPRESS};       /* names of the trains */
-enum COMMANDS_ {DEST_CMD, HALL_CMD};
+enum TRAIN_NAME {LOCAL, EXPRESS};    /* names of the trains */
+enum COMMANDS_ {DEST_CMD, HALL_CMD}; /* virtual machine commands */
 
 /* location structure used in map */
 struct location
@@ -108,30 +110,7 @@ struct train
 };
 
 
-/* Message structure */
-struct __attribute__((packed)) m
-{
-    unsigned char code;         /* Message code (described below) */
-    unsigned char arg1;         /* First argument (optional) */
-    unsigned char arg2;         /* Second argument (optional) */
 
-};
-
-struct message
-{
-    union
-    {
-        unsigned long message;          /* message viewed as a single unit */
-        struct __attribute__((packed))
-        {
-            unsigned char code;         /* Message code (described below) */
-            unsigned char arg1;         /* First argument (optional) */
-            unsigned char arg2;         /* Second argument (optional) */
-
-        };
-        char p[4];
-    };
-};
 
 
 /* magnitude/direction structure */
@@ -149,7 +128,7 @@ struct mag_dir
 };
 
 
-/* */
+/* control structure */
 struct control
 {
     union {
@@ -163,84 +142,54 @@ struct control
 };
 
 
-/* */
-struct __attribute__((packed)) pk
-{
-    struct control ctr;         /* Control field */
-    unsigned char  len;         /* Length  field */
-    struct m msg;               /* Message field */
-};
-struct packet
-{
-    union {
-        struct __attribute__((packed))
-        {
-            struct control ctr;         /* Control field */
-            unsigned char  len;         /* Length  field */
-            struct m msg;               /* Message field */
-        };
-        unsigned long long pkt;         /* packet viewed as a single unit */
-        char packets[5];                /* packet viewed as a series of bytes */
-    };
-};
 
 
 
+/* Structure for transmission of messages/packets as sequence of bytes */
 struct transmit
 {
     union {
 
-        char xmit[10];
-        long long whole;
+        char xmit[MAX_PKT];         /* array of bytes for easy population */
+        long long whole;            /* easier copying of the object       */
     };
-    char length;
+    char length;                    /* length of the transmitted object   */
 
 };
-struct message_ol
-{
-        unsigned char code;         /* Message code (described below) */
-        unsigned char arg1;         /* First argument (optional) */
-        unsigned char arg2;         /* Second argument (optional) */
-};
-struct packet_ol
-{
-    union
-    {
-        char bytes[8];
-        long long whole;
-    };
-};
 
+
+/* Structure for tranmission of frames */
 struct frame
 {
     union
     {
-        char bytes[16];
-        struct
+        char bytes[MAX_FRAME];             /* series of bytes - MAX frame is */
+        
+        struct                             /* efficient enqueue and dequeue  */
         {
-            long long low;
-            long long high;
+            long long low;                 /* Lower 8 bytes of the structure */
+            long long high;                /* Higher 8 bytes of the structure*/
         };
     };
-    int length;
+    int length;                            /* length of the frame */
 };
 
 /* List of frames to be send by the physical layer */
 struct frame_queue
 {
-    struct frame queue[25];             /* frame queue */
-    int head;                           /* Head of circular queue */
-    int tail;                           /* Tail of circular queue */
-    volatile int cnt;                   /* Number of rqs in queue */
+    struct frame queue[MAX_ELEMENTS];    /* frame queue */
+    int head;                            /* Head of circular queue */
+    int tail;                            /* Tail of circular queue */
+    volatile int cnt;                    /* Number of rqs in queue */
 };
 
 /* List of frames to be send by the physical layer */
 struct packet_queue
 {
-    struct transmit queue[25];          /* frame queue */
-    int head;                           /* Head of circular queue */
-    int tail;                           /* Tail of circular queue */
-    volatile int cnt;                   /* Number of rqs in queue */
+    struct transmit queue[MAX_ELEMENTS]; /* frame queue */
+    int head;                            /* Head of circular queue */
+    int tail;                            /* Tail of circular queue */
+    volatile int cnt;                    /* Number of rqs in queue */
 };
 
 
